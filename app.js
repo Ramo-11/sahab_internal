@@ -13,9 +13,6 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Configure EJS options - this line should be removed or corrected
-// app.engine('ejs', require('ejs').renderFile);
-
 // Static files
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
@@ -36,8 +33,9 @@ app.use(session({
 initializeDatabase();
 
 // Routes
-const clientRoutes = require('./server/routes/clients');
+// const clientRoutes = require('./server/routes/clients');
 const proposalRoutes = require('./server/routes/proposals');
+const clientRoutes = require('./server/routes/clients');
 const invoiceRoutes = require('./server/routes/invoices');
 const dashboardRoutes = require('./server/routes/dashboard');
 

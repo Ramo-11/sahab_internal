@@ -25,8 +25,6 @@ const getAllClients = (req, res) => {
           error: err
         });
       }
-
-      console.log('Fetched clients:', clients);
       
       res.render('clients/index', {
         title: 'Clients',
