@@ -1,0 +1,303 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><%= proposal.title %></h2>
+        <p class="text-muted">Proposal for <%= proposal.client_name %></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/proposals" class="btn btn-secondary">Back to Proposals</a>
+        <a href="/proposals/<%= proposal.id %>/edit" class="btn btn-primary">Edit Proposal</a>
+        <% if (proposal.status === 'accepted') { %>
+            <a href="/invoices/new?proposal_id=<%= proposal.id %>" class="btn btn-success">Create Invoice</a>
+        <% } %>
+        <button onclick="printProposal()" class="btn btn-secondary">Print</button>
+    </div>
+</div>
+
+<!-- Proposal Status Alert -->
+<% if (proposal.status === 'expired' || (proposal.valid_until && new Date(proposal.valid_until) < new Date() && proposal.status !== 'accepted' && proposal.status !== 'rejected')) { %>
+    <div class="card mb-4" style="border-color: var(--danger-color); background: rgba(239, 68, 68, 0.05);">
+        <div class="card-body">
+            <h6 class="text-danger">⚠️ This proposal has expired</h6>
+            <p class="text-muted mb-0">Consider creating a new proposal or extending the validity date.</p>
+        </div>
+    </div>
+<% } %>
+
+<div class="grid-3 mb-4">
+    <!-- Proposal Status -->
+    <div class="card">
+        <div class="card-body text-center">
+            <h6>Status</h6>
+            <span class="status-badge status-<%= proposal.status %> fs-6"><%= proposal.status.toUpperCase() %></span>
+        </div>
+    </div>
+    
+    <!-- Total Amount -->
+    <div class="card">
+        <div class="card-body text-center">
+            <h6>Total Amount</h6>
+            <h4 class="text-success">$<%= (proposal.amount || 0).toFixed(2) %></h4>
+        </div>
+    </div>
+    
+    <!-- Valid Until -->
+    <div class="card">
+        <div class="card-body text-center">
+            <h6>Valid Until</h6>
+            <% if (proposal.valid_until) { %>
+                <p class="mb-0"><%= new Date(proposal.valid_until).toLocaleDateString() %></p>
+            <% } else { %>
+                <p class="text-muted mb-0">No expiry date</p>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<div class="proposal-document card">
+    <div class="card-body">
+        <!-- Header Section -->
+        <div class="proposal-header">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h1 class="proposal-title">PROPOSAL</h1>
+                    <p class="proposal-number">Proposal ID: #<%= proposal.id %></p>
+                </div>
+                <div class="text-right">
+                    <p><strong>Date:</strong> <%= new Date(proposal.created_at).toLocaleDateString() %></p>
+                    <% if (proposal.valid_until) { %>
+                        <p><strong>Valid Until:</strong> <%= new Date(proposal.valid_until).toLocaleDateString() %></p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Information -->
+        <div class="grid-2 mb-4">
+            <div>
+                <h4>From:</h4>
+                <div class="company-info">
+                    <strong><%= process.env.COMPANY_NAME || 'Your Company' %></strong><br>
+                    <!-- Add your company details here -->
+                </div>
+            </div>
+            
+            <div>
+                <h4>To:</h4>
+                <div class="client-info">
+                    <strong><%= proposal.client_name %></strong><br>
+                    <% if (proposal.client_company) { %>
+                        <%= proposal.client_company %><br>
+                    <% } %>
+                    <% if (proposal.client_email) { %>
+                        <%= proposal.client_email %><br>
+                    <% } %>
+                    <% if (proposal.client_phone) { %>
+                        <%= proposal.client_phone %><br>
+                    <% } %>
+                    <% if (proposal.client_address) { %>
+                        <%= proposal.client_address %><br>
+                        <% if (proposal.client_city || proposal.client_state || proposal.client_zip_code) { %>
+                            <%= proposal.client_city %><% if (proposal.client_city && proposal.client_state) { %>, <% } %><%= proposal.client_state %> <%= proposal.client_zip_code %>
+                        <% } %>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proposal Content -->
+        <div class="proposal-content mb-4">
+            <h4>Proposal: <%= proposal.title %></h4>
+            <% if (proposal.description) { %>
+                <div class="proposal-description">
+                    <%= proposal.description.replace(/\n/g, '<br>') %>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Line Items -->
+        <% if (items && items.length > 0) { %>
+            <div class="proposal-items mb-4">
+                <h4>Items & Services</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-right">Rate</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% let subtotal = 0; %>
+                            <% items.forEach(item => { %>
+                                <% subtotal += item.amount || 0; %>
+                                <tr>
+                                    <td><%= item.description %></td>
+                                    <td class="text-center"><%= item.quantity || 1 %></td>
+                                    <td class="text-right">$<%= (item.rate || 0).toFixed(2) %></td>
+                                    <td class="text-right">$<%= (item.amount || 0).toFixed(2) %></td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-right">Subtotal:</th>
+                                <th class="text-right">$<%= subtotal.toFixed(2) %></th>
+                            </tr>
+                            <tr>
+                                <th colspan="3" class="text-right">Total:</th>
+                                <th class="text-right text-success">$<%= (proposal.amount || subtotal).toFixed(2) %></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Terms & Conditions -->
+        <div class="proposal-terms">
+            <h4>Terms & Conditions</h4>
+            <p class="text-muted">
+                This proposal is valid until <%= proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString() : 'further notice' %>.
+                All work will be completed according to the specifications outlined above.
+                Payment terms and project timeline will be detailed in the final contract upon acceptance.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex gap-3 flex-wrap">
+            <% if (proposal.status === 'draft') { %>
+                <button onclick="updateStatus('sent')" class="btn btn-primary">Mark as Sent</button>
+            <% } %>
+            
+            <% if (proposal.status === 'sent') { %>
+                <button onclick="updateStatus('accepted')" class="btn btn-success">Mark as Accepted</button>
+                <button onclick="updateStatus('rejected')" class="btn btn-danger">Mark as Rejected</button>
+            <% } %>
+            
+            <% if (proposal.status === 'accepted') { %>
+                <a href="/invoices/new?proposal_id=<%= proposal.id %>" class="btn btn-success">Create Invoice</a>
+            <% } %>
+            
+            <a href="/proposals/<%= proposal.id %>/edit" class="btn btn-secondary">Edit Proposal</a>
+            <button onclick="duplicateProposal()" class="btn btn-secondary">Duplicate</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.proposal-document {
+    background: white;
+    box-shadow: var(--shadow-lg);
+}
+
+.proposal-title {
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-sm);
+}
+
+.proposal-number {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.company-info,
+.client-info {
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.proposal-description {
+    background: var(--bg-secondary);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--primary-color);
+    margin-top: var(--spacing-md);
+    line-height: 1.7;
+}
+
+.proposal-terms {
+    background: var(--bg-tertiary);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    margin-top: var(--spacing-xl);
+}
+
+@media print {
+    .no-print,
+    .card-header,
+    .btn,
+    .quick-actions {
+        display: none !important;
+    }
+    
+    .proposal-document {
+        box-shadow: none;
+        border: none;
+    }
+}
+</style>
+
+<script>
+function updateStatus(newStatus) {
+    if (confirm(`Are you sure you want to mark this proposal as ${newStatus}?`)) {
+        fetch(`/proposals/<%= proposal.id %>`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                client_id: '<%= proposal.client_id %>',
+                title: '<%= proposal.title %>',
+                description: '<%= proposal.description || "" %>',
+                amount: '<%= proposal.amount || 0 %>',
+                status: newStatus,
+                valid_until: '<%= proposal.valid_until || "" %>'
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                throw new Error('Network response was not ok');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating status. Please try again.');
+        });
+    }
+}
+
+function duplicateProposal() {
+    if (confirm('Create a copy of this proposal?')) {
+        // Redirect to new proposal form with pre-filled data
+        const params = new URLSearchParams({
+            client_id: '<%= proposal.client_id %>',
+            title: 'Copy of <%= proposal.title %>',
+            description: '<%= proposal.description || "" %>',
+            amount: '<%= proposal.amount || 0 %>'
+        });
+        
+        window.location.href = `/proposals/new?${params.toString()}`;
+    }
+}
+
+function printProposal() {
+    window.print();
+}
+</script>
+
+<%- include('../partials/footer') %>

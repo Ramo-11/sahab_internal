@@ -1,0 +1,262 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><%= proposal ? 'Edit Proposal' : 'Create New Proposal' %></h2>
+        <p class="text-muted"><%= proposal ? 'Update proposal details' : 'Create a new proposal for your client' %></p>
+    </div>
+    <a href="/proposals" class="btn btn-secondary">Back to Proposals</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form action="<%= action %>" method="POST" id="proposalForm">
+            <% if (method === 'PUT') { %>
+                <input type="hidden" name="_method" value="PUT">
+            <% } %>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="client_id" class="form-label">Client *</label>
+                    <select class="form-control" id="client_id" name="client_id" required>
+                        <option value="">Select a client</option>
+                        <% if (clients && clients.length > 0) { %>
+                            <% clients.forEach(client => { %>
+                                <option value="<%= client.id %>" <%= proposal && proposal.client_id == client.id ? 'selected' : '' %>>
+                                    <%= client.name %><% if (client.company) { %> - <%= client.company %><% } %>
+                                </option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                    <% if (!clients || clients.length === 0) { %>
+                        <small class="text-muted">No clients available. <a href="/clients/new">Add a client first</a>.</small>
+                    <% } %>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title" class="form-label">Proposal Title *</label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="title" 
+                        name="title" 
+                        value="<%= proposal ? proposal.title : '' %>" 
+                        required
+                        placeholder="Enter proposal title"
+                    >
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description" class="form-label">Description</label>
+                <textarea 
+                    class="form-control" 
+                    id="description" 
+                    name="description" 
+                    rows="4"
+                    placeholder="Describe the scope of work, deliverables, timeline, etc."
+                ><%= proposal ? (proposal.description || '') : '' %></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="amount" class="form-label">Total Amount ($)</label>
+                    <input 
+                        type="number" 
+                        class="form-control" 
+                        id="amount" 
+                        name="amount" 
+                        value="<%= proposal ? (proposal.amount || '') : '' %>"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="valid_until" class="form-label">Valid Until</label>
+                    <input 
+                        type="date" 
+                        class="form-control" 
+                        id="valid_until" 
+                        name="valid_until" 
+                        value="<%= proposal ? (proposal.valid_until ? new Date(proposal.valid_until).toISOString().split('T')[0] : '') : '' %>"
+                    >
+                </div>
+            </div>
+            
+            <% if (proposal) { %>
+                <div class="form-group">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-control" id="status" name="status">
+                        <option value="draft" <%= proposal.status === 'draft' ? 'selected' : '' %>>Draft</option>
+                        <option value="sent" <%= proposal.status === 'sent' ? 'selected' : '' %>>Sent</option>
+                        <option value="accepted" <%= proposal.status === 'accepted' ? 'selected' : '' %>>Accepted</option>
+                        <option value="rejected" <%= proposal.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+                        <option value="expired" <%= proposal.status === 'expired' ? 'selected' : '' %>>Expired</option>
+                    </select>
+                </div>
+            <% } %>
+            
+            <!-- Line Items Section -->
+            <div class="form-section mt-4">
+                <h4>Line Items</h4>
+                <p class="text-muted">Add individual items or services to this proposal</p>
+                
+                <div id="lineItems">
+                    <!-- Line items will be added here -->
+                </div>
+                
+                <button type="button" class="btn btn-secondary" onclick="addLineItem()">
+                    Add Line Item
+                </button>
+            </div>
+            
+            <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <%= proposal ? 'Update Proposal' : 'Create Proposal' %>
+                </button>
+                <a href="/proposals" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let lineItemCount = 0;
+
+function addLineItem(description = '', quantity = 1, rate = 0) {
+    const lineItemsContainer = document.getElementById('lineItems');
+    const itemId = lineItemCount++;
+    
+    const lineItemHtml = `
+        <div class="line-item card mb-3" id="lineItem_${itemId}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6>Line Item ${itemId + 1}</h6>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeLineItem(${itemId})">Remove</button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" class="form-control" name="items[${itemId}][description]" value="${description}" placeholder="Describe this item or service">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="items[${itemId}][quantity]" value="${quantity}" min="1" onchange="calculateLineTotal(${itemId})">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Rate ($)</label>
+                        <input type="number" class="form-control" name="items[${itemId}][rate]" value="${rate}" step="0.01" min="0" onchange="calculateLineTotal(${itemId})">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Amount ($)</label>
+                        <input type="number" class="form-control" id="amount_${itemId}" name="items[${itemId}][amount]" value="${quantity * rate}" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    lineItemsContainer.insertAdjacentHTML('beforeend', lineItemHtml);
+    calculateTotalAmount();
+}
+
+function removeLineItem(itemId) {
+    const lineItem = document.getElementById(`lineItem_${itemId}`);
+    if (lineItem) {
+        lineItem.remove();
+        calculateTotalAmount();
+    }
+}
+
+function calculateLineTotal(itemId) {
+    const quantityInput = document.querySelector(`input[name="items[${itemId}][quantity]"]`);
+    const rateInput = document.querySelector(`input[name="items[${itemId}][rate]"]`);
+    const amountInput = document.getElementById(`amount_${itemId}`);
+    
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const rate = parseFloat(rateInput.value) || 0;
+    const total = quantity * rate;
+    
+    amountInput.value = total.toFixed(2);
+    calculateTotalAmount();
+}
+
+function calculateTotalAmount() {
+    const amountInputs = document.querySelectorAll('input[name*="[amount]"]');
+    let total = 0;
+    
+    amountInputs.forEach(input => {
+        total += parseFloat(input.value) || 0;
+    });
+    
+    document.getElementById('amount').value = total.toFixed(2);
+}
+
+// Initialize with one line item
+document.addEventListener('DOMContentLoaded', function() {
+    addLineItem();
+});
+
+document.getElementById('proposalForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const method = '<%= method %>';
+    
+    // Convert FormData to regular object for JSON
+    const data = {};
+    const items = [];
+    
+    formData.forEach((value, key) => {
+        if (key.startsWith('items[')) {
+            // Parse line items
+            const match = key.match(/items\[(\d+)\]\[(\w+)\]/);
+            if (match) {
+                const index = parseInt(match[1]);
+                const field = match[2];
+                
+                if (!items[index]) items[index] = {};
+                items[index][field] = value;
+            }
+        } else if (key !== '_method') {
+            data[key] = value;
+        }
+    });
+    
+    // Filter out empty items and add to data
+    data.items = items.filter(item => item && item.description && item.description.trim());
+    
+    fetch('<%= action %>', {
+        method: method === 'PUT' ? 'PUT' : 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else if (response.ok) {
+            <% if (proposal) { %>
+                window.location.href = '/proposals/<%= proposal.id %>';
+            <% } else { %>
+                window.location.href = '/proposals';
+            <% } %>
+        } else {
+            throw new Error('Network response was not ok');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving proposal. Please try again.');
+    });
+});
+</script>
+
+<%- include('../partials/footer') %>

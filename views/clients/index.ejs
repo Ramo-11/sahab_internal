@@ -1,0 +1,115 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Clients</h2>
+        <p class="text-muted">Manage your client relationships</p>
+    </div>
+    <a href="/clients/new" class="btn btn-primary">Add New Client</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <% if (clients && clients.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Email</th>
+                            <th class="hide-mobile">Phone</th>
+                            <th class="hide-mobile">Proposals</th>
+                            <th class="hide-mobile">Invoices</th>
+                            <th class="hide-mobile">Total Paid</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% clients.forEach(client => { %>
+                        <tr>
+                            <td>
+                                <a href="/clients/<%= client.id %>" class="text-primary font-weight-medium">
+                                    <%= client.name %>
+                                </a>
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="font-weight-medium"><%= client.company || 'N/A' %></div>
+                                </div>
+                            </td>
+                            <td>
+                                <% if (client.email) { %>
+                                    <a href="mailto:<%= client.email %>" class="text-primary"><%= client.email %></a>
+                                <% } else { %>
+                                    <span class="text-muted">No email</span>
+                                <% } %>
+                            </td>
+                            <td class="hide-mobile">
+                                <% if (client.phone) { %>
+                                    <a href="tel:<%= client.phone %>" class="text-primary"><%= client.phone %></a>
+                                <% } else { %>
+                                    <span class="text-muted">No phone</span>
+                                <% } %>
+                            </td>
+                            <td class="hide-mobile">
+                                <span class="status-badge status-active"><%= client.proposal_count || 0 %></span>
+                            </td>
+                            <td class="hide-mobile">
+                                <span class="status-badge status-active"><%= client.invoice_count || 0 %></span>
+                            </td>
+                            <td class="hide-mobile">
+                                <span class="text-success font-weight-medium">$<%= (client.total_paid || 0).toFixed(2) %></span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="/clients/<%= client.id %>" class="btn btn-sm btn-secondary">View</a>
+                                    <a href="/clients/<%= client.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
+                                    <a href="/proposals/new?client_id=<%= client.id %>" class="btn btn-sm btn-success">New Proposal</a>
+                                    <button onclick="deleteClient(<%= client.id %>)" class="btn btn-sm btn-danger">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="text-center py-5">
+                <svg style="width: 64px; height: 64px; color: var(--text-muted); margin-bottom: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+                <h4>No clients yet</h4>
+                <p class="text-muted mb-4">Start by adding your first client to begin managing your business relationships.</p>
+                <a href="/clients/new" class="btn btn-primary">Add Your First Client</a>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+function deleteClient(clientId) {
+    if (confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
+        fetch(`/clients/${clientId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting client');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting client');
+        });
+    }
+}
+</script>
+
+<%- include('../partials/footer') %>
