@@ -1,4 +1,4 @@
-// Main JavaScript file for Business Management Tool
+// Main JavaScript file for Sahab Solutions Management Tool
 
 // Mobile menu toggle
 function toggleMobileMenu() {

@@ -33,7 +33,6 @@ app.use(session({
 initializeDatabase();
 
 // Routes
-// const clientRoutes = require('./server/routes/clients');
 const proposalRoutes = require('./server/routes/proposals');
 const clientRoutes = require('./server/routes/clients');
 const invoiceRoutes = require('./server/routes/invoices');

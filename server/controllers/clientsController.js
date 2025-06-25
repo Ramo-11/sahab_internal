@@ -110,7 +110,7 @@ const getClientById = (req, res) => {
   }
 };
 
-const createClient = (req, res) => {
+ const createClient = (req, res) => {
   try {
     const {
       name,
@@ -144,6 +144,9 @@ const createClient = (req, res) => {
     db.run(query, values, function(err) {
       if (err) {
         console.error('Error creating client:', err);
+        if (req.headers['content-type'] === 'application/json') {
+          return res.status(500).json({ error: 'Failed to create client' });
+        }
         return res.status(500).render('error', {
           title: 'Error',
           appName: process.env.APP_NAME,
@@ -151,15 +154,24 @@ const createClient = (req, res) => {
         });
       }
 
-      res.redirect(`/clients/${this.lastID}`);
+      const clientId = this.lastID;
+      if (req.headers['content-type'] === 'application/json') {
+        res.json({ success: true, redirectUrl: `/clients/${clientId}` });
+      } else {
+        res.redirect(`/clients/${clientId}`);
+      }
     });
   } catch (error) {
     console.error('Error in createClient:', error);
-    res.status(500).render('error', {
-      title: 'Error',
-      appName: process.env.APP_NAME,
-      error
-    });
+    if (req.headers['content-type'] === 'application/json') {
+      res.status(500).json({ error: 'Failed to create client' });
+    } else {
+      res.status(500).render('error', {
+        title: 'Error',
+        appName: process.env.APP_NAME,
+        error
+      });
+    }
   }
 };
 
@@ -201,6 +213,10 @@ const updateClient = (req, res) => {
     db.run(query, values, function(err) {
       if (err) {
         console.error('Error updating client:', err);
+        // Check if it's a JSON request
+        if (req.headers['content-type'] === 'application/json') {
+          return res.status(500).json({ error: 'Failed to update client' });
+        }
         return res.status(500).render('error', {
           title: 'Error',
           appName: process.env.APP_NAME,
@@ -208,15 +224,24 @@ const updateClient = (req, res) => {
         });
       }
 
-      res.redirect(`/clients/${clientId}`);
+      // Check if it's a JSON request
+      if (req.headers['content-type'] === 'application/json') {
+        res.json({ success: true, redirectUrl: `/clients/${clientId}` });
+      } else {
+        res.redirect(`/clients/${clientId}`);
+      }
     });
   } catch (error) {
     console.error('Error in updateClient:', error);
-    res.status(500).render('error', {
-      title: 'Error',
-      appName: process.env.APP_NAME,
-      error
-    });
+    if (req.headers['content-type'] === 'application/json') {
+      res.status(500).json({ error: 'Failed to update client' });
+    } else {
+      res.status(500).render('error', {
+        title: 'Error',
+        appName: process.env.APP_NAME,
+        error
+      });
+    }
   }
 };
 

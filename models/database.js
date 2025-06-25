@@ -38,21 +38,43 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create proposals table
+  // Create proposals table with technical_highlights
   db.run(`
     CREATE TABLE IF NOT EXISTS proposals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       client_id INTEGER,
       title TEXT NOT NULL,
       description TEXT,
+      technical_highlights TEXT,
       amount DECIMAL(10,2),
       status TEXT DEFAULT 'draft',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       valid_until DATE,
+      proposed_timeline TEXT,
+      project_features TEXT,
       FOREIGN KEY (client_id) REFERENCES clients (id)
     )
   `);
+
+  // Check if technical_highlights column exists, if not add it
+  db.all("PRAGMA table_info(proposals)", (err, columns) => {
+    if (err) {
+      console.error('Error checking proposals table:', err.message);
+      return;
+    }
+    
+    const hasNewColumn = columns.some(col => col.name === 'technical_highlights');
+    if (!hasNewColumn) {
+      db.run(`ALTER TABLE proposals ADD COLUMN technical_highlights TEXT`, (err) => {
+        if (err) {
+          console.error('Error adding technical_highlights column:', err.message);
+        } else {
+          console.log('Added technical_highlights column to proposals table');
+        }
+      });
+    }
+  });
 
   // Create invoices table
   db.run(`
@@ -77,7 +99,7 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create proposal items table
+  // Create proposal items table (keeping for backwards compatibility)
   db.run(`
     CREATE TABLE IF NOT EXISTS proposal_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

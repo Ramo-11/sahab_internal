@@ -1,0 +1,439 @@
+/* Proposal Styles */
+
+/* Feature Management Styles */
+.feature-selector {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    background: var(--bg-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.suggested-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.suggested-feature {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.suggested-feature:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.selected-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    min-height: 40px;
+    padding: var(--spacing-sm);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+}
+
+.selected-feature {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background: var(--primary-light);
+    color: var(--primary-color);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+.remove-feature {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    padding: 0;
+    margin-left: var(--spacing-xs);
+}
+
+.remove-feature:hover {
+    color: var(--danger-color);
+}
+
+/* Proposal Document Styles */
+.proposal-document {
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: var(--spacing-lg);
+}
+
+.proposal-header {
+    border-bottom: 2px solid var(--primary-color);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-lg);
+}
+
+.proposal-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.proposal-subtitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: var(--spacing-sm) 0 0 0;
+}
+
+.proposal-number {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin: var(--spacing-xs) 0 0 0;
+}
+
+.proposal-date-info {
+    text-align: right;
+    font-size: var(--font-size-sm);
+}
+
+/* Section Styles */
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-sm);
+}
+
+.company-section,
+.client-section {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+}
+
+.company-info,
+.client-info {
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+/* Content Styles */
+.proposal-description {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.proposal-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.meta-item {
+    font-size: var(--font-size-sm);
+}
+
+/* Features Grid */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--success-color);
+}
+
+.feature-icon {
+    color: var(--success-color);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.feature-text {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Technical Highlights */
+.technical-highlights {
+    background: var(--bg-secondary);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    border-left: 4px solid var(--info-color);
+}
+
+.technical-content {
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+/* Investment Summary */
+.investment-summary {
+    background: linear-gradient(135deg, var(--success-light), var(--success-color));
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    color: white;
+}
+
+.investment-summary .section-title {
+    color: white;
+    border-bottom-color: rgba(255, 255, 255, 0.3);
+}
+
+.investment-details {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.investment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.investment-item:last-child {
+    border-bottom: none;
+}
+
+.investment-label {
+    font-weight: var(--font-weight-medium);
+}
+
+.investment-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.investment-timeline {
+    font-weight: var(--font-weight-medium);
+}
+
+/* Terms Section */
+.proposal-terms {
+    background: var(--bg-tertiary);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+}
+
+.terms-content {
+    line-height: 1.6;
+    color: var(--text-primary);
+}
+
+.terms-content ul {
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-lg);
+}
+
+.terms-content li {
+    margin-bottom: var(--spacing-xs);
+}
+
+/* Signature Section */
+.signature-section {
+    border-top: 2px solid var(--border-color);
+    padding-top: var(--spacing-lg);
+}
+
+.signature-block {
+    text-align: center;
+}
+
+.signature-line {
+    border-bottom: 2px solid var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    height: 40px;
+}
+
+.signature-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Grid System */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+}
+
+.status-badge.status-draft {
+    background: var(--warning-light);
+    color: var(--warning-color);
+}
+
+.status-badge.status-sent {
+    background: var(--info-light);
+    color: var(--info-color);
+}
+
+.status-badge.status-accepted {
+    background: var(--success-light);
+    color: var(--success-color);
+}
+
+.status-badge.status-rejected {
+    background: var(--danger-light);
+    color: var(--danger-color);
+}
+
+.status-badge.status-expired {
+    background: var(--text-muted);
+    color: white;
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .proposal-document {
+        box-shadow: none;
+        margin: 0;
+    }
+    
+    .proposal-title {
+        font-size: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+    }
+    
+    .grid-2,
+    .grid-3 {
+        gap: var(--spacing-md);
+    }
+    
+    .investment-summary {
+        background: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+        border: 2px solid var(--success-color);
+    }
+    
+    .investment-summary .section-title {
+        color: var(--primary-color) !important;
+    }
+    
+    .feature-item {
+        break-inside: avoid;
+    }
+    
+    /* Ensure proper page breaks */
+    .proposal-features,
+    .technical-highlights,
+    .investment-summary,
+    .proposal-terms {
+        break-inside: avoid;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .grid-2,
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    .proposal-title {
+        font-size: 2rem;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .investment-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+    
+    .hide-mobile {
+        display: none;
+    }
+}
+
+/* Utility Classes */
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.font-weight-medium {
+    font-weight: var(--font-weight-medium);
+}
+
+.text-success {
+    color: var(--success-color);
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+.text-danger {
+    color: var(--danger-color);
+}

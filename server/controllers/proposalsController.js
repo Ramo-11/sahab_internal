@@ -112,15 +112,14 @@ const createProposal = (req, res) => {
       description,
       amount,
       valid_until,
+      proposed_timeline,
+      project_features,
       items
     } = req.body;
 
-    // Generate proposal number
-    const proposalNumber = `PROP-${Date.now()}`;
-
     const query = `
-      INSERT INTO proposals (client_id, title, description, amount, valid_until, status)
-      VALUES (?, ?, ?, ?, ?, 'draft')
+      INSERT INTO proposals (client_id, title, description, amount, valid_until, proposed_timeline, project_features, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'draft')
     `;
 
     const values = [
@@ -128,12 +127,17 @@ const createProposal = (req, res) => {
       title,
       description || null,
       amount || 0,
-      valid_until || null
+      valid_until || null,
+      proposed_timeline || null,
+      project_features || null
     ];
 
     db.run(query, values, function(err) {
       if (err) {
         console.error('Error creating proposal:', err);
+        if (req.headers['content-type'] === 'application/json') {
+          return res.status(500).json({ error: 'Failed to create proposal' });
+        }
         return res.status(500).render('error', {
           title: 'Error',
           appName: process.env.APP_NAME,
@@ -168,21 +172,33 @@ const createProposal = (req, res) => {
             
             completedItems++;
             if (completedItems === totalItems) {
-              res.redirect(`/proposals/${proposalId}`);
+              if (req.headers['content-type'] === 'application/json') {
+                res.json({ success: true, redirectUrl: `/proposals/${proposalId}` });
+              } else {
+                res.redirect(`/proposals/${proposalId}`);
+              }
             }
           });
         });
       } else {
-        res.redirect(`/proposals/${proposalId}`);
+        if (req.headers['content-type'] === 'application/json') {
+          res.json({ success: true, redirectUrl: `/proposals/${proposalId}` });
+        } else {
+          res.redirect(`/proposals/${proposalId}`);
+        }
       }
     });
   } catch (error) {
     console.error('Error in createProposal:', error);
-    res.status(500).render('error', {
-      title: 'Error',
-      appName: process.env.APP_NAME,
-      error
-    });
+    if (req.headers['content-type'] === 'application/json') {
+      res.status(500).json({ error: 'Failed to create proposal' });
+    } else {
+      res.status(500).render('error', {
+        title: 'Error',
+        appName: process.env.APP_NAME,
+        error
+      });
+    }
   }
 };
 
@@ -195,13 +211,15 @@ const updateProposal = (req, res) => {
       description,
       amount,
       status,
-      valid_until
+      valid_until,
+      proposed_timeline,
+      project_features
     } = req.body;
 
     const query = `
       UPDATE proposals 
       SET client_id = ?, title = ?, description = ?, amount = ?, 
-          status = ?, valid_until = ?, updated_at = CURRENT_TIMESTAMP
+          status = ?, valid_until = ?, proposed_timeline = ?, project_features = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
 
@@ -212,12 +230,17 @@ const updateProposal = (req, res) => {
       amount || 0,
       status || 'draft',
       valid_until || null,
+      proposed_timeline || null,
+      project_features || null,
       proposalId
     ];
 
     db.run(query, values, function(err) {
       if (err) {
         console.error('Error updating proposal:', err);
+        if (req.headers['content-type'] === 'application/json') {
+          return res.status(500).json({ error: 'Failed to update proposal' });
+        }
         return res.status(500).render('error', {
           title: 'Error',
           appName: process.env.APP_NAME,
@@ -225,18 +248,25 @@ const updateProposal = (req, res) => {
         });
       }
 
-      res.redirect(`/proposals/${proposalId}`);
+      if (req.headers['content-type'] === 'application/json') {
+        res.json({ success: true, redirectUrl: `/proposals/${proposalId}` });
+      } else {
+        res.redirect(`/proposals/${proposalId}`);
+      }
     });
   } catch (error) {
     console.error('Error in updateProposal:', error);
-    res.status(500).render('error', {
-      title: 'Error',
-      appName: process.env.APP_NAME,
-      error
-    });
+    if (req.headers['content-type'] === 'application/json') {
+      res.status(500).json({ error: 'Failed to update proposal' });
+    } else {
+      res.status(500).render('error', {
+        title: 'Error',
+        appName: process.env.APP_NAME,
+        error
+      });
+    }
   }
 };
-
 const deleteProposal = (req, res) => {
   try {
     const proposalId = req.params.id;

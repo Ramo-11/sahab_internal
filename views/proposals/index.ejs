@@ -19,6 +19,7 @@
                             <th>Client</th>
                             <th>Amount</th>
                             <th>Status</th>
+                            <th class="hide-mobile">Timeline</th>
                             <th class="hide-mobile">Valid Until</th>
                             <th class="hide-mobile">Created</th>
                             <th>Actions</th>
@@ -49,6 +50,13 @@
                                 </span>
                             </td>
                             <td class="hide-mobile">
+                                <% if (proposal.proposed_timeline) { %>
+                                    <%= proposal.proposed_timeline %>
+                                <% } else { %>
+                                    <span class="text-muted">Not specified</span>
+                                <% } %>
+                            </td>
+                            <td class="hide-mobile">
                                 <% if (proposal.valid_until) { %>
                                     <%= new Date(proposal.valid_until).toLocaleDateString() %>
                                     <% 
@@ -71,7 +79,7 @@
                                     <a href="/proposals/<%= proposal.id %>" class="btn btn-sm btn-secondary">View</a>
                                     <a href="/proposals/<%= proposal.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
                                     <% if (proposal.status === 'accepted') { %>
-                                        <a href="/invoices/new?proposal_id=<%= proposal.id %>" class="btn btn-sm btn-success">Create Invoice</a>
+                                        <a href="/invoices/new?proposal_id=<%= proposal.id %>" class="btn btn-sm btn-success">Invoice</a>
                                     <% } %>
                                     <button onclick="deleteProposal(<%= proposal.id %>)" class="btn btn-sm btn-danger">Delete</button>
                                 </div>
