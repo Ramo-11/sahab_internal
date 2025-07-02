@@ -9,7 +9,11 @@
      data-proposal-description="<%= proposal.description || '' %>"
      data-proposal-amount="<%= proposal.amount || 0 %>"
      data-proposal-valid-until="<%= proposal.valid_until || '' %>"
-     data-technical-highlights="<%= proposal.technical_highlights || '' %>">
+     data-technical-highlights="<%= proposal.technical_highlights || '' %>"
+     data-proposed-timeline="<%= proposal.proposed_timeline || '' %>"
+     data-start-date="<%= proposal.start_date || '' %>"
+     data-due-date="<%= proposal.due_date || '' %>"
+     data-project-features="<%= proposal.project_features || '' %>">
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-4 no-print">
@@ -49,19 +53,19 @@
     <!-- Total Amount -->
     <div class="card">
         <div class="card-body text-center">
-            <h6>Total Amount</h6>
+            <h6>Total Cost</h6>
             <h4 class="text-success">$<%= (proposal.amount || 0).toFixed(2) %></h4>
         </div>
     </div>
     
-    <!-- Valid Until -->
+    <!-- Timeline -->
     <div class="card">
         <div class="card-body text-center">
-            <h6>Valid Until</h6>
-            <% if (proposal.valid_until) { %>
-                <p class="mb-0"><%= new Date(proposal.valid_until).toLocaleDateString() %></p>
+            <h6>Timeline</h6>
+            <% if (proposal.proposed_timeline) { %>
+                <p class="mb-0"><%= proposal.proposed_timeline %></p>
             <% } else { %>
-                <p class="text-muted mb-0">No expiry date</p>
+                <p class="text-muted mb-0">Not specified</p>
             <% } %>
         </div>
     </div>
@@ -72,69 +76,76 @@
         <!-- Header Section -->
         <div class="proposal-header">
             <div class="d-flex justify-content-between align-items-start mb-5">
-                <div>
+                <div style="flex: 1;">
                     <h1 class="proposal-title">PROJECT PROPOSAL</h1>
                     <p class="proposal-subtitle"><%= proposal.title %></p>
                     <p class="proposal-number">Proposal #<%= proposal.id %></p>
                 </div>
-                <div class="text-right">
-                    <div class="proposal-date-info">
-                        <p><strong>Date:</strong> <%= new Date(proposal.created_at).toLocaleDateString() %></p>
-                        <% if (proposal.valid_until) { %>
-                            <p><strong>Valid Until:</strong> <%= new Date(proposal.valid_until).toLocaleDateString() %></p>
+                <div class="proposal-date-info">
+                    <p><strong>Date:</strong> <%= new Date(proposal.created_at).toLocaleDateString() %></p>
+                    <% if (proposal.valid_until) { %>
+                        <p><strong>Valid Until:</strong> <%= new Date(proposal.valid_until).toLocaleDateString() %></p>
+                    <% } %>
+                    <% if (proposal.start_date) { %>
+                        <p><strong>Start Date:</strong> <%= new Date(proposal.start_date).toLocaleDateString() %></p>
+                    <% } %>
+                    <% if (proposal.due_date) { %>
+                        <p><strong>Due Date:</strong> <%= new Date(proposal.due_date).toLocaleDateString() %></p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Information Section -->
+        <div class="client-information-section mb-5">
+            <h3 class="section-title">Client Information</h3>
+            <div class="grid-2">
+                <div class="company-section">
+                    <h4>From:</h4>
+                    <div class="company-info">
+                        <strong><%= process.env.COMPANY_NAME || 'Your Company' %></strong><br>
+                        <% if (process.env.COMPANY_ADDRESS) { %><%= process.env.COMPANY_ADDRESS %><br><% } %>
+                        <% if (process.env.COMPANY_PHONE) { %><%= process.env.COMPANY_PHONE %><br><% } %>
+                        <% if (process.env.COMPANY_EMAIL) { %><%= process.env.COMPANY_EMAIL %><br><% } %>
+                        <% if (process.env.COMPANY_WEBSITE) { %><%= process.env.COMPANY_WEBSITE %><% } %>
+                    </div>
+                </div>
+                
+                <div class="client-section">
+                    <h4>To:</h4>
+                    <div class="client-info">
+                        <strong>Business Name:</strong> <%= proposal.client_company || 'N/A' %><br>
+                        <strong>Contact Person:</strong> <%= proposal.client_name %><br>
+                        <% if (proposal.client_email) { %>
+                            <strong>Email:</strong> <a href="mailto:<%= proposal.client_email %>"><%= proposal.client_email %></a><br>
+                        <% } %>
+                        <% if (proposal.client_phone) { %>
+                            <strong>Phone:</strong> <a href="tel:<%= proposal.client_phone %>"><%= proposal.client_phone %></a><br>
+                        <% } %>
+                        <% if (proposal.client_address) { %>
+                            <strong>Address:</strong> <%= proposal.client_address %><br>
+                            <% if (proposal.client_city || proposal.client_state || proposal.client_zip_code) { %>
+                                <%= proposal.client_city %><% if (proposal.client_city && proposal.client_state) { %>, <% } %><%= proposal.client_state %> <%= proposal.client_zip_code %>
+                            <% } %>
                         <% } %>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Company & Client Information -->
-        <div class="grid-2 mb-5">
-            <div class="company-section">
-                <h4 class="section-title">From:</h4>
-                <div class="company-info">
-                    <strong><%= process.env.COMPANY_NAME || 'Your Company' %></strong><br>
-                    <% if (process.env.COMPANY_ADDRESS) { %><%= process.env.COMPANY_ADDRESS %><br><% } %>
-                    <% if (process.env.COMPANY_PHONE) { %><%= process.env.COMPANY_PHONE %><br><% } %>
-                    <% if (process.env.COMPANY_EMAIL) { %><%= process.env.COMPANY_EMAIL %><br><% } %>
-                    <% if (process.env.COMPANY_WEBSITE) { %><%= process.env.COMPANY_WEBSITE %><% } %>
-                </div>
-            </div>
+        <!-- Project Details Section -->
+        <div class="project-details-section mb-5">
+            <h3 class="section-title">Project Details</h3>
             
-            <div class="client-section">
-                <h4 class="section-title">To:</h4>
-                <div class="client-info">
-                    <strong><%= proposal.client_name %></strong><br>
-                    <% if (proposal.client_company) { %>
-                        <%= proposal.client_company %><br>
-                    <% } %>
-                    <% if (proposal.client_email) { %>
-                        <%= proposal.client_email %><br>
-                    <% } %>
-                    <% if (proposal.client_phone) { %>
-                        <%= proposal.client_phone %><br>
-                    <% } %>
-                    <% if (proposal.client_address) { %>
-                        <%= proposal.client_address %><br>
-                        <% if (proposal.client_city || proposal.client_state || proposal.client_zip_code) { %>
-                            <%= proposal.client_city %><% if (proposal.client_city && proposal.client_state) { %>, <% } %><%= proposal.client_state %> <%= proposal.client_zip_code %>
-                        <% } %>
-                    <% } %>
-                </div>
-            </div>
-        </div>
-
-        <!-- Project Overview -->
-        <div class="proposal-content mb-5">
-            <h3 class="section-title">Project Overview</h3>
-            
+            <!-- Project Description -->
             <% if (proposal.description) { %>
                 <div class="proposal-description">
+                    <h4 style="margin-bottom: var(--spacing-md); color: var(--primary-color);">Description</h4>
                     <%- proposal.description.replace(/\n/g, '<br>') %>
                 </div>
             <% } %>
             
-            <!-- Project Meta Information -->
+            <!-- Project Timeline and Cost -->
             <div class="proposal-meta-grid">
                 <% if (proposal.proposed_timeline) { %>
                 <div class="meta-item">
@@ -142,53 +153,65 @@
                 </div>
                 <% } %>
                 <div class="meta-item">
-                    <strong>Investment:</strong> $<%= (proposal.amount || 0).toFixed(2) %>
+                    <strong>Total Cost:</strong> $<%= (proposal.amount || 0).toFixed(2) %>
                 </div>
+                <% if (proposal.start_date) { %>
+                <div class="meta-item">
+                    <strong>Start Date:</strong> <%= new Date(proposal.start_date).toLocaleDateString() %>
+                </div>
+                <% } %>
+                <% if (proposal.due_date) { %>
+                <div class="meta-item">
+                    <strong>Due Date:</strong> <%= new Date(proposal.due_date).toLocaleDateString() %>
+                </div>
+                <% } %>
             </div>
-        </div>
 
-        <!-- Project Features -->
-        <% if (proposal.project_features) { %>
-            <div class="proposal-features mb-5">
-                <h3 class="section-title">Features & Deliverables</h3>
-                <div class="features-grid">
-                    <% 
-                    try {
-                        const features = JSON.parse(proposal.project_features);
-                        features.forEach(feature => { %>
-                            <div class="feature-item">
-                                <span class="feature-icon">✓</span>
-                                <span class="feature-text"><%= feature %></span>
-                            </div>
-                    <% });
-                    } catch(e) {
-                        // Fallback for simple string format
-                        const features = proposal.project_features.split(',');
-                        features.forEach(feature => { 
-                            if (feature.trim()) { %>
+            <!-- Project Features -->
+            <% if (proposal.project_features) { %>
+                <div class="proposal-features mt-4">
+                    <h4 style="margin-bottom: var(--spacing-lg); color: var(--primary-color);">Features & Deliverables</h4>
+                    <div class="features-grid">
+                        <% 
+                        try {
+                            const features = JSON.parse(proposal.project_features);
+                            features.forEach(feature => { %>
                                 <div class="feature-item">
                                     <span class="feature-icon">✓</span>
-                                    <span class="feature-text"><%= feature.trim() %></span>
+                                    <span class="feature-text"><%= feature %></span>
                                 </div>
-                    <% }
-                        });
-                    } %>
+                        <% });
+                        } catch(e) {
+                            // Fallback for simple string format
+                            if (proposal.project_features.trim()) {
+                                const features = proposal.project_features.split(',');
+                                features.forEach(feature => { 
+                                    if (feature.trim()) { %>
+                                        <div class="feature-item">
+                                            <span class="feature-icon">✓</span>
+                                            <span class="feature-text"><%= feature.trim() %></span>
+                                        </div>
+                                <% }
+                                });
+                            }
+                        } %>
+                    </div>
                 </div>
-            </div>
-        <% } %>
+            <% } %>
 
-        <!-- Technical Highlights -->
-        <% if (proposal.technical_highlights && proposal.technical_highlights.trim()) { %>
-            <div class="technical-highlights mb-5">
-                <h3 class="section-title">Technical Highlights</h3>
-                <div class="technical-content">
-                    <%- proposal.technical_highlights.replace(/\n/g, '<br>') %>
+            <!-- Technical Highlights -->
+            <% if (proposal.technical_highlights && proposal.technical_highlights.trim()) { %>
+                <div class="technical-highlights mt-4">
+                    <h4 style="margin-bottom: var(--spacing-lg); color: var(--primary-color);">Technical Highlights</h4>
+                    <div class="technical-content">
+                        <%- proposal.technical_highlights.replace(/\n/g, '<br>') %>
+                    </div>
                 </div>
-            </div>
-        <% } %>
+            <% } %>
+        </div>
 
         <!-- Investment Summary -->
-        <div class="investment-summary mb-5">
+        <div class="investment-summary">
             <h3 class="section-title">Investment Summary</h3>
             <div class="investment-details">
                 <div class="investment-item">
@@ -201,29 +224,50 @@
                     <span class="investment-timeline"><%= proposal.proposed_timeline %></span>
                 </div>
                 <% } %>
+                <% if (proposal.start_date && proposal.due_date) { %>
+                <div class="investment-item">
+                    <span class="investment-label">Project Duration:</span>
+                    <span class="investment-timeline">
+                        <%= new Date(proposal.start_date).toLocaleDateString() %> - <%= new Date(proposal.due_date).toLocaleDateString() %>
+                    </span>
+                </div>
+                <% } %>
             </div>
         </div>
 
-        <!-- Terms & Next Steps -->
+        <!-- Next Steps Section -->
         <div class="proposal-terms">
-            <h3 class="section-title">Terms & Next Steps</h3>
+            <h3 class="section-title">Next Steps</h3>
             <div class="terms-content">
-                <p><strong>Proposal Validity:</strong> This proposal is valid until <%= proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString() : 'further notice' %>.</p>
+                <p><strong>Proposal Review:</strong> Please review this proposal carefully and reach out with any questions or clarifications needed.</p>
                 
-                <p><strong>Next Steps:</strong></p>
+                <p><strong>Acceptance Process:</strong></p>
                 <ul>
-                    <li>Review this proposal and reach out with any questions</li>
-                    <li>Upon acceptance, we'll provide a detailed project contract</li>
-                    <li>Project timeline will commence upon contract signing and initial payment</li>
+                    <li>Upon acceptance of this proposal, we'll provide a detailed project contract</li>
+                    <li>A project kickoff meeting will be scheduled to finalize requirements and timeline</li>
+                    <li>Project development will commence upon contract signing and initial payment</li>
+                    <li>Regular progress updates and milestone reviews will be scheduled throughout the project</li>
                 </ul>
                 
+                <p><strong>Timeline:</strong> This proposal is valid until <%= proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString() : 'further notice' %>. We recommend moving forward promptly to secure your preferred project timeline.</p>
+                
+                <p><strong>Questions & Contact:</strong><br>
+                Feel free to reach out with any questions, concerns, or requested modifications to this proposal. We're committed to ensuring this project meets your exact needs and expectations.</p>
+                
+                <% if (process.env.COMPANY_EMAIL || process.env.COMPANY_PHONE) { %>
                 <p><strong>Contact Information:</strong><br>
-                Feel free to reach out with any questions or to discuss this proposal further.</p>
+                <% if (process.env.COMPANY_EMAIL) { %>Email: <%= process.env.COMPANY_EMAIL %><br><% } %>
+                <% if (process.env.COMPANY_PHONE) { %>Phone: <%= process.env.COMPANY_PHONE %><% } %></p>
+                <% } %>
             </div>
         </div>
 
         <!-- Signature Section -->
-        <div class="signature-section mt-5">
+        <div class="signature-section">
+            <h3 class="section-title">Agreement</h3>
+            <p style="margin-bottom: var(--spacing-xl); color: var(--text-secondary);">
+                By signing below, you accept the terms and scope outlined in this proposal.
+            </p>
             <div class="grid-2">
                 <div class="signature-block">
                     <div class="signature-line"></div>

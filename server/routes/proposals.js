@@ -44,11 +44,10 @@ router.post('/', createProposal);
 router.get('/:id', getProposalById);
 
 // GET /proposals/:id/edit - Show edit proposal form
-router.get('/:id/edit', async (req, res) => {
+router.get('/:id/edit', (req, res) => {
   try {
     const { db } = require('../../models/database');
     
-    // Get proposal and clients
     db.get('SELECT * FROM proposals WHERE id = ?', [req.params.id], (err, proposal) => {
       if (err) {
         console.error('Error fetching proposal:', err);

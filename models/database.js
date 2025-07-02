@@ -38,7 +38,7 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create proposals table with technical_highlights
+  // Create proposals table with all required fields
   db.run(`
     CREATE TABLE IF NOT EXISTS proposals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,27 +53,40 @@ const initializeDatabase = () => {
       valid_until DATE,
       proposed_timeline TEXT,
       project_features TEXT,
+      start_date DATE,
+      due_date DATE,
       FOREIGN KEY (client_id) REFERENCES clients (id)
     )
   `);
 
-  // Check if technical_highlights column exists, if not add it
+  // Check for missing columns and add them
   db.all("PRAGMA table_info(proposals)", (err, columns) => {
     if (err) {
       console.error('Error checking proposals table:', err.message);
       return;
     }
     
-    const hasNewColumn = columns.some(col => col.name === 'technical_highlights');
-    if (!hasNewColumn) {
-      db.run(`ALTER TABLE proposals ADD COLUMN technical_highlights TEXT`, (err) => {
-        if (err) {
-          console.error('Error adding technical_highlights column:', err.message);
-        } else {
-          console.log('Added technical_highlights column to proposals table');
-        }
-      });
-    }
+    const columnNames = columns.map(col => col.name);
+    const requiredColumns = [
+      'technical_highlights',
+      'proposed_timeline', 
+      'project_features',
+      'start_date',
+      'due_date'
+    ];
+    
+    requiredColumns.forEach(columnName => {
+      if (!columnNames.includes(columnName)) {
+        const columnType = (columnName === 'start_date' || columnName === 'due_date') ? 'DATE' : 'TEXT';
+        db.run(`ALTER TABLE proposals ADD COLUMN ${columnName} ${columnType}`, (err) => {
+          if (err) {
+            console.error(`Error adding ${columnName} column:`, err.message);
+          } else {
+            console.log(`Added ${columnName} column to proposals table`);
+          }
+        });
+      }
+    });
   });
 
   // Create invoices table
