@@ -5,9 +5,10 @@ const getDashboardStats = (req, res) => {
     // Get stats in parallel
     const statsQueries = {
       totalClients: 'SELECT COUNT(*) as count FROM clients WHERE status = "active"',
-      totalProposals: 'SELECT COUNT(*) as count FROM proposals',
-      totalInvoices: 'SELECT COUNT(*) as count FROM invoices',
-      pendingInvoices: 'SELECT COUNT(*) as count FROM invoices WHERE status = "pending"',
+      totalProposals: 'SELECT COUNT(*) as count FROM external_documents WHERE type = "proposal"',
+      totalContracts: 'SELECT COUNT(*) as count FROM external_documents WHERE type = "contract"',
+      totalInvoices: 'SELECT COUNT(*) as count FROM external_documents WHERE type = "invoice"',
+      pendingInvoices: 'SELECT COUNT(*) as count FROM external_documents WHERE type = "invoice" AND status = "pending"',
       recentClients: `
         SELECT id, name, company, email, created_at 
         FROM clients 
@@ -15,25 +16,28 @@ const getDashboardStats = (req, res) => {
         LIMIT 5
       `,
       recentProposals: `
-        SELECT p.id, p.title, p.amount, p.status, p.created_at, c.name as client_name
-        FROM proposals p
-        LEFT JOIN clients c ON p.client_id = c.id
-        ORDER BY p.created_at DESC
+        SELECT d.id, d.title, d.amount, d.status, d.created_at, c.name as client_name
+        FROM external_documents d
+        LEFT JOIN clients c ON d.client_id = c.id
+        WHERE d.type = "proposal"
+        ORDER BY d.created_at DESC
         LIMIT 5
       `,
       recentInvoices: `
-        SELECT i.id, i.invoice_number, i.title, i.total_amount, i.status, i.due_date, c.name as client_name
-        FROM invoices i
-        LEFT JOIN clients c ON i.client_id = c.id
-        ORDER BY i.created_at DESC
+        SELECT d.id, d.title, d.amount, d.status, d.created_at, c.name as client_name
+        FROM external_documents d
+        LEFT JOIN clients c ON d.client_id = c.id
+        WHERE d.type = "invoice"
+        ORDER BY d.created_at DESC
         LIMIT 5
       `,
-      overdueInvoices: `
-        SELECT i.id, i.invoice_number, i.title, i.total_amount, i.due_date, c.name as client_name
-        FROM invoices i
-        LEFT JOIN clients c ON i.client_id = c.id
-        WHERE i.status = "pending" AND i.due_date < date('now')
-        ORDER BY i.due_date ASC
+      recentContracts: `
+        SELECT d.id, d.title, d.amount, d.status, d.created_at, c.name as client_name
+        FROM external_documents d
+        LEFT JOIN clients c ON d.client_id = c.id
+        WHERE d.type = "contract"
+        ORDER BY d.created_at DESC
+        LIMIT 5
       `
     };
 
@@ -50,13 +54,14 @@ const getDashboardStats = (req, res) => {
           stats: {
             totalClients: results.totalClients[0]?.count || 0,
             totalProposals: results.totalProposals[0]?.count || 0,
+            totalContracts: results.totalContracts[0]?.count || 0,
             totalInvoices: results.totalInvoices[0]?.count || 0,
             pendingInvoices: results.pendingInvoices[0]?.count || 0
           },
           recentClients: results.recentClients || [],
           recentProposals: results.recentProposals || [],
           recentInvoices: results.recentInvoices || [],
-          overdueInvoices: results.overdueInvoices || []
+          recentContracts: results.recentContracts || []
         });
       }
     };

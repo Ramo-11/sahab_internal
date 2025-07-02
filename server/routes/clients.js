@@ -76,10 +76,4 @@ router.put('/:id', updateClient);
 // DELETE /clients/:id - Delete client
 router.delete('/:id', deleteClient);
 
-// GET /clients/:id/proposals - Get client proposals
-router.get('/:id/proposals', getClientProposals);
-
-// GET /clients/:id/invoices - Get client invoices
-router.get('/:id/invoices', getClientInvoices);
-
 module.exports = router;

@@ -1,0 +1,124 @@
+<%- include('../partials/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><%= title %></h2>
+        <p class="text-muted">Manage your external <%= type %> links</p>
+    </div>
+    <a href="/documents/new?type=<%= type %>" class="btn btn-primary">Add New <%= type.charAt(0).toUpperCase() + type.slice(1) %></a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <% if (documents && documents.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Client</th>
+                            <% if (type === 'invoice') { %>
+                                <th>Amount</th>
+                            <% } %>
+                            <th>Status</th>
+                            <th class="hide-mobile">Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% documents.forEach(doc => { %>
+                        <tr>
+                            <td>
+                                <a href="<%= doc.external_url %>" target="_blank" class="text-primary font-weight-medium">
+                                    <%= doc.title %>
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-left: 4px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                    </svg>
+                                </a>
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="font-weight-medium"><%= doc.client_name %></div>
+                                    <% if (doc.client_company) { %>
+                                        <small class="text-muted"><%= doc.client_company %></small>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <% if (type === 'invoice') { %>
+                            <td>
+                                <% if (doc.amount) { %>
+                                    <span class="font-weight-medium">$<%= doc.amount.toFixed(2) %></span>
+                                <% } else { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </td>
+                            <% } %>
+                            <td>
+                                <span class="status-badge status-<%= doc.status %>">
+                                    <%= doc.status %>
+                                </span>
+                            </td>
+                            <td class="hide-mobile">
+                                <%= new Date(doc.created_at).toLocaleDateString() %>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="<%= doc.external_url %>" target="_blank" class="btn btn-sm btn-secondary">Open</a>
+                                    <a href="/documents/<%= doc.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
+                                    <button onclick="deleteDocument(<%= doc.id %>)" class="btn btn-sm btn-danger">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="text-center py-5">
+                <% if (type === 'proposal') { %>
+                    <svg style="width: 64px; height: 64px; color: var(--text-muted); margin-bottom: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                <% } else if (type === 'contract') { %>
+                    <svg style="width: 64px; height: 64px; color: var(--text-muted); margin-bottom: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                <% } else { %>
+                    <svg style="width: 64px; height: 64px; color: var(--text-muted); margin-bottom: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                <% } %>
+                <h4>No <%= type %>s yet</h4>
+                <p class="text-muted mb-4">Start by adding your first <%= type %> link.</p>
+                <a href="/documents/new?type=<%= type %>" class="btn btn-primary">Add Your First <%= type.charAt(0).toUpperCase() + type.slice(1) %></a>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+function deleteDocument(documentId) {
+    if (confirm('Are you sure you want to delete this <%= type %>? This action cannot be undone.')) {
+        fetch(`/documents/${documentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting <%= type %>');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting <%= type %>');
+        });
+    }
+}
+</script>
+
+<%- include('../partials/footer') %>

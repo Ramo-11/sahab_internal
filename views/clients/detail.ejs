@@ -39,16 +39,25 @@
                 </div>
                 
                 <div class="nav-item">
-                    <a href="/proposals" class="nav-link <%= title.includes('Proposal') ? 'active' : '' %>">
+                    <a href="/proposals" class="nav-link">
                         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                         Proposals
                     </a>
                 </div>
+
+                <div class="nav-item">
+                    <a href="/contracts" class="nav-link">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Contracts
+                    </a>
+                </div>
                 
                 <div class="nav-item">
-                    <a href="/invoices" class="nav-link <%= title.includes('Invoice') ? 'active' : '' %>">
+                    <a href="/invoices" class="nav-link">
                         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                         </svg>
@@ -83,8 +92,9 @@
     <div class="d-flex gap-2">
         <a href="/clients" class="btn btn-secondary">Back to Clients</a>
         <a href="/clients/<%= client.id %>/edit" class="btn btn-primary">Edit Client</a>
-        <a href="/proposals/new?client_id=<%= client.id %>" class="btn btn-success">New Proposal</a>
-        <a href="/invoices/new?client_id=<%= client.id %>" class="btn btn-success">New Invoice</a>
+        <a href="/documents/new?type=proposal&client_id=<%= client.id %>" class="btn btn-success">Add Proposal</a>
+        <a href="/documents/new?type=contract&client_id=<%= client.id %>" class="btn btn-success">Add Contract</a>
+        <a href="/documents/new?type=invoice&client_id=<%= client.id %>" class="btn btn-warning">Add Invoice</a>
     </div>
 </div>
 
@@ -139,75 +149,93 @@
     <div class="card">
         <div class="card-body text-center">
             <h3><%= proposals.length %></h3>
-            <p class="text-muted">Total Proposals</p>
+            <p class="text-muted">Proposals</p>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body text-center">
+            <h3><%= contracts.length %></h3>
+            <p class="text-muted">Contracts</p>
         </div>
     </div>
     
     <div class="card">
         <div class="card-body text-center">
             <h3><%= invoices.length %></h3>
-            <p class="text-muted">Total Invoices</p>
-        </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body text-center">
-            <h3 class="text-success">
-                $<%
-                    const totalPaid = invoices
-                        .filter(inv => inv.status === 'paid')
-                        .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-                %>
-                <%= totalPaid.toFixed(2) %>
-            </h3>
-            <p class="text-muted">Total Paid</p>
+            <p class="text-muted">Invoices</p>
         </div>
     </div>
 </div>
 
-<div class="grid-2">
+<div class="grid-3">
     <!-- Proposals -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4>Proposals</h4>
-            <a href="/proposals/new?client_id=<%= client.id %>" class="btn btn-sm btn-primary">New Proposal</a>
+            <a href="/documents/new?type=proposal&client_id=<%= client.id %>" class="btn btn-sm btn-primary">Add Proposal</a>
         </div>
         <div class="card-body">
             <% if (proposals && proposals.length > 0) { %>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% proposals.forEach(proposal => { %>
-                            <tr>
-                                <td>
-                                    <a href="/proposals/<%= proposal.id %>" class="text-primary">
-                                        <%= proposal.title %>
-                                    </a>
-                                </td>
-                                <td>$<%= proposal.amount ? proposal.amount.toFixed(2) : '0.00' %></td>
-                                <td><span class="status-badge status-<%= proposal.status %>"><%= proposal.status %></span></td>
-                                <td><%= new Date(proposal.created_at).toLocaleDateString() %></td>
-                                <td>
-                                    <a href="/proposals/<%= proposal.id %>" class="btn btn-sm btn-secondary">View</a>
-                                </td>
-                            </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
+                <% proposals.forEach(proposal => { %>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6>
+                            <a href="<%= proposal.external_url %>" target="_blank" class="text-primary">
+                                <%= proposal.title %>
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-left: 4px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>
+                        </h6>
+                        <% if (proposal.amount) { %>
+                            <p class="text-muted mb-1">$<%= proposal.amount.toFixed(2) %></p>
+                        <% } %>
+                        <small class="text-muted"><%= new Date(proposal.created_at).toLocaleDateString() %></small>
+                    </div>
+                    <span class="status-badge status-<%= proposal.status %>"><%= proposal.status %></span>
                 </div>
+                <% }); %>
             <% } else { %>
                 <div class="text-center py-4">
                     <p class="text-muted">No proposals yet</p>
-                    <a href="/proposals/new?client_id=<%= client.id %>" class="btn btn-primary">Create First Proposal</a>
+                    <a href="/documents/new?type=proposal&client_id=<%= client.id %>" class="btn btn-sm btn-primary">Add First Proposal</a>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Contracts -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>Contracts</h4>
+            <a href="/documents/new?type=contract&client_id=<%= client.id %>" class="btn btn-sm btn-success">Add Contract</a>
+        </div>
+        <div class="card-body">
+            <% if (contracts && contracts.length > 0) { %>
+                <% contracts.forEach(contract => { %>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6>
+                            <a href="<%= contract.external_url %>" target="_blank" class="text-primary">
+                                <%= contract.title %>
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-left: 4px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>
+                        </h6>
+                        <% if (contract.amount) { %>
+                            <p class="text-muted mb-1">$<%= contract.amount.toFixed(2) %></p>
+                        <% } %>
+                        <small class="text-muted"><%= new Date(contract.created_at).toLocaleDateString() %></small>
+                    </div>
+                    <span class="status-badge status-<%= contract.status %>"><%= contract.status %></span>
+                </div>
+                <% }); %>
+            <% } else { %>
+                <div class="text-center py-4">
+                    <p class="text-muted">No contracts yet</p>
+                    <a href="/documents/new?type=contract&client_id=<%= client.id %>" class="btn btn-sm btn-success">Add First Contract</a>
                 </div>
             <% } %>
         </div>
@@ -217,58 +245,33 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4>Invoices</h4>
-            <a href="/invoices/new?client_id=<%= client.id %>" class="btn btn-sm btn-primary">New Invoice</a>
+            <a href="/documents/new?type=invoice&client_id=<%= client.id %>" class="btn btn-sm btn-warning">Add Invoice</a>
         </div>
         <div class="card-body">
             <% if (invoices && invoices.length > 0) { %>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Invoice #</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Due Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% invoices.forEach(invoice => { %>
-                            <tr>
-                                <td>
-                                    <a href="/invoices/<%= invoice.id %>" class="text-primary">
-                                        <%= invoice.invoice_number %>
-                                    </a>
-                                </td>
-                                <td>$<%= invoice.total_amount ? invoice.total_amount.toFixed(2) : '0.00' %></td>
-                                <td><span class="status-badge status-<%= invoice.status %>"><%= invoice.status %></span></td>
-                                <td>
-                                    <% if (invoice.due_date) { %>
-                                        <%= new Date(invoice.due_date).toLocaleDateString() %>
-                                        <% 
-                                            const dueDate = new Date(invoice.due_date);
-                                            const today = new Date();
-                                            const isOverdue = invoice.status === 'pending' && dueDate < today;
-                                        %>
-                                        <% if (isOverdue) { %>
-                                            <span class="text-danger">(Overdue)</span>
-                                        <% } %>
-                                    <% } else { %>
-                                        <span class="text-muted">No due date</span>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <a href="/invoices/<%= invoice.id %>" class="btn btn-sm btn-secondary">View</a>
-                                </td>
-                            </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
+                <% invoices.forEach(invoice => { %>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6>
+                            <a href="<%= invoice.external_url %>" target="_blank" class="text-primary">
+                                <%= invoice.title %>
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-left: 4px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>
+                        </h6>
+                        <% if (invoice.amount) { %>
+                            <p class="text-muted mb-1">$<%= invoice.amount.toFixed(2) %></p>
+                        <% } %>
+                        <small class="text-muted"><%= new Date(invoice.created_at).toLocaleDateString() %></small>
+                    </div>
+                    <span class="status-badge status-<%= invoice.status %>"><%= invoice.status %></span>
                 </div>
+                <% }); %>
             <% } else { %>
                 <div class="text-center py-4">
                     <p class="text-muted">No invoices yet</p>
-                    <a href="/invoices/new?client_id=<%= client.id %>" class="btn btn-primary">Create First Invoice</a>
+                    <a href="/documents/new?type=invoice&client_id=<%= client.id %>" class="btn btn-sm btn-warning">Add First Invoice</a>
                 </div>
             <% } %>
         </div>

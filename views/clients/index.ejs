@@ -20,6 +20,7 @@
                             <th>Email</th>
                             <th class="hide-mobile">Phone</th>
                             <th class="hide-mobile">Proposals</th>
+                            <th class="hide-mobile">Contracts</th>
                             <th class="hide-mobile">Invoices</th>
                             <th class="hide-mobile">Total Paid</th>
                             <th>Actions</th>
@@ -56,17 +57,22 @@
                                 <span class="status-badge status-active"><%= client.proposal_count || 0 %></span>
                             </td>
                             <td class="hide-mobile">
+                                <span class="status-badge status-active"><%= client.contract_count || 0 %></span>
+                            </td>
+                            <td class="hide-mobile">
                                 <span class="status-badge status-active"><%= client.invoice_count || 0 %></span>
                             </td>
                             <td class="hide-mobile">
                                 <span class="text-success font-weight-medium">$<%= (client.total_paid || 0).toFixed(2) %></span>
                             </td>
                             <td>
-                                <div class="d-flex gap-2">
+                                <div class="d-flex gap-1 flex-wrap">
                                     <a href="/clients/<%= client.id %>" class="btn btn-sm btn-secondary">View</a>
                                     <a href="/clients/<%= client.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
-                                    <a href="/proposals/new?client_id=<%= client.id %>" class="btn btn-sm btn-success">New Proposal</a>
-                                    <button onclick="deleteClient(<%= client.id %>)" class="btn btn-sm btn-danger">Delete</button>
+                                    <a href="/documents/new?type=proposal&client_id=<%= client.id %>" class="btn btn-sm btn-success" title="Add Proposal">P</a>
+                                    <a href="/documents/new?type=contract&client_id=<%= client.id %>" class="btn btn-sm btn-info" title="Add Contract">C</a>
+                                    <a href="/documents/new?type=invoice&client_id=<%= client.id %>" class="btn btn-sm btn-warning" title="Add Invoice">I</a>
+                                    <button onclick="deleteClient(<%= client.id %>)" class="btn btn-sm btn-danger">×</button>
                                 </div>
                             </td>
                         </tr>
@@ -86,6 +92,38 @@
         <% } %>
     </div>
 </div>
+
+<!-- Button styling to ensure colors show properly -->
+<style>
+.btn-sm {
+    min-width: 28px;
+    text-align: center;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+    color: white;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+    color: #212529;
+}
+</style>
 
 <script>
 function deleteClient(clientId) {

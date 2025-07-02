@@ -5,12 +5,12 @@ const getAllClients = (req, res) => {
     const query = `
       SELECT 
         c.*,
-        COUNT(DISTINCT p.id) as proposal_count,
-        COUNT(DISTINCT i.id) as invoice_count,
-        COALESCE(SUM(CASE WHEN i.status = 'paid' THEN i.total_amount ELSE 0 END), 0) as total_paid
+        COUNT(DISTINCT CASE WHEN d.type = 'proposal' THEN d.id END) as proposal_count,
+        COUNT(DISTINCT CASE WHEN d.type = 'contract' THEN d.id END) as contract_count,
+        COUNT(DISTINCT CASE WHEN d.type = 'invoice' THEN d.id END) as invoice_count,
+        COALESCE(SUM(CASE WHEN d.type = 'invoice' AND d.status = 'paid' THEN d.amount ELSE 0 END), 0) as total_paid
       FROM clients c
-      LEFT JOIN proposals p ON c.id = p.client_id
-      LEFT JOIN invoices i ON c.id = i.client_id
+      LEFT JOIN external_documents d ON c.id = d.client_id
       WHERE c.status = 'active'
       GROUP BY c.id
       ORDER BY c.created_at DESC
@@ -64,41 +64,44 @@ const getClientById = (req, res) => {
         });
       }
 
-      // Get client proposals
-      const proposalsQuery = `
-        SELECT * FROM proposals 
-        WHERE client_id = ? 
-        ORDER BY created_at DESC
-      `;
+      // Get client documents by type
+      const documentsQueries = {
+        proposals: `SELECT * FROM external_documents WHERE client_id = ? AND type = 'proposal' ORDER BY created_at DESC`,
+        contracts: `SELECT * FROM external_documents WHERE client_id = ? AND type = 'contract' ORDER BY created_at DESC`,
+        invoices: `SELECT * FROM external_documents WHERE client_id = ? AND type = 'invoice' ORDER BY created_at DESC`
+      };
 
-      db.all(proposalsQuery, [clientId], (err, proposals) => {
-        if (err) {
-          console.error('Error fetching proposals:', err);
-          proposals = [];
-        }
+      let completedQueries = 0;
+      const results = {};
+      const totalQueries = Object.keys(documentsQueries).length;
 
-        // Get client invoices
-        const invoicesQuery = `
-          SELECT * FROM invoices 
-          WHERE client_id = ? 
-          ORDER BY created_at DESC
-        `;
-
-        db.all(invoicesQuery, [clientId], (err, invoices) => {
-          if (err) {
-            console.error('Error fetching invoices:', err);
-            invoices = [];
-          }
-
+      const checkComplete = () => {
+        completedQueries++;
+        if (completedQueries === totalQueries) {
           res.render('clients/detail', {
             title: `${client.name} - Client Details`,
             appName: process.env.APP_NAME,
             client,
-            proposals: proposals || [],
-            invoices: invoices || []
+            proposals: results.proposals || [],
+            contracts: results.contracts || [],
+            invoices: results.invoices || []
           });
+        }
+      };
+
+      // Execute all queries
+      Object.entries(documentsQueries).forEach(([key, query]) => {
+        db.all(query, [clientId], (err, rows) => {
+          if (err) {
+            console.error(`Error fetching ${key}:`, err);
+            results[key] = [];
+          } else {
+            results[key] = rows;
+          }
+          checkComplete();
         });
       });
+
     });
   } catch (error) {
     console.error('Error in getClientById:', error);
@@ -110,7 +113,7 @@ const getClientById = (req, res) => {
   }
 };
 
- const createClient = (req, res) => {
+const createClient = (req, res) => {
   try {
     const {
       name,
@@ -213,7 +216,6 @@ const updateClient = (req, res) => {
     db.run(query, values, function(err) {
       if (err) {
         console.error('Error updating client:', err);
-        // Check if it's a JSON request
         if (req.headers['content-type'] === 'application/json') {
           return res.status(500).json({ error: 'Failed to update client' });
         }
@@ -224,7 +226,6 @@ const updateClient = (req, res) => {
         });
       }
 
-      // Check if it's a JSON request
       if (req.headers['content-type'] === 'application/json') {
         res.json({ success: true, redirectUrl: `/clients/${clientId}` });
       } else {
@@ -267,54 +268,10 @@ const deleteClient = (req, res) => {
   }
 };
 
-const getClientProposals = (req, res) => {
-  try {
-    const clientId = req.params.id;
-
-    db.all('SELECT * FROM proposals WHERE client_id = ? ORDER BY created_at DESC', 
-      [clientId], 
-      (err, proposals) => {
-        if (err) {
-          console.error('Error fetching client proposals:', err);
-          return res.status(500).json({ error: 'Failed to fetch proposals' });
-        }
-
-        res.json(proposals || []);
-      }
-    );
-  } catch (error) {
-    console.error('Error in getClientProposals:', error);
-    res.status(500).json({ error: 'Failed to fetch proposals' });
-  }
-};
-
-const getClientInvoices = (req, res) => {
-  try {
-    const clientId = req.params.id;
-
-    db.all('SELECT * FROM invoices WHERE client_id = ? ORDER BY created_at DESC', 
-      [clientId], 
-      (err, invoices) => {
-        if (err) {
-          console.error('Error fetching client invoices:', err);
-          return res.status(500).json({ error: 'Failed to fetch invoices' });
-        }
-
-        res.json(invoices || []);
-      }
-    );
-  } catch (error) {
-    console.error('Error in getClientInvoices:', error);
-    res.status(500).json({ error: 'Failed to fetch invoices' });
-  }
-};
-
 module.exports = {
   getAllClients,
   getClientById,
   createClient,
   updateClient,
-  deleteClient,
-  getClientProposals,
-  getClientInvoices
+  deleteClient
 };

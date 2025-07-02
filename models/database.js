@@ -38,103 +38,20 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create proposals table with all required fields
+  // Create external_documents table for storing links to external docs
   db.run(`
-    CREATE TABLE IF NOT EXISTS proposals (
+    CREATE TABLE IF NOT EXISTS external_documents (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       client_id INTEGER,
+      type TEXT NOT NULL CHECK(type IN ('proposal', 'contract', 'invoice')),
       title TEXT NOT NULL,
-      description TEXT,
-      technical_highlights TEXT,
-      amount DECIMAL(10,2),
-      status TEXT DEFAULT 'draft',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      valid_until DATE,
-      proposed_timeline TEXT,
-      project_features TEXT,
-      start_date DATE,
-      due_date DATE,
-      FOREIGN KEY (client_id) REFERENCES clients (id)
-    )
-  `);
-
-  // Check for missing columns and add them
-  db.all("PRAGMA table_info(proposals)", (err, columns) => {
-    if (err) {
-      console.error('Error checking proposals table:', err.message);
-      return;
-    }
-    
-    const columnNames = columns.map(col => col.name);
-    const requiredColumns = [
-      'technical_highlights',
-      'proposed_timeline', 
-      'project_features',
-      'start_date',
-      'due_date'
-    ];
-    
-    requiredColumns.forEach(columnName => {
-      if (!columnNames.includes(columnName)) {
-        const columnType = (columnName === 'start_date' || columnName === 'due_date') ? 'DATE' : 'TEXT';
-        db.run(`ALTER TABLE proposals ADD COLUMN ${columnName} ${columnType}`, (err) => {
-          if (err) {
-            console.error(`Error adding ${columnName} column:`, err.message);
-          } else {
-            console.log(`Added ${columnName} column to proposals table`);
-          }
-        });
-      }
-    });
-  });
-
-  // Create invoices table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS invoices (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      client_id INTEGER,
-      proposal_id INTEGER,
-      invoice_number TEXT UNIQUE,
-      title TEXT NOT NULL,
+      external_url TEXT NOT NULL,
       description TEXT,
       amount DECIMAL(10,2),
-      tax_amount DECIMAL(10,2) DEFAULT 0,
-      total_amount DECIMAL(10,2),
       status TEXT DEFAULT 'pending',
-      issue_date DATE DEFAULT CURRENT_DATE,
-      due_date DATE,
-      paid_date DATE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (client_id) REFERENCES clients (id),
-      FOREIGN KEY (proposal_id) REFERENCES proposals (id)
-    )
-  `);
-
-  // Create proposal items table (keeping for backwards compatibility)
-  db.run(`
-    CREATE TABLE IF NOT EXISTS proposal_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      proposal_id INTEGER,
-      description TEXT NOT NULL,
-      quantity INTEGER DEFAULT 1,
-      rate DECIMAL(10,2),
-      amount DECIMAL(10,2),
-      FOREIGN KEY (proposal_id) REFERENCES proposals (id)
-    )
-  `);
-
-  // Create invoice items table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS invoice_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      invoice_id INTEGER,
-      description TEXT NOT NULL,
-      quantity INTEGER DEFAULT 1,
-      rate DECIMAL(10,2),
-      amount DECIMAL(10,2),
-      FOREIGN KEY (invoice_id) REFERENCES invoices (id)
+      FOREIGN KEY (client_id) REFERENCES clients (id)
     )
   `);
 
