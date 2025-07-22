@@ -1,5 +1,5 @@
 {
-  "name": "Sahab Solutions Management Tool",
+  "name": "sahab-solutions-management-tool",
   "version": "1.0.0",
   "description": "Internal management tool for proposals, invoices, and client tracking",
   "main": "app.js",
