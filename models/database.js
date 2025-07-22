@@ -54,37 +54,6 @@ const initializeDatabase = () => {
       FOREIGN KEY (client_id) REFERENCES clients (id)
     )
   `);
-
-  // Insert sample data
-  insertSampleData();
-};
-
-const insertSampleData = () => {
-  // Check if clients exist
-  db.get("SELECT COUNT(*) as count FROM clients", (err, row) => {
-    if (err) {
-      console.error('Error checking clients:', err.message);
-      return;
-    }
-    
-    if (row.count === 0) {
-      // Insert sample clients
-      const sampleClients = [
-        ['Acme Corporation', 'contact@acme.com', '(555) 123-4567', 'Acme Corp', '123 Business St', 'New York', 'NY', '10001'],
-        ['Tech Solutions Inc', 'info@techsolutions.com', '(555) 987-6543', 'Tech Solutions', '456 Innovation Ave', 'San Francisco', 'CA', '94105'],
-        ['Green Energy LLC', 'hello@greenenergy.com', '(555) 456-7890', 'Green Energy', '789 Renewable Dr', 'Austin', 'TX', '73301']
-      ];
-
-      sampleClients.forEach(client => {
-        db.run(`
-          INSERT INTO clients (name, email, phone, company, address, city, state, zip_code)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `, client);
-      });
-
-      console.log('Sample clients inserted');
-    }
-  });
 };
 
 module.exports = {

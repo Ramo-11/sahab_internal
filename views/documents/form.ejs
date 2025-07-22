@@ -115,16 +115,25 @@
                                 <option value="sent" <%= document.status === 'sent' ? 'selected' : '' %>>Sent</option>
                                 <option value="accepted" <%= document.status === 'accepted' ? 'selected' : '' %>>Accepted</option>
                                 <option value="rejected" <%= document.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+                                <option value="changes_requested" <%= document.status === 'changes_requested' ? 'selected' : '' %>>Changes Requested</option>
+                                <option value="voided" <%= document.status === 'voided' ? 'selected' : '' %>>Voided</option>
                             <% } else if (selectedType === 'contract') { %>
-                                <option value="draft" <%= document.status === 'draft' ? 'selected' : '' %>>Draft</option>
+                                <option value="pending" <%= document.status === 'pending' ? 'selected' : '' %>>Pending</option>
                                 <option value="sent" <%= document.status === 'sent' ? 'selected' : '' %>>Sent</option>
+                                <option value="accepted" <%= document.status === 'accepted' ? 'selected' : '' %>>Accepted</option>
+                                <option value="rejected" <%= document.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+                                <option value="changes_requested" <%= document.status === 'changes_requested' ? 'selected' : '' %>>Changes Requested</option>
                                 <option value="signed" <%= document.status === 'signed' ? 'selected' : '' %>>Signed</option>
-                                <option value="cancelled" <%= document.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                <option value="voided" <%= document.status === 'voided' ? 'selected' : '' %>>Voided</option>
                             <% } else { %>
                                 <option value="pending" <%= document.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                <option value="sent" <%= document.status === 'sent' ? 'selected' : '' %>>Sent</option>
                                 <option value="paid" <%= document.status === 'paid' ? 'selected' : '' %>>Paid</option>
+                                <option value="partially_paid" <%= document.status === 'partially_paid' ? 'selected' : '' %>>Partially Paid</option>
                                 <option value="overdue" <%= document.status === 'overdue' ? 'selected' : '' %>>Overdue</option>
                                 <option value="cancelled" <%= document.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                <option value="refunded" <%= document.status === 'refunded' ? 'selected' : '' %>>Refunded</option>
+                                <option value="voided" <%= document.status === 'voided' ? 'selected' : '' %>>Voided</option>
                             <% } %>
                         </select>
                     </div>

@@ -263,6 +263,16 @@ a:hover {
 .status-overdue { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
 .status-draft { background: rgba(107, 114, 128, 0.1); color: var(--secondary-color); }
 
+.status-sent { background: rgba(6, 182, 212, 0.1); color: var(--info-color); }
+.status-accepted { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+.status-rejected { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+.status-changes_requested { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+.status-signed { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+.status-voided { background: rgba(107, 114, 128, 0.1); color: var(--secondary-color); }
+.status-partially_paid { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+.status-refunded { background: rgba(6, 182, 212, 0.1); color: var(--info-color); }
+.status-cancelled { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+
 /* Utilities */
 .text-center { text-align: center; }
 .text-right { text-align: right; }
