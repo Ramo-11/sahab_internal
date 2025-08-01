@@ -9,6 +9,8 @@ const getDashboardStats = (req, res) => {
       totalContracts: 'SELECT COUNT(*) as count FROM external_documents WHERE type = "contract"',
       totalInvoices: 'SELECT COUNT(*) as count FROM external_documents WHERE type = "invoice"',
       pendingInvoices: 'SELECT COUNT(*) as count FROM external_documents WHERE type = "invoice" AND status = "pending"',
+      totalCollected: 'SELECT COALESCE(SUM(amount), 0) as total FROM external_documents WHERE type = "invoice" AND status = "paid"',
+      debugInvoices: 'SELECT id, title, amount, status FROM external_documents WHERE type = "invoice"',
       recentClients: `
         SELECT id, name, company, email, created_at 
         FROM clients 
@@ -56,7 +58,9 @@ const getDashboardStats = (req, res) => {
             totalProposals: results.totalProposals[0]?.count || 0,
             totalContracts: results.totalContracts[0]?.count || 0,
             totalInvoices: results.totalInvoices[0]?.count || 0,
-            pendingInvoices: results.pendingInvoices[0]?.count || 0
+            pendingInvoices: results.pendingInvoices[0]?.count || 0,
+            totalCollected: (results.totalCollected && results.totalCollected[0] && results.totalCollected[0].total !== undefined) ? 
+                           results.totalCollected[0].total : 0
           },
           recentClients: results.recentClients || [],
           recentProposals: results.recentProposals || [],
