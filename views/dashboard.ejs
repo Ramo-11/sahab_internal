@@ -4,8 +4,15 @@
 <div class="dashboard-stats">
     <div class="card">
         <div class="card-body text-center">
-            <h3><%= stats.totalClients %></h3>
+            <h3><%= stats.activeClients %></h3>
             <p class="text-muted">Active Clients</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-center">
+            <h3><%= stats.pendingClients %></h3>
+            <p class="text-muted">Pending Clients</p>
         </div>
     </div>
     
@@ -126,7 +133,7 @@
                         <h6><a href="<%= proposal.external_url || '#' %>" target="_blank" class="text-primary"><%= proposal.title %></a></h6>
                         <p class="text-muted mb-1"><%= proposal.client_name %></p>
                         <% if (proposal.amount) { %>
-                            <small class="text-muted">$<%= proposal.amount.toFixed(2) %></small>
+                            <small class="text-muted">$<%= parseFloat(proposal.amount).toFixed(2) %></small>
                         <% } %>
                     </div>
                     <span class="status-badge status-<%= proposal.status %>"><%= proposal.status %></span>
@@ -155,7 +162,7 @@
                         <h6><a href="<%= contract.external_url || '#' %>" target="_blank" class="text-primary"><%= contract.title %></a></h6>
                         <p class="text-muted mb-1"><%= contract.client_name %></p>
                         <% if (contract.amount) { %>
-                            <small class="text-muted">$<%= contract.amount.toFixed(2) %></small>
+                            <small class="text-muted">$<%= parseFloat(contract.amount).toFixed(2) %></small>
                         <% } %>
                     </div>
                     <span class="status-badge status-<%= contract.status %>"><%= contract.status %></span>
@@ -184,7 +191,7 @@
                         <h6><a href="<%= invoice.external_url || '#' %>" target="_blank" class="text-primary"><%= invoice.title %></a></h6>
                         <p class="text-muted mb-1"><%= invoice.client_name %></p>
                         <% if (invoice.amount) { %>
-                            <small class="text-muted">$<%= invoice.amount.toFixed(2) %></small>
+                            <small class="text-muted">$<%= parseFloat(invoice.amount).toFixed(2) %></small>
                         <% } %>
                     </div>
                     <span class="status-badge status-<%= invoice.status %>"><%= invoice.status %></span>

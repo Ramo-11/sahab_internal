@@ -189,7 +189,7 @@
                             </a>
                         </h6>
                         <% if (proposal.amount) { %>
-                            <p class="text-muted mb-1">$<%= proposal.amount.toFixed(2) %></p>
+                            <p class="text-muted mb-1">$<%= parseFloat(proposal.amount).toFixed(2) %></p>
                         <% } %>
                         <small class="text-muted"><%= new Date(proposal.created_at).toLocaleDateString() %></small>
                     </div>
@@ -225,7 +225,7 @@
                             </a>
                         </h6>
                         <% if (contract.amount) { %>
-                            <p class="text-muted mb-1">$<%= contract.amount.toFixed(2) %></p>
+                            <p class="text-muted mb-1">$<%= parseFloat(contract.amount).toFixed(2) %></p>
                         <% } %>
                         <small class="text-muted"><%= new Date(contract.created_at).toLocaleDateString() %></small>
                     </div>
@@ -261,7 +261,7 @@
                             </a>
                         </h6>
                         <% if (invoice.amount) { %>
-                            <p class="text-muted mb-1">$<%= invoice.amount.toFixed(2) %></p>
+                            <p class="text-muted mb-1">$<%= parseFloat(invoice.amount).toFixed(2) %></p>
                         <% } %>
                         <small class="text-muted"><%= new Date(invoice.created_at).toLocaleDateString() %></small>
                     </div>

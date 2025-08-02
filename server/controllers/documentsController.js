@@ -1,7 +1,7 @@
-const { db } = require('../../models/database');
+const { pool } = require('../../models/database');
 
 // Get all documents (proposals, contracts, invoices)
-const getAllDocuments = (req, res) => {
+const getAllDocuments = async (req, res) => {
   try {
     const query = `
       SELECT 
@@ -13,28 +13,23 @@ const getAllDocuments = (req, res) => {
       ORDER BY d.created_at DESC
     `;
 
-    db.all(query, (err, documents) => {
-      if (err) {
-        console.error('Error fetching documents:', err);
-        return res.status(500).render('error', {
-          title: 'Error',
-          appName: process.env.APP_NAME,
-          error: err
-        });
-      }
+    const result = await pool.query(query);
+    const documents = result.rows.map(doc => ({
+      ...doc,
+      amount: doc.amount ? parseFloat(doc.amount) : null
+    }));
 
-      // Separate documents by type
-      const proposals = documents.filter(doc => doc.type === 'proposal');
-      const contracts = documents.filter(doc => doc.type === 'contract');
-      const invoices = documents.filter(doc => doc.type === 'invoice');
+    // Separate documents by type
+    const proposals = documents.filter(doc => doc.type === 'proposal');
+    const contracts = documents.filter(doc => doc.type === 'contract');
+    const invoices = documents.filter(doc => doc.type === 'invoice');
 
-      res.render('documents/index', {
-        title: 'Documents',
-        appName: process.env.APP_NAME,
-        proposals: proposals || [],
-        contracts: contracts || [],
-        invoices: invoices || []
-      });
+    res.render('documents/index', {
+      title: 'Documents',
+      appName: process.env.APP_NAME,
+      proposals: proposals || [],
+      contracts: contracts || [],
+      invoices: invoices || []
     });
   } catch (error) {
     console.error('Error in getAllDocuments:', error);
@@ -47,7 +42,7 @@ const getAllDocuments = (req, res) => {
 };
 
 // Get documents by type
-const getDocumentsByType = (req, res) => {
+const getDocumentsByType = async (req, res) => {
   try {
     const type = req.params.type;
     
@@ -65,32 +60,27 @@ const getDocumentsByType = (req, res) => {
         c.company as client_company
       FROM external_documents d
       LEFT JOIN clients c ON d.client_id = c.id
-      WHERE d.type = ?
+      WHERE d.type = $1
       ORDER BY d.created_at DESC
     `;
 
-    db.all(query, [type], (err, documents) => {
-      if (err) {
-        console.error('Error fetching documents:', err);
-        return res.status(500).render('error', {
-          title: 'Error',
-          appName: process.env.APP_NAME,
-          error: err
-        });
-      }
+    const result = await pool.query(query, [type]);
+    const documents = result.rows.map(doc => ({
+      ...doc,
+      amount: doc.amount ? parseFloat(doc.amount) : null
+    }));
 
-      const titleMap = {
-        'proposal': 'Proposals',
-        'contract': 'Contracts', 
-        'invoice': 'Invoices'
-      };
+    const titleMap = {
+      'proposal': 'Proposals',
+      'contract': 'Contracts', 
+      'invoice': 'Invoices'
+    };
 
-      res.render('documents/type', {
-        title: titleMap[type],
-        appName: process.env.APP_NAME,
-        documents: documents || [],
-        type: type
-      });
+    res.render('documents/type', {
+      title: titleMap[type],
+      appName: process.env.APP_NAME,
+      documents: documents || [],
+      type: type
     });
   } catch (error) {
     console.error('Error in getDocumentsByType:', error);
@@ -103,7 +93,7 @@ const getDocumentsByType = (req, res) => {
 };
 
 // Create new document link
-const createDocument = (req, res) => {
+const createDocument = async (req, res) => {
   try {
     const {
       client_id,
@@ -119,7 +109,8 @@ const createDocument = (req, res) => {
       INSERT INTO external_documents (
         client_id, type, title, external_url, description, amount, status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id
     `;
 
     const values = [
@@ -132,20 +123,12 @@ const createDocument = (req, res) => {
       status || 'pending'
     ];
 
-    db.run(query, values, function(err) {
-      if (err) {
-        console.error('Error creating document:', err);
-        return res.status(500).json({ 
-          success: false, 
-          error: 'Failed to create document link' 
-        });
-      }
+    const result = await pool.query(query, values);
+    const documentId = result.rows[0].id;
 
-      const documentId = this.lastID;
-      res.json({ 
-        success: true, 
-        redirectUrl: `/${type}s` 
-      });
+    res.json({ 
+      success: true, 
+      redirectUrl: `/${type}s` 
     });
   } catch (error) {
     console.error('Error in createDocument:', error);
@@ -157,7 +140,7 @@ const createDocument = (req, res) => {
 };
 
 // Update document
-const updateDocument = (req, res) => {
+const updateDocument = async (req, res) => {
   try {
     const documentId = req.params.id;
     const {
@@ -172,9 +155,9 @@ const updateDocument = (req, res) => {
 
     const query = `
       UPDATE external_documents 
-      SET client_id = ?, type = ?, title = ?, external_url = ?, 
-          description = ?, amount = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
+      SET client_id = $1, type = $2, title = $3, external_url = $4, 
+          description = $5, amount = $6, status = $7, updated_at = NOW()
+      WHERE id = $8
     `;
 
     const values = [
@@ -188,19 +171,11 @@ const updateDocument = (req, res) => {
       documentId
     ];
 
-    db.run(query, values, function(err) {
-      if (err) {
-        console.error('Error updating document:', err);
-        return res.status(500).json({ 
-          success: false, 
-          error: 'Failed to update document' 
-        });
-      }
+    await pool.query(query, values);
 
-      res.json({ 
-        success: true, 
-        redirectUrl: `/${type}s` 
-      });
+    res.json({ 
+      success: true, 
+      redirectUrl: `/${type}s` 
     });
   } catch (error) {
     console.error('Error in updateDocument:', error);
@@ -212,18 +187,13 @@ const updateDocument = (req, res) => {
 };
 
 // Delete document
-const deleteDocument = (req, res) => {
+const deleteDocument = async (req, res) => {
   try {
     const documentId = req.params.id;
 
-    db.run('DELETE FROM external_documents WHERE id = ?', [documentId], function(err) {
-      if (err) {
-        console.error('Error deleting document:', err);
-        return res.status(500).json({ error: 'Failed to delete document' });
-      }
+    await pool.query('DELETE FROM external_documents WHERE id = $1', [documentId]);
 
-      res.json({ success: true });
-    });
+    res.json({ success: true });
   } catch (error) {
     console.error('Error in deleteDocument:', error);
     res.status(500).json({ error: 'Failed to delete document' });

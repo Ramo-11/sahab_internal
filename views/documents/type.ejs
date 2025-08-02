@@ -47,7 +47,7 @@
                             <% if (type === 'invoice') { %>
                             <td>
                                 <% if (doc.amount) { %>
-                                    <span class="font-weight-medium">$<%= doc.amount.toFixed(2) %></span>
+                                    <span class="font-weight-medium">$<%= parseFloat(doc.amount).toFixed(2) %></span>
                                 <% } else { %>
                                     <span class="text-muted">-</span>
                                 <% } %>
@@ -65,7 +65,7 @@
                                 <div class="d-flex gap-2">
                                     <a href="<%= doc.external_url %>" target="_blank" class="btn btn-sm btn-secondary">Open</a>
                                     <a href="/documents/<%= doc.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
-                                    <button onclick="deleteDocument(<%= doc.id %>)" class="btn btn-sm btn-danger">Delete</button>
+                                    <button onclick="deleteDocument('<%= doc.id %>')" class="btn btn-sm btn-danger">Delete</button>
                                 </div>
                             </td>
                         </tr>

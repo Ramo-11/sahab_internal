@@ -5,9 +5,7 @@ const {
   getClientById,
   createClient,
   updateClient,
-  deleteClient,
-  getClientProposals,
-  getClientInvoices
+  deleteClient
 } = require('../controllers/clientsController');
 
 // GET /clients - List all clients
@@ -33,32 +31,25 @@ router.get('/:id', getClientById);
 // GET /clients/:id/edit - Show edit client form
 router.get('/:id/edit', async (req, res) => {
   try {
-    const { db } = require('../../models/database');
+    const { pool } = require('../../models/database');
     
-    db.get('SELECT * FROM clients WHERE id = ?', [req.params.id], (err, client) => {
-      if (err) {
-        console.error('Error fetching client:', err);
-        return res.status(500).render('error', { 
-          title: 'Error',
-          appName: process.env.APP_NAME,
-          error: err 
-        });
-      }
-      
-      if (!client) {
-        return res.status(404).render('404', {
-          title: '404 - Client Not Found',
-          appName: process.env.APP_NAME
-        });
-      }
-      
-      res.render('clients/form', {
-        title: 'Edit Client',
-        appName: process.env.APP_NAME,
-        client,
-        action: `/clients/${client.id}`,
-        method: 'PUT'
+    const result = await pool.query('SELECT * FROM clients WHERE id = $1', [req.params.id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).render('404', {
+        title: '404 - Client Not Found',
+        appName: process.env.APP_NAME
       });
+    }
+    
+    const client = result.rows[0];
+    
+    res.render('clients/form', {
+      title: 'Edit Client',
+      appName: process.env.APP_NAME,
+      client,
+      action: `/clients/${client.id}`,
+      method: 'PUT'
     });
   } catch (error) {
     console.error('Error in edit route:', error);

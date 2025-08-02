@@ -30,79 +30,63 @@ router.get('/invoices', (req, res) => {
 });
 
 // GET /documents/new - Show create document form
-router.get('/new', (req, res) => {
-  const { db } = require('../../models/database');
-  const type = req.query.type || 'proposal';
-  
-  // Get clients for dropdown (only active clients)
-  db.all('SELECT id, name, company FROM clients WHERE status = "active" ORDER BY name', (err, clients) => {
-    if (err) {
-      console.error('Error fetching clients:', err);
-      return res.status(500).render('error', { 
-        title: 'Error',
-        appName: process.env.APP_NAME,
-        error: err 
-      });
-    }
+router.get('/new', async (req, res) => {
+  try {
+    const { pool } = require('../../models/database');
+    const type = req.query.type || 'proposal';
+    
+    // Get clients for dropdown (only active clients)
+    const result = await pool.query('SELECT id, name, company FROM clients WHERE status = $1 ORDER BY name', ['active']);
     
     res.render('documents/form', {
       title: `Add New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
       appName: process.env.APP_NAME,
       document: null,
-      clients,
+      clients: result.rows,
       selectedType: type,
       action: '/documents',
       method: 'POST'
     });
-  });
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    res.status(500).render('error', { 
+      title: 'Error',
+      appName: process.env.APP_NAME,
+      error 
+    });
+  }
 });
 
 // POST /documents - Create new document
 router.post('/', createDocument);
 
 // GET /documents/:id/edit - Show edit document form
-router.get('/:id/edit', (req, res) => {
+router.get('/:id/edit', async (req, res) => {
   try {
-    const { db } = require('../../models/database');
+    const { pool } = require('../../models/database');
     
-    db.get('SELECT * FROM external_documents WHERE id = ?', [req.params.id], (err, document) => {
-      if (err) {
-        console.error('Error fetching document:', err);
-        return res.status(500).render('error', { 
-          title: 'Error',
-          appName: process.env.APP_NAME,
-          error: err 
-        });
-      }
-      
-      if (!document) {
-        return res.status(404).render('404', {
-          title: '404 - Document Not Found',
-          appName: process.env.APP_NAME
-        });
-      }
-      
-      // Get clients for dropdown (only active clients)
-      db.all('SELECT id, name, company FROM clients WHERE status = "active" ORDER BY name', (err, clients) => {
-        if (err) {
-          console.error('Error fetching clients:', err);
-          return res.status(500).render('error', { 
-            title: 'Error',
-            appName: process.env.APP_NAME,
-            error: err 
-          });
-        }
-        
-        res.render('documents/form', {
-          title: `Edit ${document.type.charAt(0).toUpperCase() + document.type.slice(1)}`,
-          appName: process.env.APP_NAME,
-          document,
-          clients,
-          selectedType: document.type,
-          action: `/documents/${document.id}`,
-          method: 'PUT'
-        });
+    const documentResult = await pool.query('SELECT * FROM external_documents WHERE id = $1', [req.params.id]);
+    
+    if (documentResult.rows.length === 0) {
+      return res.status(404).render('404', {
+        title: '404 - Document Not Found',
+        appName: process.env.APP_NAME
       });
+    }
+    
+    const document = documentResult.rows[0];
+    
+    // Get clients for dropdown (only active clients)
+    const clientsResult = await pool.query('SELECT id, name, company FROM clients WHERE status = $1 ORDER BY name', ['active']);
+    
+    res.render('documents/form', {
+      title: `Edit ${document.type.charAt(0).toUpperCase() + document.type.slice(1)}`,
+      appName: process.env.APP_NAME,
+      document,
+      clients: clientsResult.rows,
+      selectedType: document.type,
+      action: `/documents/${document.id}`,
+      method: 'PUT'
     });
   } catch (error) {
     console.error('Error in edit route:', error);

@@ -1,6 +1,6 @@
-const { db } = require('../../models/database');
+const { pool } = require('../../models/database');
 
-const getAllClients = (req, res) => {
+const getAllClients = async (req, res) => {
   try {
     const query = `
       SELECT 
@@ -16,21 +16,21 @@ const getAllClients = (req, res) => {
       ORDER BY c.created_at DESC
     `;
 
-    db.all(query, (err, clients) => {
-      if (err) {
-        console.error('Error fetching clients:', err);
-        return res.status(500).render('error', {
-          title: 'Error',
-          appName: process.env.APP_NAME,
-          error: err
-        });
-      }
-      
-      res.render('clients/index', {
-        title: 'Clients',
-        appName: process.env.APP_NAME,
-        clients: clients || []
-      });
+    const result = await pool.query(query);
+    
+    // Convert numeric fields to proper numbers
+    const clients = result.rows.map(client => ({
+      ...client,
+      proposal_count: parseInt(client.proposal_count) || 0,
+      contract_count: parseInt(client.contract_count) || 0,
+      invoice_count: parseInt(client.invoice_count) || 0,
+      total_paid: parseFloat(client.total_paid) || 0
+    }));
+    
+    res.render('clients/index', {
+      title: 'Clients',
+      appName: process.env.APP_NAME,
+      clients: clients || []
     });
   } catch (error) {
     console.error('Error in getAllClients:', error);
@@ -42,66 +42,50 @@ const getAllClients = (req, res) => {
   }
 };
 
-const getClientById = (req, res) => {
+const getClientById = async (req, res) => {
   try {
     const clientId = req.params.id;
 
     // Get client details
-    db.get('SELECT * FROM clients WHERE id = ?', [clientId], (err, client) => {
-      if (err) {
-        console.error('Error fetching client:', err);
-        return res.status(500).render('error', {
-          title: 'Error',
-          appName: process.env.APP_NAME,
-          error: err
-        });
-      }
-
-      if (!client) {
-        return res.status(404).render('404', {
-          title: '404 - Client Not Found',
-          appName: process.env.APP_NAME
-        });
-      }
-
-      // Get client documents by type
-      const documentsQueries = {
-        proposals: `SELECT * FROM external_documents WHERE client_id = ? AND type = 'proposal' ORDER BY created_at DESC`,
-        contracts: `SELECT * FROM external_documents WHERE client_id = ? AND type = 'contract' ORDER BY created_at DESC`,
-        invoices: `SELECT * FROM external_documents WHERE client_id = ? AND type = 'invoice' ORDER BY created_at DESC`
-      };
-
-      let completedQueries = 0;
-      const results = {};
-      const totalQueries = Object.keys(documentsQueries).length;
-
-      const checkComplete = () => {
-        completedQueries++;
-        if (completedQueries === totalQueries) {
-          res.render('clients/detail', {
-            title: `${client.name} - Client Details`,
-            appName: process.env.APP_NAME,
-            client,
-            proposals: results.proposals || [],
-            contracts: results.contracts || [],
-            invoices: results.invoices || []
-          });
-        }
-      };
-
-      // Execute all queries
-      Object.entries(documentsQueries).forEach(([key, query]) => {
-        db.all(query, [clientId], (err, rows) => {
-          if (err) {
-            console.error(`Error fetching ${key}:`, err);
-            results[key] = [];
-          } else {
-            results[key] = rows;
-          }
-          checkComplete();
-        });
+    const clientResult = await pool.query('SELECT * FROM clients WHERE id = $1', [clientId]);
+    
+    if (clientResult.rows.length === 0) {
+      return res.status(404).render('404', {
+        title: '404 - Client Not Found',
+        appName: process.env.APP_NAME
       });
+    }
 
+    const client = clientResult.rows[0];
+
+    // Get client documents by type
+    const [proposalsResult, contractsResult, invoicesResult] = await Promise.all([
+      pool.query('SELECT * FROM external_documents WHERE client_id = $1 AND type = $2 ORDER BY created_at DESC', [clientId, 'proposal']),
+      pool.query('SELECT * FROM external_documents WHERE client_id = $1 AND type = $2 ORDER BY created_at DESC', [clientId, 'contract']),
+      pool.query('SELECT * FROM external_documents WHERE client_id = $1 AND type = $2 ORDER BY created_at DESC', [clientId, 'invoice'])
+    ]);
+
+    // Convert amounts to floats
+    const proposals = proposalsResult.rows.map(p => ({
+      ...p,
+      amount: p.amount ? parseFloat(p.amount) : null
+    }));
+    const contracts = contractsResult.rows.map(c => ({
+      ...c,
+      amount: c.amount ? parseFloat(c.amount) : null
+    }));
+    const invoices = invoicesResult.rows.map(i => ({
+      ...i,
+      amount: i.amount ? parseFloat(i.amount) : null
+    }));
+
+    res.render('clients/detail', {
+      title: `${client.name} - Client Details`,
+      appName: process.env.APP_NAME,
+      client,
+      proposals,
+      contracts,
+      invoices
     });
   } catch (error) {
     console.error('Error in getClientById:', error);
@@ -113,7 +97,7 @@ const getClientById = (req, res) => {
   }
 };
 
-const createClient = (req, res) => {
+const createClient = async (req, res) => {
   try {
     const {
       name,
@@ -129,7 +113,8 @@ const createClient = (req, res) => {
 
     const query = `
       INSERT INTO clients (name, email, phone, company, address, city, state, zip_code, country)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id
     `;
 
     const values = [
@@ -144,26 +129,14 @@ const createClient = (req, res) => {
       country || 'US'
     ];
 
-    db.run(query, values, function(err) {
-      if (err) {
-        console.error('Error creating client:', err);
-        if (req.headers['content-type'] === 'application/json') {
-          return res.status(500).json({ error: 'Failed to create client' });
-        }
-        return res.status(500).render('error', {
-          title: 'Error',
-          appName: process.env.APP_NAME,
-          error: err
-        });
-      }
+    const result = await pool.query(query, values);
+    const clientId = result.rows[0].id;
 
-      const clientId = this.lastID;
-      if (req.headers['content-type'] === 'application/json') {
-        res.json({ success: true, redirectUrl: `/clients/${clientId}` });
-      } else {
-        res.redirect(`/clients/${clientId}`);
-      }
-    });
+    if (req.headers['content-type'] === 'application/json') {
+      res.json({ success: true, redirectUrl: `/clients/${clientId}` });
+    } else {
+      res.redirect(`/clients/${clientId}`);
+    }
   } catch (error) {
     console.error('Error in createClient:', error);
     if (req.headers['content-type'] === 'application/json') {
@@ -178,7 +151,7 @@ const createClient = (req, res) => {
   }
 };
 
-const updateClient = (req, res) => {
+const updateClient = async (req, res) => {
   try {
     const clientId = req.params.id;
     const {
@@ -195,9 +168,9 @@ const updateClient = (req, res) => {
 
     const query = `
       UPDATE clients 
-      SET name = ?, email = ?, phone = ?, company = ?, address = ?, 
-          city = ?, state = ?, zip_code = ?, country = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
+      SET name = $1, email = $2, phone = $3, company = $4, address = $5, 
+          city = $6, state = $7, zip_code = $8, country = $9, updated_at = NOW()
+      WHERE id = $10
     `;
 
     const values = [
@@ -213,25 +186,13 @@ const updateClient = (req, res) => {
       clientId
     ];
 
-    db.run(query, values, function(err) {
-      if (err) {
-        console.error('Error updating client:', err);
-        if (req.headers['content-type'] === 'application/json') {
-          return res.status(500).json({ error: 'Failed to update client' });
-        }
-        return res.status(500).render('error', {
-          title: 'Error',
-          appName: process.env.APP_NAME,
-          error: err
-        });
-      }
+    await pool.query(query, values);
 
-      if (req.headers['content-type'] === 'application/json') {
-        res.json({ success: true, redirectUrl: `/clients/${clientId}` });
-      } else {
-        res.redirect(`/clients/${clientId}`);
-      }
-    });
+    if (req.headers['content-type'] === 'application/json') {
+      res.json({ success: true, redirectUrl: `/clients/${clientId}` });
+    } else {
+      res.redirect(`/clients/${clientId}`);
+    }
   } catch (error) {
     console.error('Error in updateClient:', error);
     if (req.headers['content-type'] === 'application/json') {
@@ -246,22 +207,14 @@ const updateClient = (req, res) => {
   }
 };
 
-const deleteClient = (req, res) => {
+const deleteClient = async (req, res) => {
   try {
     const clientId = req.params.id;
 
     // Soft delete by updating status
-    db.run('UPDATE clients SET status = "inactive", updated_at = CURRENT_TIMESTAMP WHERE id = ?', 
-      [clientId], 
-      function(err) {
-        if (err) {
-          console.error('Error deleting client:', err);
-          return res.status(500).json({ error: 'Failed to delete client' });
-        }
+    await pool.query('UPDATE clients SET status = $1, updated_at = NOW() WHERE id = $2', ['inactive', clientId]);
 
-        res.json({ success: true });
-      }
-    );
+    res.json({ success: true });
   } catch (error) {
     console.error('Error in deleteClient:', error);
     res.status(500).json({ error: 'Failed to delete client' });

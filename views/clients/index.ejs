@@ -63,7 +63,7 @@
                                 <span class="status-badge status-active"><%= client.invoice_count || 0 %></span>
                             </td>
                             <td class="hide-mobile">
-                                <span class="text-success font-weight-medium">$<%= (client.total_paid || 0).toFixed(2) %></span>
+                                <span class="text-success font-weight-medium">$<%= parseFloat(client.total_paid || 0).toFixed(2) %></span>
                             </td>
                             <td>
                                 <div class="d-flex gap-1 flex-wrap">
@@ -72,7 +72,7 @@
                                     <a href="/documents/new?type=proposal&client_id=<%= client.id %>" class="btn btn-sm btn-success" title="Add Proposal">P</a>
                                     <a href="/documents/new?type=contract&client_id=<%= client.id %>" class="btn btn-sm btn-info" title="Add Contract">C</a>
                                     <a href="/documents/new?type=invoice&client_id=<%= client.id %>" class="btn btn-sm btn-warning" title="Add Invoice">I</a>
-                                    <button onclick="deleteClient(<%= client.id %>)" class="btn btn-sm btn-danger">×</button>
+                                    <button onclick="deleteClient('<%= client.id %>')" class="btn btn-sm btn-danger">×</button>
                                 </div>
                             </td>
                         </tr>
