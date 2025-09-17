@@ -56,7 +56,7 @@ async function initCharts() {
                                 {
                                     label: 'Revenue',
                                     data: [result.data.invoices.totalRevenue],
-                                    backgroundColor: '#7117f2',
+                                    backgroundColor: '#10b981',
                                 },
                             ],
                         },
@@ -88,7 +88,18 @@ async function initCharts() {
                 }
             } else {
                 const labels = result.data.invoices.revenue.map((item) => item.label || item._id);
-                const data = result.data.invoices.revenue.map((item) => item.revenue);
+                const revenueData = result.data.invoices.revenue.map((item) => item.revenue);
+
+                // Map expense data to same labels
+                const expenseData = labels.map((label) => {
+                    const expenseItem = result.data.expenses?.timeline?.find(
+                        (e) =>
+                            e.label === label ||
+                            e._id ===
+                                result.data.invoices.revenue.find((r) => r.label === label)?._id
+                    );
+                    return expenseItem?.expenses || 0;
+                });
 
                 revenueChart = new Chart(revenueCtx.getContext('2d'), {
                     type: 'line',
@@ -97,9 +108,17 @@ async function initCharts() {
                         datasets: [
                             {
                                 label: 'Revenue',
-                                data: data,
-                                borderColor: '#7117f2',
-                                backgroundColor: 'rgba(113, 23, 242, 0.1)',
+                                data: revenueData,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                            },
+                            {
+                                label: 'Expenses',
+                                data: expenseData,
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                 tension: 0.4,
                                 fill: true,
                             },
@@ -109,11 +128,13 @@ async function initCharts() {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false },
+                            legend: { display: true, position: 'top' },
                             tooltip: {
                                 callbacks: {
                                     label: (context) =>
-                                        `Revenue: $${context.parsed.y.toLocaleString()}`,
+                                        `${
+                                            context.dataset.label
+                                        }: $${context.parsed.y.toLocaleString()}`,
                                 },
                             },
                         },
@@ -275,11 +296,37 @@ async function updateChartPeriod(period) {
 
         if (result.success && revenueChart) {
             if (result.data?.invoices?.revenue && result.data.invoices.revenue.length > 0) {
-                const labels = result.data.invoices.revenue.map((item) => item._id);
-                const data = result.data.invoices.revenue.map((item) => item.revenue);
+                const labels = result.data.invoices.revenue.map((item) => item.label || item._id);
+                const revenueData = result.data.invoices.revenue.map((item) => item.revenue);
+
+                // Map expense data to same labels
+                const expenseData = labels.map((label) => {
+                    const expenseItem = result.data.expenses?.timeline?.find(
+                        (e) =>
+                            e.label === label ||
+                            e._id ===
+                                result.data.invoices.revenue.find((r) => r.label === label)?._id
+                    );
+                    return expenseItem?.expenses || 0;
+                });
 
                 revenueChart.data.labels = labels;
-                revenueChart.data.datasets[0].data = data;
+                revenueChart.data.datasets[0].data = revenueData;
+
+                // Add or update expense dataset
+                if (revenueChart.data.datasets.length > 1) {
+                    revenueChart.data.datasets[1].data = expenseData;
+                } else {
+                    revenueChart.data.datasets.push({
+                        label: 'Expenses',
+                        data: expenseData,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                    });
+                }
+
                 revenueChart.update();
             } else {
                 // No data for this period

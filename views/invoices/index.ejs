@@ -99,10 +99,12 @@
                         </td>
                         <td><%= invoice.client?.company || invoice.client?.name || '-' %></td>
                         <td class="editable-cell">
-                            <span class="view-mode">$<%= (invoice.amount / 1000).toFixed(1) %>k</span>
+                            <span class="view-mode">
+                                $<%= Number(invoice.amount).toFixed(2) %>
+                            </span>
                             <input type="number" class="form-control edit-mode" 
-                                   style="display: none;" value="<%= invoice.amount %>" 
-                                   data-field="amount" step="0.01">
+                                style="display: none;" value="<%= invoice.amount %>" 
+                                data-field="amount" step="0.01">
                         </td>
                         <td class="editable-cell">
                             <span class="view-mode">

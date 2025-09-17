@@ -88,15 +88,17 @@
                         <td><%= proposal.client?.company || proposal.client?.name || '-' %></td>
                         <td class="editable-cell">
                             <% if (proposal.pricing?.amount && proposal.pricing.amount > 0) { %>
-                                <span class="view-mode">$<%= (proposal.pricing.amount / 1000).toFixed(1) %>k</span>
+                                <span class="view-mode">
+                                    $<%= Number(proposal.pricing.amount).toFixed(2) %>
+                                </span>
                                 <input type="number" class="form-control edit-mode" 
-                                       style="display: none;" value="<%= proposal.pricing.amount %>" 
-                                       data-field="pricing.amount" step="100">
+                                    style="display: none;" value="<%= proposal.pricing.amount %>" 
+                                    data-field="pricing.amount" step="0.01">
                             <% } else { %>
                                 <span class="view-mode text-muted">-</span>
                                 <input type="number" class="form-control edit-mode" 
-                                       style="display: none;" value="0" 
-                                       data-field="pricing.amount" step="100" placeholder="0">
+                                    style="display: none;" value="0" 
+                                    data-field="pricing.amount" step="0.01" placeholder="0">
                             <% } %>
                         </td>
                         <td class="editable-cell">

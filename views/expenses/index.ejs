@@ -148,12 +148,12 @@
                         </td>
                         <td class="editable-cell">
                             <span class="view-mode expense-amount">
-                                $<%= (expense.amount / 100).toFixed(2) %>
+                                $<%= expense.amount.toFixed(2) %>
                             </span>
                             <input type="number" class="form-control edit-mode" 
-                                   style="display: none;" 
-                                   value="<%= (expense.amount / 100).toFixed(2) %>" 
-                                   data-field="amount" step="0.01">
+                                style="display: none;" 
+                                value="<%= expense.amount %>" 
+                                data-field="amount" step="0.01">
                         </td>
                         <td class="editable-cell">
                             <span class="view-mode">

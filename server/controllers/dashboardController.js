@@ -1,6 +1,7 @@
 const Client = require('../../models/Client');
 const Proposal = require('../../models/Proposal');
 const Invoice = require('../../models/Invoice');
+const Expense = require('../../models/Expense');
 const { logger } = require('../logger');
 
 /**
@@ -8,6 +9,11 @@ const { logger } = require('../logger');
  */
 const showDashboard = async (req, res) => {
     try {
+        // Get current month for calculations
+        const currentMonth = new Date();
+        currentMonth.setDate(1);
+        currentMonth.setHours(0, 0, 0, 0);
+
         // Get quick stats
         const [
             clientCount,
@@ -19,6 +25,9 @@ const showDashboard = async (req, res) => {
             clientStats,
             invoiceStats,
             proposalStats,
+            revenueStats,
+            expenseStats,
+            totalExpenses,
         ] = await Promise.all([
             Client.countDocuments({ status: 'active' }),
             Proposal.countDocuments({ status: { $in: ['sent', 'viewed'] } }),
@@ -73,26 +82,45 @@ const showDashboard = async (req, res) => {
                     },
                 },
             ]),
-        ]);
-
-        // Get revenue stats
-        const currentMonth = new Date();
-        currentMonth.setDate(1);
-        currentMonth.setHours(0, 0, 0, 0);
-
-        const revenueStats = await Invoice.aggregate([
-            {
-                $match: {
-                    status: 'paid',
-                    paidDate: { $gte: currentMonth },
+            // Revenue stats
+            Invoice.aggregate([
+                {
+                    $match: {
+                        status: 'paid',
+                        paidDate: { $gte: currentMonth },
+                    },
                 },
-            },
-            {
-                $group: {
-                    _id: null,
-                    monthlyRevenue: { $sum: '$amount' },
+                {
+                    $group: {
+                        _id: null,
+                        monthlyRevenue: { $sum: '$amount' },
+                    },
                 },
-            },
+            ]),
+            // Monthly expense stats
+            Expense.aggregate([
+                {
+                    $match: {
+                        expenseDate: { $gte: currentMonth },
+                    },
+                },
+                {
+                    $group: {
+                        _id: null,
+                        monthlyExpenses: { $sum: '$amount' },
+                        count: { $sum: 1 },
+                    },
+                },
+            ]),
+            // Total expenses
+            Expense.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: '$amount' },
+                    },
+                },
+            ]),
         ]);
 
         // Format stats
@@ -120,6 +148,14 @@ const showDashboard = async (req, res) => {
                 viewed: proposalStats.find((s) => s._id === 'viewed')?.count || 0,
                 accepted: proposalStats.find((s) => s._id === 'accepted')?.count || 0,
                 totalValue: proposalStats.reduce((sum, s) => sum + (s.value || 0), 0),
+            },
+            expenseStats: {
+                monthlyExpenses: expenseStats[0]?.monthlyExpenses || 0,
+                totalExpenses: totalExpenses[0]?.total || 0,
+                monthlyCount: expenseStats[0]?.count || 0,
+                monthlyProfit:
+                    (revenueStats[0]?.monthlyRevenue || 0) -
+                    (expenseStats[0]?.monthlyExpenses || 0),
             },
         };
 
@@ -195,6 +231,29 @@ const getStats = async (req, res) => {
             { $limit: 30 }, // Limit data points for readability
         ]);
 
+        // Get expense time series
+        const expenseTimeSeries = await Expense.aggregate([
+            {
+                $match: {
+                    expenseDate: { $gte: startDate },
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: {
+                            format: groupFormat,
+                            date: '$expenseDate',
+                        },
+                    },
+                    expenses: { $sum: '$amount' },
+                    count: { $sum: 1 },
+                },
+            },
+            { $sort: { _id: 1 } },
+            { $limit: 30 },
+        ]);
+
         const [clientStats, proposalStats, invoiceStats] = await Promise.all([
             Client.getStats ? Client.getStats() : Client.find().countDocuments(),
             Proposal.getConversionStats
@@ -250,6 +309,18 @@ const getStats = async (req, res) => {
             count: item.count,
         }));
 
+        const formattedExpenses = expenseTimeSeries.map((item) => ({
+            _id: item._id,
+            label:
+                days <= 7
+                    ? new Date(item._id).toLocaleDateString('en-US', { weekday: 'short' })
+                    : days <= 30
+                    ? `Week ${item._id.split('-W')[1] || item._id}`
+                    : new Date(item._id + '-01').toLocaleDateString('en-US', { month: 'short' }),
+            expenses: item.expenses,
+            count: item.count,
+        }));
+
         res.json({
             success: true,
             data: {
@@ -258,6 +329,9 @@ const getStats = async (req, res) => {
                 invoices: {
                     ...invoiceStats,
                     revenue: formattedRevenue,
+                },
+                expenses: {
+                    timeline: formattedExpenses,
                 },
                 growth: {
                     revenue: revenueGrowth,

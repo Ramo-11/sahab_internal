@@ -159,7 +159,7 @@ async function saveExpense(id) {
         const value = input.value.trim();
 
         if (field === 'amount') {
-            updates[field] = parseFloat(value) * 100; // Convert to cents
+            updates[field] = parseFloat(value);
         } else if (field === 'expenseDate' && value) {
             updates[field] = new Date(value).toISOString();
         } else {

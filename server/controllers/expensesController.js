@@ -96,11 +96,13 @@ const getExpenses = async (req, res) => {
  */
 const createExpense = async (req, res) => {
     try {
+        logger.debug(`expense amount received by server: ${req.body.amount}`);
         const expenseData = {
             ...req.body,
-            amount: req.body.amount * 100, // Convert to cents
+            amount: req.body.amount,
         };
 
+        logger.debug(`expense amount after conversion: ${expenseData.amount}`);
         const expense = new Expense(expenseData);
         await expense.save();
 

@@ -99,7 +99,6 @@ const proposalSchema = new mongoose.Schema(
 
 // Indexes
 proposalSchema.index({ client: 1, createdAt: -1 });
-proposalSchema.index({ status: 1 });
 
 // Virtual for formatted number
 proposalSchema.virtual('formattedNumber').get(function () {
