@@ -1,0 +1,140 @@
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Add New Client</h1>
+        <p class="page-subtitle">Create a new client profile</p>
+    </div>
+    <div class="page-actions">
+        <a href="/clients" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Clients
+        </a>
+    </div>
+</div>
+
+<!-- Form -->
+<form id="newClientForm" class="form-container">
+    <!-- Basic Information -->
+    <div class="form-section">
+        <h3 class="form-section-title">Basic Information</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label required">Full Name</label>
+                <input type="text" class="form-control" name="name" required />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Email</label>
+                <input type="email" class="form-control" name="email" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" class="form-control" name="phone" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Company</label>
+                <input type="text" class="form-control" name="company" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Website</label>
+                <input type="url" class="form-control" name="website" placeholder="https://" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select class="form-control" name="status">
+                    <option value="lead">Lead</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Person -->
+    <div class="form-section">
+        <h3 class="form-section-title">Contact Person</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Contact Name</label>
+                <input type="text" class="form-control" name="contactPerson.name" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" class="form-control" name="contactPerson.title" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Contact Email</label>
+                <input type="email" class="form-control" name="contactPerson.email" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Contact Phone</label>
+                <input type="tel" class="form-control" name="contactPerson.phone" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Details -->
+    <div class="form-section">
+        <h3 class="form-section-title">Business Details</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Industry</label>
+                <select class="form-control" name="industry">
+                    <option value="technology">Technology</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="finance">Finance</option>
+                    <option value="retail">Retail</option>
+                    <option value="education">Education</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Company Size</label>
+                <select class="form-control" name="companySize">
+                    <option value="">Select size</option>
+                    <option value="1-10">1-10 employees</option>
+                    <option value="11-50">11-50 employees</option>
+                    <option value="51-200">51-200 employees</option>
+                    <option value="201-500">201-500 employees</option>
+                    <option value="500+">500+ employees</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Notes</label>
+            <textarea
+                class="form-control"
+                name="notes"
+                rows="4"
+                placeholder="Any additional notes..."
+            ></textarea>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='/clients'">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Create Client
+        </button>
+    </div>
+</form>

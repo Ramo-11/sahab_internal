@@ -1,153 +1,201 @@
-<%- include('../partials/header') %>
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2>Clients</h2>
-        <p class="text-muted">Manage your client relationships</p>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Clients</h1>
+        <p class="page-subtitle">Manage your client relationships</p>
     </div>
-    <a href="/clients/new" class="btn btn-primary">Add New Client</a>
+    <div class="page-actions">
+        <button class="btn btn-secondary" onclick="exportData()">
+            <i class="fas fa-download"></i> Export
+        </button>
+        <a href="/clients/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Client
+        </a>
+    </div>
 </div>
 
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <input type="text" 
+                       class="form-control" 
+                       id="searchInput" 
+                       placeholder="Search clients..."
+                       value="<%= filters.search || '' %>">
+            </div>
+            <div class="filter-group">
+                <select class="form-control" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="lead" <%= filters.status === 'lead' ? 'selected' : '' %>>Lead</option>
+                    <option value="active" <%= filters.status === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="inactive" <%= filters.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                    <option value="archived" <%= filters.status === 'archived' ? 'selected' : '' %>>Archived</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select class="form-control" id="industryFilter">
+                    <option value="">All Industries</option>
+                    <option value="technology" <%= filters.industry === 'technology' ? 'selected' : '' %>>Technology</option>
+                    <option value="healthcare" <%= filters.industry === 'healthcare' ? 'selected' : '' %>>Healthcare</option>
+                    <option value="finance" <%= filters.industry === 'finance' ? 'selected' : '' %>>Finance</option>
+                    <option value="retail" <%= filters.industry === 'retail' ? 'selected' : '' %>>Retail</option>
+                    <option value="education" <%= filters.industry === 'education' ? 'selected' : '' %>>Education</option>
+                    <option value="other" <%= filters.industry === 'other' ? 'selected' : '' %>>Other</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+            <button class="btn btn-secondary" onclick="clearFilters()">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Clients Table -->
 <div class="card">
-    <div class="card-body">
-        <% if (clients && clients.length > 0) { %>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Company</th>
-                            <th>Email</th>
-                            <th class="hide-mobile">Phone</th>
-                            <th class="hide-mobile">Proposals</th>
-                            <th class="hide-mobile">Contracts</th>
-                            <th class="hide-mobile">Invoices</th>
-                            <th class="hide-mobile">Total Paid</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% clients.forEach(client => { %>
-                        <tr>
-                            <td>
-                                <a href="/clients/<%= client.id %>" class="text-primary font-weight-medium">
-                                    <%= client.name %>
+    <div class="table-responsive">
+        <table class="table" id="clientsTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Revenue</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (clients.length === 0) { %>
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <div class="empty-state">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p>No clients found</p>
+                            <a href="/clients/new" class="btn btn-primary btn-sm">Add Your First Client</a>
+                        </div>
+                    </td>
+                </tr>
+                <% } else { %>
+                    <% clients.forEach(client => { %>
+                    <tr data-id="<%= client._id %>" data-client='<%= JSON.stringify(client) %>'>
+                        <td class="editable-cell">
+                            <span class="view-mode">
+                                <a href="/clients/<%= client._id %>" class="text-dark">
+                                    <strong><%= client.name %></strong>
                                 </a>
-                            </td>
-                            <td>
-                                <div>
-                                    <div class="font-weight-medium"><%= client.company || 'N/A' %></div>
-                                </div>
-                            </td>
-                            <td>
+                            </span>
+                            <input type="text" class="form-control edit-mode" 
+                                   style="display: none;" value="<%= client.name %>" data-field="name">
+                        </td>
+                        <td class="editable-cell">
+                            <span class="view-mode"><%= client.company || '-' %></span>
+                            <input type="text" class="form-control edit-mode" 
+                                   style="display: none;" value="<%= client.company || '' %>" 
+                                   data-field="company">
+                        </td>
+                        <td class="editable-cell">
+                            <div class="view-mode">
                                 <% if (client.email) { %>
-                                    <a href="mailto:<%= client.email %>" class="text-primary"><%= client.email %></a>
-                                <% } else { %>
-                                    <span class="text-muted">No email</span>
+                                    <a href="mailto:<%= client.email %>" class="d-block">
+                                        <i class="fas fa-envelope"></i> <%= client.email %>
+                                    </a>
                                 <% } %>
-                            </td>
-                            <td class="hide-mobile">
+                                <% if (!client.email) { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </div>
+                            <div class="edit-mode" style="display: none;">
+                                <input type="email" class="form-control mb-1" 
+                                       placeholder="Email" value="<%= client.email || '' %>" 
+                                       data-field="email">
+                            </div>
+                        </td>
+                        <td class="editable-cell">
+                            <div class="view-mode">
                                 <% if (client.phone) { %>
-                                    <a href="tel:<%= client.phone %>" class="text-primary"><%= client.phone %></a>
-                                <% } else { %>
-                                    <span class="text-muted">No phone</span>
+                                    <a href="tel:<%= client.phone.replace(/\D/g,'') %>" class="d-block">
+                                        <i class="fas fa-phone"></i> <%= formatPhone(client.phone) %>
+                                    </a>
                                 <% } %>
-                            </td>
-                            <td class="hide-mobile">
-                                <span class="status-badge status-active"><%= client.proposal_count || 0 %></span>
-                            </td>
-                            <td class="hide-mobile">
-                                <span class="status-badge status-active"><%= client.contract_count || 0 %></span>
-                            </td>
-                            <td class="hide-mobile">
-                                <span class="status-badge status-active"><%= client.invoice_count || 0 %></span>
-                            </td>
-                            <td class="hide-mobile">
-                                <span class="text-success font-weight-medium">$<%= parseFloat(client.total_paid || 0).toFixed(2) %></span>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-1 flex-wrap">
-                                    <a href="/clients/<%= client.id %>" class="btn btn-sm btn-secondary">View</a>
-                                    <a href="/clients/<%= client.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
-                                    <a href="/documents/new?type=proposal&client_id=<%= client.id %>" class="btn btn-sm btn-success" title="Add Proposal">P</a>
-                                    <a href="/documents/new?type=contract&client_id=<%= client.id %>" class="btn btn-sm btn-info" title="Add Contract">C</a>
-                                    <a href="/documents/new?type=invoice&client_id=<%= client.id %>" class="btn btn-sm btn-warning" title="Add Invoice">I</a>
-                                    <button onclick="deleteClient('<%= client.id %>')" class="btn btn-sm btn-danger">×</button>
+                                <% if (!client.phone) { %>
+                                    <span class="text-muted">-</span>
+                                <% } %>
+                            </div>
+                            <div class="edit-mode" style="display: none;">
+                                <input type="tel" class="form-control" 
+                                       placeholder="Phone" value="<%= client.phone || '' %>" 
+                                       data-field="phone">
+                            </div>
+                        </td>
+                        <td class="editable-cell">
+                            <span class="view-mode">
+                                <span class="badge badge-<%= 
+                                    client.status === 'active' ? 'success' : 
+                                    client.status === 'lead' ? 'info' : 
+                                    client.status === 'inactive' ? 'warning' : 'secondary' 
+                                %>">
+                                    <%= client.status %>
+                                </span>
+                            </span>
+                            <select class="form-control edit-mode" style="display: none;" data-field="status">
+                                <option value="lead" <%= client.status === 'lead' ? 'selected' : '' %>>Lead</option>
+                                <option value="active" <%= client.status === 'active' ? 'selected' : '' %>>Active</option>
+                                <option value="inactive" <%= client.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                                <option value="archived" <%= client.status === 'archived' ? 'selected' : '' %>>Archived</option>
+                            </select>
+                        </td>
+                        <td>$<%= (client.totalRevenue / 1000).toFixed(1) %>k</td>
+                        <td>
+                            <div class="action-buttons">
+                                <!-- View mode actions -->
+                                <div class="view-actions">
+                                    <a href="/clients/<%= client._id %>" class="btn btn-sm btn-icon" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-icon" 
+                                            onclick="editClient('<%= client._id %>')" title="Quick Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-icon text-danger" 
+                                            onclick="deleteClient('<%= client._id %>')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
-                            </td>
-                        </tr>
-                        <% }); %>
-                    </tbody>
-                </table>
-            </div>
-        <% } else { %>
-            <div class="text-center py-5">
-                <svg style="width: 64px; height: 64px; color: var(--text-muted); margin-bottom: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                </svg>
-                <h4>No clients yet</h4>
-                <p class="text-muted mb-4">Start by adding your first client to begin managing your business relationships.</p>
-                <a href="/clients/new" class="btn btn-primary">Add Your First Client</a>
-            </div>
-        <% } %>
+                                <!-- Edit mode actions -->
+                                <div class="edit-actions" style="display: none;">
+                                    <button class="btn btn-sm btn-success" 
+                                            onclick="saveInlineClient('<%= client._id %>')">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" 
+                                            onclick="cancelInlineEdit('<%= client._id %>')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <% }); %>
+                <% } %>
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- Button styling to ensure colors show properly -->
-<style>
-.btn-sm {
-    min-width: 28px;
-    text-align: center;
-}
-
-.btn-info {
-    background-color: #17a2b8;
-    border-color: #17a2b8;
-    color: white;
-}
-
-.btn-info:hover {
-    background-color: #138496;
-    border-color: #117a8b;
-    color: white;
-}
-
-.btn-warning {
-    background-color: #ffc107;
-    border-color: #ffc107;
-    color: #212529;
-}
-
-.btn-warning:hover {
-    background-color: #e0a800;
-    border-color: #d39e00;
-    color: #212529;
-}
-</style>
-
-<script>
-function deleteClient(clientId) {
-    if (confirm('Are you sure you want to delete this client? This action cannot be undone.')) {
-        fetch(`/clients/${clientId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error deleting client');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting client');
-        });
+<%
+// Helper function for phone formatting
+function formatPhone(phone) {
+    if (!phone) return '';
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 10) {
+        return `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6)}`;
     }
+    return phone;
 }
-</script>
-
-<%- include('../partials/footer') %>
+%>

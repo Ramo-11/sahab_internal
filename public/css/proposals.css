@@ -1,0 +1,109 @@
+/* Proposals Page Styles */
+.proposals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Proposal Status Indicators */
+.proposal-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.proposal-status.expired {
+    color: var(--danger);
+}
+
+/* Proposal Form Specific */
+.deliverables-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.deliverable-item {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.deliverable-item input {
+    flex: 1;
+}
+
+.deliverable-remove {
+    color: var(--danger);
+    cursor: pointer;
+}
+
+/* Pricing Fields */
+#hourlyFields {
+    background: var(--gray-50);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    margin-top: var(--spacing-md);
+}
+
+/* Milestone Section */
+.milestone-item {
+    background: var(--gray-50);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.milestone-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Proposal Preview */
+.proposal-preview {
+    background: var(--white);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.proposal-header-info {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 2px solid var(--primary-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Proposal Actions */
+.proposal-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+}
+
+.send-proposal-btn {
+    background: var(--info);
+    color: var(--white);
+}
+
+.send-proposal-btn:hover {
+    background: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .proposal-header-info {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    #hourlyFields {
+        padding: var(--spacing-sm);
+    }
+}

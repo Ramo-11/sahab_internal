@@ -1,73 +1,36 @@
-require('dotenv').config();
+// ********** Imports **************
+const expressLayouts = require('express-ejs-layouts');
 const express = require('express');
-const path = require('path');
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-const session = require('express-session');
-const methodOverride = require('method-override');
-const { initializeDatabase } = require('./models/database');
 
+const router = require('./server/router');
+const { logger } = require('./server/logger');
+const connectDB = require('./server/dbController');
+// ********** End Imports **********
+
+// ********** Initialization **************
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// View engine setup
+require('dotenv').config({ quiet: true });
+logger.info('Running in ' + process.env.NODE_ENV + ' mode');
+connectDB();
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', './views');
+app.use(expressLayouts);
+app.set('layout', 'layout');
+app.set('layout extractScripts', true);
+app.set('layout extractStyles', true);
 
-// Static files
-app.use('/public', express.static(path.join(__dirname, 'public')));
-
-// Middleware
-app.use(bodyParser.urlencoded({ extended: true }));
+// Now add the regular body parsers for all other routes
 app.use(bodyParser.json());
-app.use(methodOverride('_method')); // Enable PUT/DELETE from forms
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static('public'));
+app.use(cookieParser());
+// ********** End Initialization **********
 
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // Set to true in production with HTTPS
-}));
+app.use('/', router);
 
-// Initialize database
-initializeDatabase();
-
-// Routes
-const clientRoutes = require('./server/routes/clients');
-const documentRoutes = require('./server/routes/documents');
-const dashboardRoutes = require('./server/routes/dashboard');
-
-app.use('/', dashboardRoutes);
-app.use('/clients', clientRoutes);
-app.use('/documents', documentRoutes);
-
-// Redirect old routes to new document system
-app.get('/proposals', (req, res) => res.redirect('/documents/proposals'));
-app.get('/proposals/*', (req, res) => res.redirect('/documents/proposals'));
-app.get('/contracts', (req, res) => res.redirect('/documents/contracts'));
-app.get('/contracts/*', (req, res) => res.redirect('/documents/contracts'));
-app.get('/invoices', (req, res) => res.redirect('/documents/invoices'));
-app.get('/invoices/*', (req, res) => res.redirect('/documents/invoices'));
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).render('404', { 
-    title: '404 - Page Not Found',
-    appName: process.env.APP_NAME || 'Sahab Solutions'
-  });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('error', { 
-    title: '500 - Server Error',
-    appName: process.env.APP_NAME || 'Sahab Solutions',
-    error: process.env.NODE_ENV === 'development' ? err : null
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`${process.env.APP_NAME || 'Sahab Solutions'} running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+app.listen(process.env.PORT, () =>
+    logger.info(`server running on port: http://localhost:${process.env.PORT}`)
+);

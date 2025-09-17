@@ -1,0 +1,134 @@
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Create New Proposal</h1>
+        <p class="page-subtitle">Track a proposal sent to client</p>
+    </div>
+    <div class="page-actions">
+        <a href="/proposals" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Proposals
+        </a>
+    </div>
+</div>
+
+<!-- Form -->
+<form id="newProposalForm" class="form-container">
+    <!-- Proposal Information -->
+    <div class="form-section">
+        <h3 class="form-section-title">Proposal Information</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label required">Proposal Title</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    name="title"
+                    placeholder="e.g., Website Redesign, Mobile App Development"
+                    required
+                />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label required">Client</label>
+                <select class="form-control" name="client" id="clientSelect" required>
+                    <option value="">Select a client</option>
+                    <% clients.forEach(client => { %>
+                    <option value="<%= client._id %>"><%= client.company || client.name %></option>
+                    <% }); %>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Project Type</label>
+                <select class="form-control" name="projectType">
+                    <option value="">Select type</option>
+                    <option value="website">Website Development</option>
+                    <option value="mobile_app">Mobile Application</option>
+                    <option value="software">Software Development</option>
+                    <option value="consulting">Consulting</option>
+                    <option value="maintenance">Maintenance & Support</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Proposal Value</label>
+                <div class="input-group">
+                    <span class="input-group-prepend">$</span>
+                    <input
+                        type="number"
+                        class="form-control"
+                        name="pricing.amount"
+                        min="0"
+                        step="100"
+                        placeholder="0.00"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Sent Date</label>
+                <input type="date" class="form-control" name="sentDate" />
+                <span class="form-help">When was this proposal sent?</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Status</label>
+                <select class="form-control" name="status">
+                    <option value="draft">Draft</option>
+                    <option value="sent" selected>Sent</option>
+                    <option value="viewed">Viewed</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label required">External Proposal Link</label>
+            <input
+                type="url"
+                class="form-control"
+                name="documentUrl"
+                placeholder="Link to proposal in Google Docs, Notion, etc."
+                required
+            />
+            <span class="form-help">Link to the actual proposal document</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Brief Description</label>
+            <textarea
+                class="form-control"
+                name="description"
+                rows="3"
+                placeholder="Brief summary of what's being proposed..."
+            ></textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Internal Notes</label>
+            <textarea
+                class="form-control"
+                name="internalNotes"
+                rows="2"
+                placeholder="Any notes for internal reference..."
+            ></textarea>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='/proposals'">
+            Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Create Proposal
+        </button>
+    </div>
+</form>

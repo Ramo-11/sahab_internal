@@ -1,0 +1,97 @@
+<!-- Mobile Toggle -->
+<button class="sidebar-toggle" id="sidebarToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <i class="fas fa-cube"></i>
+            <span>Sahab Solutions</span>
+        </div>
+    </div>
+
+    <div class="sidebar-nav">
+        <div class="nav-item">
+            <a href="/" class="nav-link <%= locals.activeTab === 'dashboard' ? 'active' : '' %>">
+                <span class="nav-icon">
+                    <i class="fas fa-tachometer-alt"></i>
+                </span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a
+                href="/clients"
+                class="nav-link <%= locals.activeTab === 'clients' ? 'active' : '' %>"
+            >
+                <span class="nav-icon">
+                    <i class="fas fa-users"></i>
+                </span>
+                <span class="nav-text">Clients</span>
+                <% if (locals.newClientsCount) { %>
+                <span class="nav-badge"><%= newClientsCount %></span>
+                <% } %>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a
+                href="/proposals"
+                class="nav-link <%= locals.activeTab === 'proposals' ? 'active' : '' %>"
+            >
+                <span class="nav-icon">
+                    <i class="fas fa-file-alt"></i>
+                </span>
+                <span class="nav-text">Proposals</span>
+                <% if (locals.pendingProposals) { %>
+                <span class="nav-badge"><%= pendingProposals %></span>
+                <% } %>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a
+                href="/invoices"
+                class="nav-link <%= locals.activeTab === 'invoices' ? 'active' : '' %>"
+            >
+                <span class="nav-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </span>
+                <span class="nav-text">Invoices</span>
+                <% if (locals.overdueInvoices) { %>
+                <span class="nav-badge"><%= overdueInvoices %></span>
+                <% } %>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a
+                href="/analysis"
+                class="nav-link <%= locals.activeTab === 'analysis' ? 'active' : '' %>"
+            >
+                <span class="nav-icon">
+                    <i class="fas fa-chart-line"></i>
+                </span>
+                <span class="nav-text">Analysis</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-details">
+                <div class="user-name">Admin User</div>
+                <div class="user-role">Administrator</div>
+            </div>
+            <button class="btn btn-icon btn-sm">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </div>
+</nav>

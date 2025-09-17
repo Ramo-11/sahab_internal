@@ -1,0 +1,189 @@
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Proposals</h1>
+        <p class="page-subtitle">Manage your business proposals</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-secondary" onclick="exportData()">
+            <i class="fas fa-download"></i> Export
+        </button>
+        <a href="/proposals/new" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Proposal
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <input type="text" 
+                       class="form-control" 
+                       id="searchInput" 
+                       placeholder="Search proposals..."
+                       value="<%= filters.search || '' %>">
+            </div>
+            <div class="filter-group">
+                <select class="form-control" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="draft" <%= filters.status === 'draft' ? 'selected' : '' %>>Draft</option>
+                    <option value="sent" <%= filters.status === 'sent' ? 'selected' : '' %>>Sent</option>
+                    <option value="viewed" <%= filters.status === 'viewed' ? 'selected' : '' %>>Viewed</option>
+                    <option value="accepted" <%= filters.status === 'accepted' ? 'selected' : '' %>>Accepted</option>
+                    <option value="rejected" <%= filters.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select class="form-control" id="clientFilter">
+                    <option value="">All Clients</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+            <button class="btn btn-secondary" onclick="clearFilters()">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Proposals Table -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table" id="proposalsTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Client</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (proposals.length === 0) { %>
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <div class="empty-state">
+                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                            <p>No proposals found</p>
+                            <a href="/proposals/new" class="btn btn-primary btn-sm">Create Your First Proposal</a>
+                        </div>
+                    </td>
+                </tr>
+                <% } else { %>
+                    <% proposals.forEach(proposal => { %>
+                    <tr data-id="<%= proposal._id %>" data-proposal='<%= JSON.stringify(proposal) %>'>
+                        <td class="editable-cell">
+                            <span class="view-mode">
+                                <strong><%= proposal.title %></strong>
+                            </span>
+                            <input type="text" class="form-control edit-mode" 
+                                   style="display: none;" value="<%= proposal.title %>" data-field="title">
+                        </td>
+                        <td><%= proposal.client?.company || proposal.client?.name || '-' %></td>
+                        <td class="editable-cell">
+                            <% if (proposal.pricing?.amount && proposal.pricing.amount > 0) { %>
+                                <span class="view-mode">$<%= (proposal.pricing.amount / 1000).toFixed(1) %>k</span>
+                                <input type="number" class="form-control edit-mode" 
+                                       style="display: none;" value="<%= proposal.pricing.amount %>" 
+                                       data-field="pricing.amount" step="100">
+                            <% } else { %>
+                                <span class="view-mode text-muted">-</span>
+                                <input type="number" class="form-control edit-mode" 
+                                       style="display: none;" value="0" 
+                                       data-field="pricing.amount" step="100" placeholder="0">
+                            <% } %>
+                        </td>
+                        <td class="editable-cell">
+                            <span class="view-mode">
+                                <span class="badge badge-<%= 
+                                    proposal.status === 'accepted' ? 'success' : 
+                                    proposal.status === 'rejected' ? 'danger' : 
+                                    proposal.status === 'sent' ? 'info' : 
+                                    proposal.status === 'viewed' ? 'primary' : 'warning' 
+                                %>">
+                                    <%= proposal.status %>
+                                </span>
+                            </span>
+                            <select class="form-control edit-mode" style="display: none;" data-field="status">
+                                <option value="draft" <%= proposal.status === 'draft' ? 'selected' : '' %>>Draft</option>
+                                <option value="sent" <%= proposal.status === 'sent' ? 'selected' : '' %>>Sent</option>
+                                <option value="viewed" <%= proposal.status === 'viewed' ? 'selected' : '' %>>Viewed</option>
+                                <option value="accepted" <%= proposal.status === 'accepted' ? 'selected' : '' %>>Accepted</option>
+                                <option value="rejected" <%= proposal.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
+                            </select>
+                        </td>
+                        <td>
+                            <% 
+                            let dateToShow = '';
+                            let dateLabel = '';
+                            if (proposal.status === 'accepted' && proposal.acceptedDate) {
+                                dateToShow = new Date(proposal.acceptedDate).toLocaleDateString();
+                                dateLabel = 'Accepted';
+                            } else if (proposal.status === 'rejected' && proposal.rejectedDate) {
+                                dateToShow = new Date(proposal.rejectedDate).toLocaleDateString();
+                                dateLabel = 'Rejected';
+                            } else if (proposal.status === 'viewed' && proposal.viewedDate) {
+                                dateToShow = new Date(proposal.viewedDate).toLocaleDateString();
+                                dateLabel = 'Viewed';
+                            } else if (proposal.sentDate) {
+                                dateToShow = new Date(proposal.sentDate).toLocaleDateString();
+                                dateLabel = 'Sent';
+                            } else {
+                                dateToShow = new Date(proposal.createdAt).toLocaleDateString();
+                                dateLabel = 'Created';
+                            }
+                            %>
+                            <small class="text-muted"><%= dateLabel %>:</small><br>
+                            <%= dateToShow %>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <!-- View mode actions -->
+                                <div class="view-actions">
+                                    <% if (proposal.documentUrl) { %>
+                                        <a href="<%= proposal.documentUrl %>" target="_blank" 
+                                           class="btn btn-sm btn-icon text-primary" title="View Document">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    <% } %>
+                                    <% if (proposal.status === 'sent' || proposal.status === 'viewed') { %>
+                                        <button class="btn btn-sm btn-icon text-success" 
+                                                onclick="markAsAccepted('<%= proposal._id %>')" title="Mark as Accepted">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                    <% } %>
+                                    <button class="btn btn-sm btn-icon" 
+                                            onclick="editProposal('<%= proposal._id %>')" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-icon text-danger" 
+                                            onclick="deleteProposal('<%= proposal._id %>')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <!-- Edit mode actions -->
+                                <div class="edit-actions" style="display: none;">
+                                    <button class="btn btn-sm btn-success" 
+                                            onclick="saveProposal('<%= proposal._id %>')">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" 
+                                            onclick="cancelEdit('<%= proposal._id %>')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <% }); %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>

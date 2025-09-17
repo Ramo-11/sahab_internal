@@ -1,0 +1,275 @@
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">
+            <span id="displayName"><%= clientData.displayName || clientData.company || clientData.name %></span>
+        </h1>
+        <div class="page-meta">
+            <span class="badge badge-<%= clientData.status === 'active' ? 'success' : clientData.status === 'lead' ? 'info' : 'warning' %>">
+                <%= clientData.status %>
+            </span>
+            <span class="text-muted">Added <%= new Date(clientData.createdAt).toLocaleDateString() %></span>
+        </div>
+    </div>
+    <div class="page-actions">
+        <button id="editBtn" class="btn btn-secondary" onclick="toggleEditMode()">
+            <i class="fas fa-edit"></i> Edit
+        </button>
+        <button id="saveBtn" class="btn btn-primary" style="display: none;" onclick="saveClient()">
+            <i class="fas fa-save"></i> Save
+        </button>
+        <button id="cancelBtn" class="btn btn-secondary" style="display: none;" onclick="cancelEdit()">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+        <button class="btn btn-danger" onclick="deleteClient('<%= clientData._id %>')">
+            <i class="fas fa-trash"></i> Delete
+        </button>
+    </div>
+</div>
+
+<!-- Client Details -->
+<div class="detail-grid">
+    <!-- Contact Information -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Contact Information</h3>
+        </div>
+        <div class="card-body">
+            <div class="detail-row">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">
+                    <span class="view-mode"><%= clientData.name %></span>
+                    <input type="text" class="form-control edit-mode" style="display: none;" 
+                           data-field="name" value="<%= clientData.name %>">
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">
+                    <span class="view-mode">
+                        <a href="mailto:<%= clientData.email %>"><%= clientData.email %></a>
+                    </span>
+                    <input type="email" class="form-control edit-mode" style="display: none;" 
+                           data-field="email" value="<%= clientData.email %>">
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Phone:</span>
+                <span class="detail-value">
+                    <span class="view-mode"><%= clientData.phone || 'Not provided' %></span>
+                    <input type="tel" class="form-control edit-mode" style="display: none;" 
+                           data-field="phone" value="<%= clientData.phone || '' %>">
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Company:</span>
+                <span class="detail-value">
+                    <span class="view-mode"><%= clientData.company || 'Not provided' %></span>
+                    <input type="text" class="form-control edit-mode" style="display: none;" 
+                           data-field="company" value="<%= clientData.company || '' %>">
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Website:</span>
+                <span class="detail-value">
+                    <span class="view-mode">
+                        <% if (clientData.website) { %>
+                            <a href="<%= clientData.website %>" target="_blank"><%= clientData.website %></a>
+                        <% } else { %>
+                            Not provided
+                        <% } %>
+                    </span>
+                    <input type="url" class="form-control edit-mode" style="display: none;" 
+                           data-field="website" value="<%= clientData.website || '' %>" placeholder="https://">
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Business Details -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Business Details</h3>
+        </div>
+        <div class="card-body">
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="detail-value">
+                    <span class="view-mode">
+                        <span class="badge badge-<%= clientData.status === 'active' ? 'success' : clientData.status === 'lead' ? 'info' : 'warning' %>">
+                            <%= clientData.status %>
+                        </span>
+                    </span>
+                    <select class="form-control edit-mode" style="display: none;" data-field="status">
+                        <option value="lead" <%= clientData.status === 'lead' ? 'selected' : '' %>>Lead</option>
+                        <option value="active" <%= clientData.status === 'active' ? 'selected' : '' %>>Active</option>
+                        <option value="inactive" <%= clientData.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                        <option value="archived" <%= clientData.status === 'archived' ? 'selected' : '' %>>Archived</option>
+                    </select>
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Industry:</span>
+                <span class="detail-value">
+                    <span class="view-mode"><%= clientData.industry || 'Not specified' %></span>
+                    <select class="form-control edit-mode" style="display: none;" data-field="industry">
+                        <option value="">Select industry</option>
+                        <option value="technology" <%= clientData.industry === 'technology' ? 'selected' : '' %>>Technology</option>
+                        <option value="healthcare" <%= clientData.industry === 'healthcare' ? 'selected' : '' %>>Healthcare</option>
+                        <option value="finance" <%= clientData.industry === 'finance' ? 'selected' : '' %>>Finance</option>
+                        <option value="retail" <%= clientData.industry === 'retail' ? 'selected' : '' %>>Retail</option>
+                        <option value="education" <%= clientData.industry === 'education' ? 'selected' : '' %>>Education</option>
+                        <option value="other" <%= clientData.industry === 'other' ? 'selected' : '' %>>Other</option>
+                    </select>
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Company Size:</span>
+                <span class="detail-value">
+                    <span class="view-mode"><%= clientData.companySize || 'Not specified' %></span>
+                    <select class="form-control edit-mode" style="display: none;" data-field="companySize">
+                        <option value="">Select size</option>
+                        <option value="1-10" <%= clientData.companySize === '1-10' ? 'selected' : '' %>>1-10 employees</option>
+                        <option value="11-50" <%= clientData.companySize === '11-50' ? 'selected' : '' %>>11-50 employees</option>
+                        <option value="51-200" <%= clientData.companySize === '51-200' ? 'selected' : '' %>>51-200 employees</option>
+                        <option value="201-500" <%= clientData.companySize === '201-500' ? 'selected' : '' %>>201-500 employees</option>
+                        <option value="500+" <%= clientData.companySize === '500+' ? 'selected' : '' %>>500+ employees</option>
+                    </select>
+                </span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Total Revenue:</span>
+                $<%= clientData.totalRevenue ? (clientData.totalRevenue / 1000).toFixed(1) : '0.0' %>k
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Total Projects:</span>
+                <span class="detail-value"><%= clientData.totalProjects || 0 %></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notes Section -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Notes</h3>
+    </div>
+    <div class="card-body">
+        <div class="view-mode">
+            <p><%= clientData.notes || 'No notes added yet.' %></p>
+        </div>
+        <textarea class="form-control edit-mode" style="display: none;" 
+                  data-field="notes" rows="4"><%= clientData.notes || '' %></textarea>
+    </div>
+</div>
+
+<!-- Related Data Tabs -->
+<div class="card">
+    <div class="tab-nav">
+        <button class="tab-link active" data-tab="proposals">
+            Proposals (<%= proposals.length %>)
+        </button>
+        <button class="tab-link" data-tab="invoices">Invoices (<%= invoices.length %>)</button>
+        <button class="tab-link" data-tab="history">History</button>
+    </div>
+
+    <div class="tab-content">
+        <!-- Proposals Tab -->
+        <div class="tab-pane active" id="proposals">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (proposals.length === 0) { %>
+                        <tr>
+                            <td colspan="5" class="text-center">No proposals yet</td>
+                        </tr>
+                        <% } else { %>
+                            <% proposals.forEach(proposal => { %>
+                            <tr>
+                                <td><%= proposal.title %></td>
+                                <td>$<%= ((proposal.pricing?.amount || 0) / 1000).toFixed(1) %>k</td>
+                                <td>
+                                    <span class="badge badge-<%= proposal.status === 'accepted' ? 'success' : 'info' %>">
+                                        <%= proposal.status %>
+                                    </span>
+                                </td>
+                                <td><%= new Date(proposal.createdAt).toLocaleDateString() %></td>
+                                <td>
+                                    <a href="/proposals/<%= proposal._id %>" class="btn btn-sm btn-icon">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Invoices Tab -->
+        <div class="tab-pane" id="invoices">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Due Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (invoices.length === 0) { %>
+                        <tr>
+                            <td colspan="5" class="text-center">No invoices yet</td>
+                        </tr>
+                        <% } else { %>
+                            <% invoices.forEach(invoice => { %>
+                            <tr>
+                                <td>#<%= invoice.invoiceNumber %></td>
+                                <td>$<%= ((invoice.amount || 0) / 1000).toFixed(1) %>k</td>
+                                <td>
+                                    <span class="badge badge-<%= invoice.status === 'paid' ? 'success' : invoice.status === 'overdue' ? 'danger' : 'warning' %>">
+                                        <%= invoice.status %>
+                                    </span>
+                                </td>
+                                <td><%= new Date(invoice.dueDate).toLocaleDateString() %></td>
+                                <td>
+                                    <a href="/invoices/<%= invoice._id %>" class="btn btn-sm btn-icon">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-pane" id="history">
+            <div class="timeline" id="clientHistory">
+                <p class="text-center text-muted">Loading history...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data -->
+<div id="clientData" 
+     style="display: none"
+     data-client-id="<%= clientData._id %>"
+     data-client='<%= JSON.stringify(clientData) %>'>
+</div>

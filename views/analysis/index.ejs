@@ -1,0 +1,236 @@
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Analysis & Reports</h1>
+        <p class="page-subtitle">Business insights and performance metrics</p>
+    </div>
+    <div class="page-actions">
+        <select class="form-control" id="periodSelect" style="width: 150px;">
+            <option value="30" <%= period == '30' ? 'selected' : '' %>>Last 30 Days</option>
+            <option value="60" <%= period == '60' ? 'selected' : '' %>>Last 60 Days</option>
+            <option value="90" <%= period == '90' ? 'selected' : '' %>>Last 90 Days</option>
+            <option value="365" <%= period == '365' ? 'selected' : '' %>>Last Year</option>
+        </select>
+        <button class="btn btn-primary" onclick="refreshAnalysis()">
+            <i class="fas fa-sync"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="stats-grid mb-3">
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="stat-value">$<%= (stats.invoices.totalRevenue / 1000).toFixed(1) %>k</div>
+        <div class="stat-label">Total Revenue</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="stat-value"><%= ((stats.proposals.accepted / (stats.proposals.sent || 1)) * 100).toFixed(1) %>%</div>
+        <div class="stat-label">Conversion Rate</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon info">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-value"><%= stats.clients.totals[0]?.totalClients || 0 %></div>
+        <div class="stat-label">Total Clients</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value"><%= stats.invoices.avgInvoiceAmount ? (stats.invoices.avgInvoiceAmount / 1000).toFixed(1) + 'k' : '0' %></div>
+        <div class="stat-label">Avg Invoice Value</div>
+    </div>
+</div>
+
+<!-- Analysis Tabs -->
+<div class="card">
+    <div class="tab-nav">
+        <button class="tab-link active" data-tab="revenue">Revenue Analysis</button>
+        <button class="tab-link" data-tab="clients">Client Analysis</button>
+        <button class="tab-link" data-tab="proposals">Proposal Performance</button>
+        <button class="tab-link" data-tab="invoices">Invoice Analysis</button>
+    </div>
+    
+    <div class="tab-content">
+        <!-- Revenue Tab -->
+        <div class="tab-pane active" id="revenue">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Revenue Trend</h3>
+                    <div class="chart-options">
+                        <button class="chart-option active" data-view="monthly">Monthly</button>
+                        <button class="chart-option" data-view="quarterly">Quarterly</button>
+                        <button class="chart-option" data-view="yearly">Yearly</button>
+                    </div>
+                </div>
+                <canvas id="revenueChart"></canvas>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">This Month</div>
+                    <div class="metric-value">$<%= ((stats.invoices.totalRevenue || 0) / 1000).toFixed(1) %>k</div>
+                    <div class="metric-change positive">+12%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Outstanding</div>
+                    <div class="metric-value">$<%= ((stats.invoices.totalUnpaid || 0) / 1000).toFixed(1) %>k</div>
+                    <div class="metric-change negative">-5%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Projected</div>
+                    <div class="metric-value">$<%= ((stats.invoices.totalRevenue * 1.2 || 0) / 1000).toFixed(1) %>k</div>
+                    <div class="metric-change">Next Month</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Clients Tab -->
+        <div class="tab-pane" id="clients">
+            <div class="charts-row">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Client Distribution</h3>
+                    </div>
+                    <canvas id="clientDistChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Client by Industry</h3>
+                    </div>
+                    <canvas id="clientIndustryChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="table-container mt-3">
+                <h4>Top Clients by Revenue</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Industry</th>
+                                <th>Projects</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topClientsTable">
+                            <tr>
+                                <td colspan="4" class="text-center">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Proposals Tab -->
+        <div class="tab-pane" id="proposals">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">Proposal Conversion Funnel</h3>
+                </div>
+                <canvas id="proposalFunnelChart"></canvas>
+            </div>
+            
+            <div class="metrics-grid mt-3">
+                <div class="metric-card">
+                    <div class="metric-label">Total Sent</div>
+                    <div class="metric-value"><%= stats.proposals.sent || 0 %></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Accepted</div>
+                    <div class="metric-value"><%= stats.proposals.accepted || 0 %></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Value</div>
+                    <div class="metric-value">$<%= ((stats.proposals.acceptedValue || 0) / 1000).toFixed(1) %>k</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Win Rate</div>
+                    <div class="metric-value"><%= stats.proposals.sent ? ((stats.proposals.accepted / stats.proposals.sent) * 100).toFixed(1) : 0 %>%</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invoices Tab -->
+        <div class="tab-pane" id="invoices">
+            <div class="charts-row">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Payment Status</h3>
+                    </div>
+                    <canvas id="paymentStatusChart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Aging Analysis</h3>
+                    </div>
+                    <canvas id="agingChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="metrics-grid mt-3">
+                <div class="metric-card">
+                    <div class="metric-label">Avg Days to Pay</div>
+                    <div class="metric-value">18</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Overdue Count</div>
+                    <div class="metric-value"><%= stats.invoices.unpaidCount || 0 %></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Collection Rate</div>
+                    <div class="metric-value">94%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h3 class="card-title">Export Data</h3>
+    </div>
+    <div class="card-body">
+        <div class="export-options">
+            <button class="export-btn" onclick="exportData('revenue')">
+                <i class="fas fa-chart-line"></i>
+                <span>Revenue Report</span>
+            </button>
+            <button class="export-btn" onclick="exportData('clients')">
+                <i class="fas fa-users"></i>
+                <span>Client Report</span>
+            </button>
+            <button class="export-btn" onclick="exportData('proposals')">
+                <i class="fas fa-file-alt"></i>
+                <span>Proposal Report</span>
+            </button>
+            <button class="export-btn" onclick="exportData('invoices')">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Invoice Report</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data -->
+<div id="analysisData" 
+     style="display:none;"
+     data-stats='<%= JSON.stringify(stats) %>'
+     data-period="<%= period %>"
+     data-date-range='<%= JSON.stringify(dateRange) %>'>
+</div>

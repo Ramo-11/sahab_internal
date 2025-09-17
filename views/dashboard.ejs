@@ -1,83 +1,186 @@
-<%- include('partials/header') %>
+<!-- Dashboard Header -->
+<div class="dashboard-header">
+    <h1 class="dashboard-title">Dashboard</h1>
+    <p class="dashboard-subtitle">
+        Welcome back! Here's what's happening with your business today.
+    </p>
+</div>
 
-<!-- Dashboard Stats -->
-<div class="dashboard-stats">
-    <div class="card">
-        <div class="card-body text-center">
-            <h3><%= stats.activeClients %></h3>
-            <p class="text-muted">Active Clients</p>
+<!-- Client Stats Section -->
+<div class="stats-section">
+    <h3 class="section-title">Clients</h3>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value"><%= stats.clientStats?.active || 0 %></div>
+            <div class="stat-label">Active</div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-body text-center">
-            <h3><%= stats.pendingClients %></h3>
-            <p class="text-muted">Pending Clients</p>
+        <div class="stat-card">
+            <div class="stat-icon info">
+                <i class="fas fa-user-clock"></i>
+            </div>
+            <div class="stat-value"><%= stats.clientStats?.lead || 0 %></div>
+            <div class="stat-label">Leads</div>
         </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body text-center">
-            <h3><%= stats.totalProposals %></h3>
-            <p class="text-muted">Total Proposals</p>
+
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="fas fa-user-minus"></i>
+            </div>
+            <div class="stat-value"><%= stats.clientStats?.inactive || 0 %></div>
+            <div class="stat-label">Inactive</div>
         </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body text-center">
-            <h3><%= stats.totalContracts %></h3>
-            <p class="text-muted">Total Contracts</p>
-        </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body text-center">
-            <h3><%= stats.totalInvoices %></h3>
-            <p class="text-muted">Total Invoices</p>
-        </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body text-center">
-            <h3 class="<%= stats.pendingInvoices > 0 ? 'text-warning' : 'text-success' %>"><%= stats.pendingInvoices %></h3>
-            <p class="text-muted">Pending Invoices</p>
-        </div>
-    </div>
-    
-    <div class="card">
-        <div class="card-body text-center">
-            <h3 class="text-success">$<%= (stats.totalCollected || 0).toFixed(2) %></h3>
-            <p class="text-muted">Total Collected</p>
+
+        <div class="stat-card">
+            <div class="stat-icon secondary">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-value"><%= stats.clientStats?.total || 0 %></div>
+            <div class="stat-label">Total Clients</div>
         </div>
     </div>
 </div>
 
-<div class="grid-2">
-    <!-- Recent Clients -->
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>Recent Clients</h4>
-            <a href="/clients/new" class="btn btn-sm btn-primary">Add Client</a>
+<!-- Invoice Stats Section -->
+<div class="stats-section">
+    <h3 class="section-title">Invoices</h3>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-value">
+                $<%= ((stats.invoiceStats?.totalPaid || 0) / 1000).toFixed(1) %>k
+            </div>
+            <div class="stat-label">Total Paid</div>
         </div>
-        <div class="card-body">
-            <% if (recentClients && recentClients.length > 0) { %>
-                <% recentClients.forEach(client => { %>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h6><a href="/clients/<%= client.id %>" class="text-primary"><%= client.name %></a></h6>
-                        <p class="text-muted mb-1"><%= client.company || 'No company' %></p>
-                        <small class="text-muted"><%= new Date(client.created_at).toLocaleDateString() %></small>
-                    </div>
+
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="stat-value">
+                $<%= ((stats.invoiceStats?.totalPending || 0) / 1000).toFixed(1) %>k
+            </div>
+            <div class="stat-label">Pending</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon info">
+                <i class="fas fa-paper-plane"></i>
+            </div>
+            <div class="stat-value"><%= stats.invoiceStats?.sent || 0 %></div>
+            <div class="stat-label">Sent</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-value"><%= stats.invoiceStats?.overdue || 0 %></div>
+            <div class="stat-label">Overdue</div>
+        </div>
+    </div>
+</div>
+
+<!-- Proposal Stats Section -->
+<div class="stats-section">
+    <h3 class="section-title">Proposals</h3>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-value"><%= stats.proposalStats?.sent || 0 %></div>
+            <div class="stat-label">Sent</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon info">
+                <i class="fas fa-eye"></i>
+            </div>
+            <div class="stat-value"><%= stats.proposalStats?.viewed || 0 %></div>
+            <div class="stat-label">Viewed</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value"><%= stats.proposalStats?.accepted || 0 %></div>
+            <div class="stat-label">Accepted</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon secondary">
+                <i class="fas fa-file-signature"></i>
+            </div>
+            <div class="stat-value">
+                $<%= ((stats.proposalStats?.totalValue || 0) / 1000).toFixed(1) %>k
+            </div>
+            <div class="stat-label">Total Value</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-row">
+    <!-- Revenue Chart -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3 class="chart-title">Revenue Overview</h3>
+            <div class="chart-options">
+                <button class="chart-option active" data-period="week">Week</button>
+                <button class="chart-option" data-period="month">Month</button>
+                <button class="chart-option" data-period="year">Year</button>
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Client Distribution -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3 class="chart-title">Client Distribution</h3>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="clientChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity & Quick Actions -->
+<div class="charts-row">
+    <!-- Recent Activity -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent Activity</h3>
+        </div>
+        <div class="activity-list">
+            <% if (recentClients && recentClients.length > 0) { %> <%
+            recentClients.forEach(function(client) { %>
+            <div class="activity-item">
+                <div
+                    class="activity-icon"
+                    style="background: rgba(113, 23, 242, 0.1); color: var(--primary-color)"
+                >
+                    <i class="fas fa-user-plus"></i>
                 </div>
-                <% }); %>
-                <div class="text-center mt-3">
-                    <a href="/clients" class="btn btn-sm btn-secondary">View All Clients</a>
+                <div class="activity-content">
+                    <div class="activity-title">New client added</div>
+                    <div class="activity-desc"><%= client.company || client.name %></div>
                 </div>
-            <% } else { %>
-                <p class="text-muted text-center">No clients yet</p>
-                <div class="text-center">
-                    <a href="/clients/new" class="btn btn-primary">Add Your First Client</a>
+                <div class="activity-time">
+                    <%= new Date(client.createdAt).toLocaleDateString() %>
                 </div>
+            </div>
+            <% }); %> <% } else { %>
+            <p class="text-center text-muted">No recent activity</p>
             <% } %>
         </div>
     </div>
@@ -85,126 +188,41 @@
     <!-- Quick Actions -->
     <div class="card">
         <div class="card-header">
-            <h4>Quick Actions</h4>
+            <h3 class="card-title">Quick Actions</h3>
         </div>
-        <div class="card-body">
-            <div class="d-flex flex-column gap-3">
-                <a href="/documents/new?type=proposal" class="btn btn-primary">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Add Proposal Link
-                </a>
-                <a href="/documents/new?type=contract" class="btn btn-success">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Add Contract Link
-                </a>
-                <a href="/documents/new?type=invoice" class="btn btn-warning">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                    </svg>
-                    Add Invoice Link
-                </a>
-                <a href="/clients/new" class="btn btn-secondary">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 8px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                    </svg>
-                    Add New Client
-                </a>
-            </div>
+        <div class="quick-actions">
+            <a href="/clients/new" class="quick-action-btn">
+                <div class="quick-action-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="quick-action-text">Add Client</div>
+            </a>
+            <a href="/proposals/new" class="quick-action-btn">
+                <div class="quick-action-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="quick-action-text">Create Proposal</div>
+            </a>
+            <a href="/invoices/new" class="quick-action-btn">
+                <div class="quick-action-icon">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div class="quick-action-text">New Invoice</div>
+            </a>
+            <a href="/analysis" class="quick-action-btn">
+                <div class="quick-action-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="quick-action-text">View Reports</div>
+            </a>
         </div>
     </div>
 </div>
 
-<div class="grid-3 mt-4">
-    <!-- Recent Proposals -->
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>Recent Proposals</h4>
-            <a href="/proposals" class="btn btn-sm btn-secondary">View All</a>
-        </div>
-        <div class="card-body">
-            <% if (recentProposals && recentProposals.length > 0) { %>
-                <% recentProposals.forEach(proposal => { %>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h6><a href="<%= proposal.external_url || '#' %>" target="_blank" class="text-primary"><%= proposal.title %></a></h6>
-                        <p class="text-muted mb-1"><%= proposal.client_name %></p>
-                        <% if (proposal.amount) { %>
-                            <small class="text-muted">$<%= parseFloat(proposal.amount).toFixed(2) %></small>
-                        <% } %>
-                    </div>
-                    <span class="status-badge status-<%= proposal.status %>"><%= proposal.status %></span>
-                </div>
-                <% }); %>
-            <% } else { %>
-                <p class="text-muted text-center">No proposals yet</p>
-                <div class="text-center">
-                    <a href="/documents/new?type=proposal" class="btn btn-sm btn-primary">Add First Proposal</a>
-                </div>
-            <% } %>
-        </div>
-    </div>
-
-    <!-- Recent Contracts -->
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>Recent Contracts</h4>
-            <a href="/contracts" class="btn btn-sm btn-secondary">View All</a>
-        </div>
-        <div class="card-body">
-            <% if (recentContracts && recentContracts.length > 0) { %>
-                <% recentContracts.forEach(contract => { %>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h6><a href="<%= contract.external_url || '#' %>" target="_blank" class="text-primary"><%= contract.title %></a></h6>
-                        <p class="text-muted mb-1"><%= contract.client_name %></p>
-                        <% if (contract.amount) { %>
-                            <small class="text-muted">$<%= parseFloat(contract.amount).toFixed(2) %></small>
-                        <% } %>
-                    </div>
-                    <span class="status-badge status-<%= contract.status %>"><%= contract.status %></span>
-                </div>
-                <% }); %>
-            <% } else { %>
-                <p class="text-muted text-center">No contracts yet</p>
-                <div class="text-center">
-                    <a href="/documents/new?type=contract" class="btn btn-sm btn-success">Add First Contract</a>
-                </div>
-            <% } %>
-        </div>
-    </div>
-
-    <!-- Recent Invoices -->
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>Recent Invoices</h4>
-            <a href="/invoices" class="btn btn-sm btn-secondary">View All</a>
-        </div>
-        <div class="card-body">
-            <% if (recentInvoices && recentInvoices.length > 0) { %>
-                <% recentInvoices.forEach(invoice => { %>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h6><a href="<%= invoice.external_url || '#' %>" target="_blank" class="text-primary"><%= invoice.title %></a></h6>
-                        <p class="text-muted mb-1"><%= invoice.client_name %></p>
-                        <% if (invoice.amount) { %>
-                            <small class="text-muted">$<%= parseFloat(invoice.amount).toFixed(2) %></small>
-                        <% } %>
-                    </div>
-                    <span class="status-badge status-<%= invoice.status %>"><%= invoice.status %></span>
-                </div>
-                <% }); %>
-            <% } else { %>
-                <p class="text-muted text-center">No invoices yet</p>
-                <div class="text-center">
-                    <a href="/documents/new?type=invoice" class="btn btn-sm btn-warning">Add First Invoice</a>
-                </div>
-            <% } %>
-        </div>
-    </div>
-</div>
-
-<%- include('partials/footer') %>
+<!-- Hidden data for JavaScript -->
+<div
+    id="dashboardData"
+    style="display: none"
+    data-stats="<%= encodeURIComponent(JSON.stringify(stats)) %>"
+    data-recent-clients="<%= encodeURIComponent(JSON.stringify(recentClients)) %>"
+></div>

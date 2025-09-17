@@ -1,0 +1,182 @@
+/* Enhanced Table Styles */
+.table-container {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.table-title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+}
+
+.table-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Table styles */
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead th {
+    background: var(--gray-50);
+    font-weight: var(--font-weight-semibold);
+    color: var(--gray-700);
+    padding: var(--spacing-md);
+    text-align: left;
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--gray-200);
+    white-space: nowrap;
+}
+
+.table tbody td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--gray-100);
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background: rgba(113, 23, 242, 0.02);
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Sortable headers */
+.table th.sortable {
+    cursor: pointer;
+    position: relative;
+    padding-right: var(--spacing-lg);
+}
+
+.table th.sortable:hover {
+    background: var(--gray-100);
+}
+
+.table th.sortable::after {
+    content: '\f0dc';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    right: var(--spacing-sm);
+    color: var(--gray-400);
+    font-size: var(--font-size-xs);
+}
+
+.table th.sort-asc::after {
+    content: '\f0de';
+    color: var(--primary-color);
+}
+
+.table th.sort-desc::after {
+    content: '\f0dd';
+    color: var(--primary-color);
+}
+
+/* Table status badges */
+.table .badge {
+    font-size: var(--font-size-xs);
+    padding: 4px 8px;
+    font-weight: var(--font-weight-semibold);
+    text-transform: capitalize;
+}
+
+/* Table actions */
+.table-actions-cell {
+    white-space: nowrap;
+}
+
+.table-actions-cell .btn {
+    padding: 4px 8px;
+    margin: 0 2px;
+}
+
+/* Empty state */
+.table-empty {
+    text-align: center;
+    padding: var(--spacing-3xl) var(--spacing-xl);
+    color: var(--gray-500);
+}
+
+.table-empty-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--gray-300);
+}
+
+.table-empty-text {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Pagination */
+.table-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--gray-200);
+}
+
+.pagination-info {
+    color: var(--gray-600);
+    font-size: var(--font-size-sm);
+}
+
+.pagination-controls {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.pagination-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--gray-300);
+    background: var(--white);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: var(--gray-50);
+    border-color: var(--primary-color);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn.active {
+    background: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+}
+
+/* Responsive tables */
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table {
+        min-width: 600px;
+    }
+}
