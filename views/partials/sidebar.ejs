@@ -69,6 +69,18 @@
 
         <div class="nav-item">
             <a
+                href="/expenses"
+                class="nav-link <%= locals.activeTab === 'expenses' ? 'active' : '' %>"
+            >
+                <span class="nav-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </span>
+                <span class="nav-text">Expenses</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a
                 href="/analysis"
                 class="nav-link <%= locals.activeTab === 'analysis' ? 'active' : '' %>"
             >

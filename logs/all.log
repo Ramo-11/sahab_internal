@@ -731,3 +731,112 @@
 2025-09-17 15:08:18 = [INFO  ] - Invoice created: 68cb07221d1a15c436326696
 2025-09-17 15:08:46 = [INFO  ] - Invoice created: 68cb073e1d1a15c4363266a4
 2025-09-17 15:08:57 = [INFO  ] - Invoice updated: 68cb073e1d1a15c4363266a4
+2025-09-17 15:22:40 = [INFO  ] - Running in undefined mode
+2025-09-17 15:22:40 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:22:40 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:22:41 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:22:43 = [INFO  ] - Running in undefined mode
+2025-09-17 15:22:43 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:22:43 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:22:44 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:23:24 = [INFO  ] - Running in undefined mode
+2025-09-17 15:23:24 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:23:24 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:23:25 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:24:17 = [INFO  ] - Running in undefined mode
+2025-09-17 15:24:17 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:24:17 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:24:18 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:25:07 = [INFO  ] - Running in undefined mode
+2025-09-17 15:25:07 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:25:07 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:25:08 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:25:38 = [INFO  ] - Running in undefined mode
+2025-09-17 15:25:38 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:25:38 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:25:40 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:25:49 = [INFO  ] - Running in undefined mode
+2025-09-17 15:25:49 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:25:49 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:25:50 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:27:30 = [INFO  ] - Running in undefined mode
+2025-09-17 15:27:30 = [INFO  ] - Running in undefined mode
+2025-09-17 15:27:30 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:27:30 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:27:30 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:27:30 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:27:31 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:27:31 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:27:38 = [INFO  ] - Running in undefined mode
+2025-09-17 15:27:38 = [INFO  ] - Running in undefined mode
+2025-09-17 15:27:38 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:27:38 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:27:38 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:27:38 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:27:39 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:27:39 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:27:45 = [INFO  ] - Running in undefined mode
+2025-09-17 15:27:45 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:27:45 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:27:45 = [INFO  ] - Running in undefined mode
+2025-09-17 15:27:45 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:27:45 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:27:45 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:27:46 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:27:48 = [INFO  ] - Running in undefined mode
+2025-09-17 15:27:48 = [INFO  ] - Running in undefined mode
+2025-09-17 15:27:48 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:27:48 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:27:48 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:27:48 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:27:49 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:27:49 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:28:08 = [INFO  ] - Running in undefined mode
+2025-09-17 15:28:08 = [INFO  ] - Running in undefined mode
+2025-09-17 15:28:08 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:28:09 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:28:08 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:28:09 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:28:09 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:28:09 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:33:31 = [INFO  ] - Running in undefined mode
+2025-09-17 15:33:31 = [INFO  ] - Running in undefined mode
+2025-09-17 15:33:31 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:33:31 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:33:31 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:33:31 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:33:32 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:33:32 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:33:59 = [INFO  ] - Running in undefined mode
+2025-09-17 15:33:59 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:33:59 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:33:59 = [INFO  ] - Running in undefined mode
+2025-09-17 15:33:59 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:33:59 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:34:00 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:34:00 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:36:21 = [INFO  ] - Running in undefined mode
+2025-09-17 15:36:21 = [INFO  ] - Running in undefined mode
+2025-09-17 15:36:21 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:36:21 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:36:21 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:36:21 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:36:22 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:36:22 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:37:18 = [INFO  ] - Running in undefined mode
+2025-09-17 15:37:18 = [INFO  ] - Running in undefined mode
+2025-09-17 15:37:18 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:37:18 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:37:18 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:37:18 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:37:19 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:37:19 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:37:28 = [INFO  ] - Expense created: 68cb0df787828df4d1770019
+2025-09-17 15:39:19 = [INFO  ] - Running in undefined mode
+2025-09-17 15:39:19 = [INFO  ] - Running in undefined mode
+2025-09-17 15:39:19 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:39:19 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:39:19 = [DEBUG ] - Attempting to connect to database 'sahab_test' with url: mongodb+srv://sahab:wQtWLpgj9pKp39dr@maincluster.ogtcqau.mongodb.net/?retryWrites=true&w=majority&appName=MainCluster&dbName=sahab_test
+2025-09-17 15:39:19 = [INFO  ] - server running on port: http://localhost:3000
+2025-09-17 15:39:21 = [INFO  ] - MongoDB connected successfully
+2025-09-17 15:39:21 = [INFO  ] - MongoDB connected successfully

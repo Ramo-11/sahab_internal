@@ -7,6 +7,7 @@ const clientController = require('./controllers/clientController');
 const proposalController = require('./controllers/proposalController');
 const invoiceController = require('./controllers/invoiceController');
 const analysisController = require('./controllers/analysisController');
+const expensesController = require('./controllers/expensesController');
 
 /**
  * Dashboard Routes
@@ -82,6 +83,19 @@ router.get('/api/analysis/proposals', analysisController.getProposalAnalysis);
 router.get('/api/analysis/invoices', analysisController.getInvoiceAnalysis);
 router.get('/api/analysis/trends', analysisController.getTrends);
 router.get('/api/analysis/export', analysisController.exportData);
+
+/**
+ * Expense Routes
+ */
+// Views
+router.get('/expenses', expensesController.showExpenses);
+
+// API
+router.get('/api/expenses', expensesController.getExpenses);
+router.post('/api/expenses', expensesController.createExpense);
+router.put('/api/expenses/:id', expensesController.updateExpense);
+router.delete('/api/expenses/:id', expensesController.deleteExpense);
+router.get('/api/expenses/stats', expensesController.getExpenseStats);
 
 /**
  * Utility Routes

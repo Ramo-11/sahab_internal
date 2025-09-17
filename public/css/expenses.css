@@ -1,0 +1,91 @@
+/* Expense Page Styles */
+
+/* Stats Section */
+.expense-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.expense-stat-card {
+    background: var(--white);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.expense-stat-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.expense-stat-label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin-top: var(--spacing-xs);
+}
+
+/* Quick Add Section */
+.quick-add-expense {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: flex-end;
+    padding: var(--spacing-md);
+    background: var(--gray-50);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.quick-add-expense .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.quick-add-expense .btn {
+    white-space: nowrap;
+}
+
+/* Category Badge */
+.category-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+/* Expense Table */
+.expense-amount {
+    font-weight: 600;
+}
+
+.expense-client {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+/* Edit Mode */
+tr.editing {
+    background: var(--gray-50);
+}
+
+.edit-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .expense-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-add-expense {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

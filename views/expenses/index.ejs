@@ -1,0 +1,215 @@
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Expenses</h1>
+        <p class="page-subtitle">Track business expenses</p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="expense-stats">
+    <div class="expense-stat-card">
+        <div class="expense-stat-value">
+            $<%= ((total || 0) / 100).toFixed(2) %>
+        </div>
+        <div class="expense-stat-label">Total Expenses</div>
+    </div>
+    <div class="expense-stat-card">
+        <div class="expense-stat-value">
+            <%= expenses.length %>
+        </div>
+        <div class="expense-stat-label">Transactions</div>
+    </div>
+</div>
+
+<!-- Quick Add -->
+<div class="card quick-add-expense">
+    <div class="form-group">
+        <input type="number" class="form-control" id="quickAmount" placeholder="Amount" step="0.01" required>
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control" id="quickDescription" placeholder="Description (optional)">
+    </div>
+    <div class="form-group">
+        <select class="form-control" id="quickCategory">
+            <option value="other">Other</option>
+            <option value="office">Office</option>
+            <option value="software">Software</option>
+            <option value="travel">Travel</option>
+            <option value="meals">Meals</option>
+            <option value="marketing">Marketing</option>
+            <option value="contractors">Contractors</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <select class="form-control" id="quickClient">
+            <option value="">No Client</option>
+            <% clients.forEach(client => { %>
+            <option value="<%= client._id %>"><%= client.company || client.name %></option>
+            <% }); %>
+        </select>
+    </div>
+    <button class="btn btn-primary" onclick="quickAddExpense()">
+        <i class="fas fa-plus"></i> Add Expense
+    </button>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <input type="text" 
+                       class="form-control" 
+                       id="searchInput" 
+                       placeholder="Search description..."
+                       value="<%= filters.search || '' %>">
+            </div>
+            <div class="filter-group">
+                <select class="form-control" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="office" <%= filters.category === 'office' ? 'selected' : '' %>>Office</option>
+                    <option value="software" <%= filters.category === 'software' ? 'selected' : '' %>>Software</option>
+                    <option value="travel" <%= filters.category === 'travel' ? 'selected' : '' %>>Travel</option>
+                    <option value="meals" <%= filters.category === 'meals' ? 'selected' : '' %>>Meals</option>
+                    <option value="marketing" <%= filters.category === 'marketing' ? 'selected' : '' %>>Marketing</option>
+                    <option value="contractors" <%= filters.category === 'contractors' ? 'selected' : '' %>>Contractors</option>
+                    <option value="other" <%= filters.category === 'other' ? 'selected' : '' %>>Other</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select class="form-control" id="clientFilter">
+                    <option value="">All Clients</option>
+                    <% clients.forEach(client => { %>
+                        <option value="<%= client._id %>" <%= filters.client === String(client._id) ? 'selected' : '' %>>
+                            <%= client.company || client.name %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="filter-group">
+                <input type="month" 
+                       class="form-control" 
+                       id="monthFilter" 
+                       value="<%= filters.month || '' %>">
+            </div>
+            <button class="btn btn-primary" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply
+            </button>
+            <button class="btn btn-secondary" onclick="clearFilters()">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Expenses Table -->
+<div class="card">
+    <div class="table-responsive">
+        <table class="table" id="expensesTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Category</th>
+                    <th>Client</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (expenses.length === 0) { %>
+                <tr>
+                    <td colspan="6" class="text-center">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <p>No expenses found</p>
+                        </div>
+                    </td>
+                </tr>
+                <% } else { %>
+                    <% expenses.forEach(expense => { %>
+                    <tr data-id="<%= expense._id %>" data-expense='<%= JSON.stringify(expense) %>'>
+                        <td class="editable-cell">
+                            <span class="view-mode">
+                                <%= new Date(expense.expenseDate).toLocaleDateString() %>
+                            </span>
+                            <input type="date" class="form-control edit-mode" 
+                                   style="display: none;" 
+                                   value="<%= new Date(expense.expenseDate).toISOString().split('T')[0] %>" 
+                                   data-field="expenseDate">
+                        </td>
+                        <td class="editable-cell">
+                            <span class="view-mode">
+                                <%= expense.description || '-' %>
+                            </span>
+                            <input type="text" class="form-control edit-mode" 
+                                   style="display: none;" value="<%= expense.description || '' %>" data-field="description">
+                        </td>
+                        <td class="editable-cell">
+                            <span class="view-mode expense-amount">
+                                $<%= (expense.amount / 100).toFixed(2) %>
+                            </span>
+                            <input type="number" class="form-control edit-mode" 
+                                   style="display: none;" 
+                                   value="<%= (expense.amount / 100).toFixed(2) %>" 
+                                   data-field="amount" step="0.01">
+                        </td>
+                        <td class="editable-cell">
+                            <span class="view-mode">
+                                <span class="category-badge">
+                                    <%= expense.category %>
+                                </span>
+                            </span>
+                            <select class="form-control edit-mode" style="display: none;" data-field="category">
+                                <option value="office" <%= expense.category === 'office' ? 'selected' : '' %>>Office</option>
+                                <option value="software" <%= expense.category === 'software' ? 'selected' : '' %>>Software</option>
+                                <option value="travel" <%= expense.category === 'travel' ? 'selected' : '' %>>Travel</option>
+                                <option value="meals" <%= expense.category === 'meals' ? 'selected' : '' %>>Meals</option>
+                                <option value="marketing" <%= expense.category === 'marketing' ? 'selected' : '' %>>Marketing</option>
+                                <option value="contractors" <%= expense.category === 'contractors' ? 'selected' : '' %>>Contractors</option>
+                                <option value="other" <%= expense.category === 'other' ? 'selected' : '' %>>Other</option>
+                            </select>
+                        </td>
+                        <td>
+                            <% if (expense.client) { %>
+                                <span class="expense-client">
+                                    <%= expense.client.company || expense.client.name %>
+                                </span>
+                            <% } else { %>
+                                <span class="text-muted">-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <!-- View mode actions -->
+                                <div class="view-actions">
+                                    <button class="btn btn-sm btn-icon" 
+                                            onclick="editExpense('<%= expense._id %>')" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-icon text-danger" 
+                                            onclick="deleteExpense('<%= expense._id %>')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                <!-- Edit mode actions -->
+                                <div class="edit-actions" style="display: none;">
+                                    <button class="btn btn-sm btn-success" 
+                                            onclick="saveExpense('<%= expense._id %>')">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" 
+                                            onclick="cancelEdit('<%= expense._id %>')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <% }); %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>

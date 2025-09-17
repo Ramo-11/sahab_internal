@@ -90,6 +90,14 @@ const API = {
         sendReminder: (id, data) => API.post(`/api/invoices/${id}/reminder`, data),
     },
 
+    expenses: {
+        getAll: (params) => API.get('/api/expenses', params),
+        get: (id) => API.get(`/api/expenses/${id}`),
+        create: (data) => API.post('/api/expenses', data),
+        update: (id, data) => API.put(`/api/expenses/${id}`, data),
+        delete: (id) => API.delete(`/api/expenses/${id}`),
+    },
+
     // Dashboard endpoints
     dashboard: {
         getStats: (period) => API.get('/api/dashboard/stats', { period }),
