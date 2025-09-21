@@ -19,6 +19,7 @@ const expenseSchema = new mongoose.Schema(
                 'software',
                 'travel',
                 'meals',
+                'drinks',
                 'marketing',
                 'contractors',
                 'donation',
