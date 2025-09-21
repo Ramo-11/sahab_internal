@@ -14,6 +14,42 @@
     font-size: var(--font-size-base);
 }
 
+.big-highlight {
+    grid-column: span 4; /* full width if using grid */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    font-size: 2rem;
+    padding: 2rem;
+    background: var(--card-bg);
+    border: 2px solid var(--primary-color);
+    border-radius: 1rem;
+}
+
+.big-highlight .stat-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.big-highlight .stat-value {
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.big-highlight .stat-label {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
+
 /* Stats Section */
 .stats-section {
     margin-bottom: var(--spacing-xl);

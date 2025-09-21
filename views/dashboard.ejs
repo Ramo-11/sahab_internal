@@ -6,6 +6,20 @@
     </p>
 </div>
 
+<div class="stats-section">
+    <h3 class="section-title">Current Total</h3>
+    <div class="stat-card big-highlight">
+        <div class="stat-icon primary">
+            <i class="fas fa-balance-scale"></i>
+        </div>
+        <div class="stat-value">
+            $<%= ((stats.invoiceStats?.totalPaid || 0) - (stats.expenseStats?.totalExpenses || 0)).toFixed(1) %>
+        </div>
+        <div class="stat-label">Total the business have</div>
+    </div>
+</div>
+
+
 <!-- Financial Overview Section -->
 <div class="stats-section">
     <h3 class="section-title">Financial Overview</h3>
