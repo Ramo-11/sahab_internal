@@ -21,7 +21,7 @@
         let totalPending = 0;
         let totalOverdue = 0;
         invoices.forEach(inv => {
-            const paidAmount = inv.amountPaid || 0;
+            const paidAmount = inv.status === 'paid' ? inv.amount : (inv.amountPaid || 0);
             totalPaid += paidAmount;
 
             const pending = inv.amount - paidAmount;

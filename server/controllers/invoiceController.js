@@ -41,8 +41,6 @@ const showInvoices = async (req, res) => {
             .select('name company')
             .sort('name');
 
-        logger.debug(`invoicesWithBalance: ${JSON.stringify(invoicesWithBalance, null, 2)}`);
-
         res.render('invoices/index', {
             title: 'Invoices - Sahab Solutions',
             layout: 'layout',
