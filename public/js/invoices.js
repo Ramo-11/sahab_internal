@@ -141,7 +141,6 @@ async function saveInvoice(id) {
         const value = input.value.trim();
 
         if (field === 'amount') {
-            console.log('Parsing amount:', value);
             updates[field] = parseFloat(value) || 0;
         } else if (field === 'dueDate') {
             updates[field] = new Date(value).toISOString();
@@ -162,14 +161,10 @@ async function saveInvoice(id) {
         if (response.success) {
             Common.showNotification('Invoice updated successfully', 'success');
 
-            // Update the displayed data
-            updateInvoiceRow(row, response.data);
-
-            // Update the stored invoice data
-            row.dataset.invoice = JSON.stringify(response.data);
-
-            // Exit edit mode
-            cancelEdit(id);
+            // Refresh the page after a short delay
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
         }
     } catch (error) {
         Common.showNotification(error.message || 'Failed to update invoice', 'error');
@@ -296,7 +291,7 @@ async function handleInvoiceFormSubmit(e) {
 
 // ========== Action Functions ==========
 async function markAsPaid(id) {
-    Common.confirm('Mark this invoice as paid?', async () => {
+    Common.confirm('Mark this invoice as fully paid?', async () => {
         try {
             const row = document.querySelector(`tr[data-id="${id}"]`);
             const invoice = row ? JSON.parse(row.dataset.invoice) : null;
@@ -310,15 +305,10 @@ async function markAsPaid(id) {
             if (response.success) {
                 Common.showNotification('Invoice marked as paid', 'success');
 
-                // Update the row
-                if (row) {
-                    updateInvoiceRow(row, response.data);
-                    row.dataset.invoice = JSON.stringify(response.data);
-
-                    // Hide the mark as paid button
-                    const markPaidBtn = row.querySelector('button[onclick*="markAsPaid"]');
-                    if (markPaidBtn) markPaidBtn.style.display = 'none';
-                }
+                // Refresh the page
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             }
         } catch (error) {
             Common.showNotification(error.message || 'Failed to update invoice', 'error');
@@ -438,6 +428,85 @@ async function submitNewInvoice() {
     }
 }
 
+// Sorting state
+let currentSort = { field: null, direction: 'asc' };
+
+function sortTable(field) {
+    // Toggle direction if same field
+    if (currentSort.field === field) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+    }
+
+    // Get all rows
+    const tbody = document.querySelector('#invoicesTable tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(
+        (row) => !row.querySelector('.empty-state')
+    );
+
+    if (rows.length === 0) return;
+
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue, bValue;
+
+        const aInvoice = JSON.parse(a.dataset.invoice);
+        const bInvoice = JSON.parse(b.dataset.invoice);
+
+        switch (field) {
+            case 'invoiceNumber':
+                aValue = parseInt(aInvoice.invoiceNumber) || 0;
+                bValue = parseInt(bInvoice.invoiceNumber) || 0;
+                break;
+            case 'title':
+                aValue = aInvoice.title?.toLowerCase() || '';
+                bValue = bInvoice.title?.toLowerCase() || '';
+                break;
+            case 'client':
+                aValue = (aInvoice.client?.company || aInvoice.client?.name || '').toLowerCase();
+                bValue = (bInvoice.client?.company || bInvoice.client?.name || '').toLowerCase();
+                break;
+            case 'amount':
+                aValue = parseFloat(aInvoice.amount) || 0;
+                bValue = parseFloat(bInvoice.amount) || 0;
+                break;
+            case 'status':
+                // Custom sort order for status
+                const statusOrder = { overdue: 0, sent: 1, partial: 2, draft: 3, paid: 4 };
+                aValue = statusOrder[aInvoice.status] || 5;
+                bValue = statusOrder[bInvoice.status] || 5;
+                break;
+            case 'dueDate':
+                aValue = new Date(aInvoice.dueDate).getTime();
+                bValue = new Date(bInvoice.dueDate).getTime();
+                break;
+            default:
+                return 0;
+        }
+
+        if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    // Update sort icons
+    document.querySelectorAll('.sortable .sort-icon').forEach((icon) => {
+        icon.className = 'fas fa-sort sort-icon';
+    });
+
+    const currentHeader = document.querySelector(`.sortable[onclick*="${field}"] .sort-icon`);
+    if (currentHeader) {
+        currentHeader.className = `fas fa-sort-${
+            currentSort.direction === 'asc' ? 'up' : 'down'
+        } sort-icon`;
+    }
+
+    // Re-append sorted rows
+    rows.forEach((row) => tbody.appendChild(row));
+}
+
 // Partial payment functions
 async function openPartialPaymentModal(invoiceId) {
     try {
@@ -474,9 +543,11 @@ async function submitPartialPayment() {
     const amount = parseFloat(document.getElementById('paymentAmount').value);
     const method = document.getElementById('paymentMethod').value;
     const reference = document.getElementById('paymentReference').value;
+    const datePaid = document.getElementById('paymentDate').value;
+    const notes = document.getElementById('paymentNotes').value;
 
     if (!amount || amount <= 0) {
-        showAlert('Please enter a valid payment amount', 'warning');
+        Common.showNotification('Please enter a valid payment amount', 'warning');
         return;
     }
 
@@ -486,23 +557,29 @@ async function submitPartialPayment() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ amount, method, reference }),
+            body: JSON.stringify({
+                amount,
+                method,
+                reference,
+                datePaid: datePaid || new Date().toISOString(),
+                notes,
+            }),
         });
 
         const result = await response.json();
 
         if (result.success) {
             $('#partialPaymentModal').modal('hide');
-            showAlert('Payment recorded successfully', 'success');
+            Common.showNotification('Payment recorded successfully', 'success');
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } else {
-            showAlert(result.message || 'Failed to record payment', 'danger');
+            Common.showNotification(result.message || 'Failed to record payment', 'error');
         }
     } catch (error) {
         console.error('Error recording payment:', error);
-        showAlert('An error occurred while recording payment', 'danger');
+        Common.showNotification('An error occurred while recording payment', 'error');
     }
 }
 
@@ -525,6 +602,289 @@ function showAlert(message, type) {
     }, 5000);
 }
 
+// Store current invoice ID for notes editing
+let currentDetailInvoiceId = null;
+
+// Update the showInvoiceDetails function to store the invoice ID
+async function showInvoiceDetails(invoiceId) {
+    try {
+        // Store the invoice ID for later use
+        currentDetailInvoiceId = invoiceId;
+
+        // Reset edit modes
+        document.getElementById('notesViewMode').style.display = 'block';
+        document.getElementById('notesEditMode').style.display = 'none';
+        document.getElementById('internalNotesViewMode').style.display = 'block';
+        document.getElementById('internalNotesEditMode').style.display = 'none';
+
+        // Fetch invoice details
+        const response = await fetch(`/api/invoices/${invoiceId}`);
+        const result = await response.json();
+
+        if (!result.success) {
+            Common.showNotification('Failed to load invoice details', 'error');
+            return;
+        }
+
+        const invoice = result.data;
+
+        // Populate modal header
+        document.getElementById('invoiceDetailsTitle').textContent = `Invoice #${
+            invoice.invoiceNumber || 'N/A'
+        } Details`;
+
+        // Populate invoice information
+        document.getElementById('detailInvoiceNumber').textContent = invoice.invoiceNumber || '-';
+        document.getElementById('detailTitle').textContent = invoice.title || '-';
+
+        // Status with badge
+        const statusBadge = `<span class="badge badge-${
+            invoice.status === 'paid'
+                ? 'success'
+                : invoice.status === 'partial'
+                ? 'warning'
+                : invoice.status === 'overdue' || invoice.isOverdue
+                ? 'danger'
+                : invoice.status === 'sent'
+                ? 'primary'
+                : 'secondary'
+        }">${
+            invoice.isOverdue && invoice.status !== 'paid'
+                ? 'OVERDUE'
+                : invoice.status.toUpperCase()
+        }</span>`;
+        document.getElementById('detailStatus').innerHTML = statusBadge;
+
+        document.getElementById('detailIssueDate').textContent = new Date(
+            invoice.issueDate
+        ).toLocaleDateString();
+        document.getElementById('detailDueDate').textContent = new Date(
+            invoice.dueDate
+        ).toLocaleDateString();
+        document.getElementById('detailPaymentTerms').textContent =
+            invoice.paymentTerms || 'Net 30';
+
+        // Populate client information
+        if (invoice.client) {
+            document.getElementById('detailClientName').textContent =
+                invoice.client.company || invoice.client.name || '-';
+            document.getElementById('detailClientEmail').innerHTML = invoice.client.email
+                ? `<a href="mailto:${invoice.client.email}">${invoice.client.email}</a>`
+                : '-';
+            document.getElementById('detailClientPhone').textContent = invoice.client.phone || '-';
+        } else {
+            document.getElementById('detailClientName').textContent = '-';
+            document.getElementById('detailClientEmail').textContent = '-';
+            document.getElementById('detailClientPhone').textContent = '-';
+        }
+
+        // Populate financial summary
+        const amountPaid = invoice.amountPaid || 0;
+        const balanceDue = invoice.amount - amountPaid;
+
+        document.getElementById('detailAmount').textContent = `$${invoice.amount.toFixed(2)}`;
+        document.getElementById('detailAmountPaid').textContent = `$${amountPaid.toFixed(2)}`;
+        document.getElementById('detailBalanceDue').textContent = `$${balanceDue.toFixed(2)}`;
+
+        // Populate payment history
+        const paymentHistoryBody = document.getElementById('paymentHistoryBody');
+        if (invoice.paymentHistory && invoice.paymentHistory.length > 0) {
+            document.getElementById('paymentCount').textContent = `${
+                invoice.paymentHistory.length
+            } payment${invoice.paymentHistory.length > 1 ? 's' : ''}`;
+
+            paymentHistoryBody.innerHTML = invoice.paymentHistory
+                .map(
+                    (payment) => `
+                <tr>
+                    <td>${new Date(payment.datePaid).toLocaleDateString()}</td>
+                    <td class="font-weight-bold">$${payment.amount.toFixed(2)}</td>
+                    <td><span class="badge badge-info">${
+                        payment.method || 'unspecified'
+                    }</span></td>
+                    <td>${payment.reference || '-'}</td>
+                    <td>${new Date(payment.dateRecorded).toLocaleDateString()}</td>
+                    <td>${payment.notes || '-'}</td>
+                </tr>
+            `
+                )
+                .join('');
+        } else if (invoice.status === 'paid') {
+            // Show single payment entry for paid invoices without history
+            document.getElementById('paymentCount').textContent = '1 payment';
+            paymentHistoryBody.innerHTML = `
+                <tr>
+                    <td>${
+                        invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : '-'
+                    }</td>
+                    <td class="font-weight-bold">$${invoice.amount.toFixed(2)}</td>
+                    <td><span class="badge badge-info">${
+                        invoice.paymentMethod || 'unspecified'
+                    }</span></td>
+                    <td>${invoice.paymentReference || '-'}</td>
+                    <td>${
+                        invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString() : '-'
+                    }</td>
+                    <td>Full payment</td>
+                </tr>
+            `;
+        } else {
+            document.getElementById('paymentCount').textContent = '0 payments';
+            paymentHistoryBody.innerHTML =
+                '<tr><td colspan="6" class="text-center text-muted">No payment history</td></tr>';
+        }
+
+        // Populate notes - both display and input fields
+        document.getElementById('detailNotes').textContent = invoice.notes || 'No notes';
+        document.getElementById('detailNotesInput').value = invoice.notes || '';
+
+        document.getElementById('detailInternalNotes').textContent =
+            invoice.internalNotes || 'No internal notes';
+        document.getElementById('detailInternalNotesInput').value = invoice.internalNotes || '';
+
+        // Document link
+        if (invoice.documentUrl) {
+            document.getElementById('documentLinkSection').style.display = 'block';
+            document.getElementById('detailDocumentLink').href = invoice.documentUrl;
+        } else {
+            document.getElementById('documentLinkSection').style.display = 'none';
+        }
+
+        // Reminder history
+        if (invoice.remindersSent && invoice.remindersSent.length > 0) {
+            document.getElementById('reminderSection').style.display = 'block';
+            document.getElementById('reminderCount').textContent = `${
+                invoice.remindersSent.length
+            } reminder${invoice.remindersSent.length > 1 ? 's' : ''}`;
+            document.getElementById('reminderHistory').innerHTML = invoice.remindersSent
+                .map(
+                    (reminder) => `
+                <div class="mb-2">
+                    <i class="fas fa-envelope text-muted"></i>
+                    Sent via ${reminder.method} on ${new Date(reminder.sentAt).toLocaleDateString()}
+                    ${
+                        reminder.notes
+                            ? `<br><small class="text-muted">${reminder.notes}</small>`
+                            : ''
+                    }
+                </div>
+            `
+                )
+                .join('');
+        } else {
+            document.getElementById('reminderSection').style.display = 'none';
+        }
+
+        // Update action buttons
+        const recordPaymentBtn = document.getElementById('detailRecordPaymentBtn');
+        const markPaidBtn = document.getElementById('detailMarkPaidBtn');
+
+        if (invoice.status === 'paid') {
+            recordPaymentBtn.style.display = 'none';
+            markPaidBtn.style.display = 'none';
+        } else {
+            recordPaymentBtn.style.display = 'inline-block';
+            recordPaymentBtn.onclick = () => {
+                $('#invoiceDetailsModal').modal('hide');
+                openPartialPaymentModal(invoiceId);
+            };
+
+            markPaidBtn.style.display = 'inline-block';
+            markPaidBtn.onclick = () => {
+                $('#invoiceDetailsModal').modal('hide');
+                markAsPaid(invoiceId);
+            };
+        }
+
+        // Show the modal
+        $('#invoiceDetailsModal').modal('show');
+    } catch (error) {
+        console.error('Error loading invoice details:', error);
+        Common.showNotification('Failed to load invoice details', 'error');
+    }
+}
+
+// Toggle between view and edit mode for notes
+function toggleNotesEdit(type) {
+    if (type === 'notes') {
+        const viewMode = document.getElementById('notesViewMode');
+        const editMode = document.getElementById('notesEditMode');
+
+        if (editMode.style.display === 'none') {
+            viewMode.style.display = 'none';
+            editMode.style.display = 'block';
+            document.getElementById('detailNotesInput').focus();
+        } else {
+            viewMode.style.display = 'block';
+            editMode.style.display = 'none';
+            // Reset to original value
+            const originalNotes = document.getElementById('detailNotes').textContent;
+            document.getElementById('detailNotesInput').value =
+                originalNotes === 'No notes' ? '' : originalNotes;
+        }
+    } else if (type === 'internal') {
+        const viewMode = document.getElementById('internalNotesViewMode');
+        const editMode = document.getElementById('internalNotesEditMode');
+
+        if (editMode.style.display === 'none') {
+            viewMode.style.display = 'none';
+            editMode.style.display = 'block';
+            document.getElementById('detailInternalNotesInput').focus();
+        } else {
+            viewMode.style.display = 'block';
+            editMode.style.display = 'none';
+            // Reset to original value
+            const originalNotes = document.getElementById('detailInternalNotes').textContent;
+            document.getElementById('detailInternalNotesInput').value =
+                originalNotes === 'No internal notes' ? '' : originalNotes;
+        }
+    }
+}
+
+// Save notes
+async function saveNotes() {
+    if (!currentDetailInvoiceId) {
+        Common.showNotification('Error: Invoice ID not found', 'error');
+        return;
+    }
+
+    const notes = document.getElementById('detailNotesInput').value.trim();
+    const internalNotes = document.getElementById('detailInternalNotesInput').value.trim();
+
+    try {
+        const response = await API.invoices.updateNotes(currentDetailInvoiceId, {
+            notes: notes,
+            internalNotes: internalNotes,
+        });
+
+        if (response.success) {
+            Common.showNotification('Notes updated successfully', 'success');
+
+            // Update the display
+            document.getElementById('detailNotes').textContent = notes || 'No notes';
+            document.getElementById('detailInternalNotes').textContent =
+                internalNotes || 'No internal notes';
+
+            // Switch back to view mode
+            document.getElementById('notesViewMode').style.display = 'block';
+            document.getElementById('notesEditMode').style.display = 'none';
+            document.getElementById('internalNotesViewMode').style.display = 'block';
+            document.getElementById('internalNotesEditMode').style.display = 'none';
+
+            // Update the invoice data in the table row if it exists
+            const row = document.querySelector(`tr[data-id="${currentDetailInvoiceId}"]`);
+            if (row) {
+                const invoiceData = JSON.parse(row.dataset.invoice);
+                invoiceData.notes = notes;
+                invoiceData.internalNotes = internalNotes;
+                row.dataset.invoice = JSON.stringify(invoiceData);
+            }
+        }
+    } catch (error) {
+        Common.showNotification(error.message || 'Failed to update notes', 'error');
+    }
+}
+
 // Make functions globally available
 window.editInvoice = editInvoice;
 window.cancelEdit = cancelEdit;
@@ -538,3 +898,7 @@ window.openNewInvoiceModal = openNewInvoiceModal;
 window.submitNewInvoice = submitNewInvoice;
 window.openPartialPaymentModal = openPartialPaymentModal;
 window.submitPartialPayment = submitPartialPayment;
+window.showInvoiceDetails = showInvoiceDetails;
+window.toggleNotesEdit = toggleNotesEdit;
+window.saveNotes = saveNotes;
+window.sortTable = sortTable;

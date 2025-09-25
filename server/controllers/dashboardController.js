@@ -58,12 +58,29 @@ const showDashboard = async (req, res) => {
                                     _id: null,
                                     totalPaid: {
                                         $sum: {
-                                            $cond: [{ $eq: ['$status', 'paid'] }, '$amount', 0],
+                                            $cond: [
+                                                { $eq: ['$status', 'paid'] },
+                                                '$amount',
+                                                { $ifNull: ['$amountPaid', 0] },
+                                            ],
                                         },
                                     },
                                     totalPending: {
                                         $sum: {
-                                            $cond: [{ $ne: ['$status', 'paid'] }, '$amount', 0],
+                                            $cond: [
+                                                {
+                                                    $not: [
+                                                        { $in: ['$status', ['paid', 'cancelled']] },
+                                                    ],
+                                                },
+                                                {
+                                                    $subtract: [
+                                                        '$amount',
+                                                        { $ifNull: ['$amountPaid', 0] },
+                                                    ],
+                                                },
+                                                0,
+                                            ],
                                         },
                                     },
                                 },
@@ -86,14 +103,33 @@ const showDashboard = async (req, res) => {
             Invoice.aggregate([
                 {
                     $match: {
-                        status: 'paid',
-                        paidDate: { $gte: currentMonth },
+                        $or: [
+                            // Fully paid invoices
+                            {
+                                status: 'paid',
+                                paidDate: { $gte: currentMonth },
+                            },
+                            // Partially paid invoices (count the paid portion)
+                            {
+                                status: 'partial',
+                                updatedAt: { $gte: currentMonth },
+                                amountPaid: { $gt: 0 },
+                            },
+                        ],
                     },
                 },
                 {
                     $group: {
                         _id: null,
-                        monthlyRevenue: { $sum: '$amount' },
+                        monthlyRevenue: {
+                            $sum: {
+                                $cond: [
+                                    { $eq: ['$status', 'paid'] },
+                                    '$amount',
+                                    { $ifNull: ['$amountPaid', 0] }, // For partial payments, use amountPaid
+                                ],
+                            },
+                        },
                     },
                 },
             ]),

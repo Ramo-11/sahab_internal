@@ -88,6 +88,21 @@ const API = {
         send: (id) => API.post(`/api/invoices/${id}/send`),
         recordPayment: (id, payment) => API.post(`/api/invoices/${id}/payment`, payment),
         sendReminder: (id, data) => API.post(`/api/invoices/${id}/reminder`, data),
+        // In the invoices section, add:
+        updateNotes: async (id, notes) => {
+            const response = await fetch(`/api/invoices/${id}/notes`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(notes),
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to update notes');
+            }
+            return response.json();
+        },
     },
 
     expenses: {

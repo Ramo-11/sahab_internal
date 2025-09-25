@@ -106,6 +106,19 @@ const invoiceSchema = new mongoose.Schema(
             enum: ['bank_transfer', 'zelle', 'check', 'cash', 'paypal', 'stripe', 'other'],
         },
         paymentReference: String,
+        paymentHistory: [
+            {
+                amount: Number,
+                method: String,
+                reference: String,
+                datePaid: Date,
+                dateRecorded: {
+                    type: Date,
+                    default: Date.now,
+                },
+                notes: String,
+            },
+        ],
         amountPaid: {
             type: Number,
             default: 0,

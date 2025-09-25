@@ -71,6 +71,7 @@ router.post('/api/invoices/:id/send', invoiceController.sendInvoice);
 router.post('/api/invoices/:id/payment', invoiceController.recordPayment);
 router.post('/api/invoices/:id/reminder', invoiceController.sendReminder);
 router.get('/api/invoices/:id/preview', invoiceController.previewInvoice);
+router.put('/api/invoices/:id/notes', invoiceController.updateNotes);
 
 /**
  * Analysis Routes

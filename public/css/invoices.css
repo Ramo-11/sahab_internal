@@ -93,6 +93,64 @@ tr.editing {
     gap: var(--spacing-xs);
 }
 
+/* Sortable headers */
+.sortable {
+    position: relative;
+    user-select: none;
+    transition: background-color var(--transition-fast);
+}
+
+.sortable:hover {
+    background-color: var(--gray-50) !important;
+}
+
+.sort-icon {
+    margin-left: 0.5rem;
+    color: var(--gray-400);
+    font-size: 0.875rem;
+    transition: color var(--transition-fast);
+}
+
+.sortable:hover .sort-icon {
+    color: var(--gray-600);
+}
+
+.fa-sort-up,
+.fa-sort-down {
+    color: var(--primary-color) !important;
+}
+
+/* Edit mode improvements */
+.editable-cell {
+    position: relative;
+}
+
+.editable-cell .edit-mode {
+    width: 100%;
+    min-width: 120px;
+}
+
+tr.editing {
+    background: var(--gray-50);
+}
+
+.edit-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+/* Action buttons layout */
+.action-buttons .view-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.action-buttons .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
 /* Transition for row deletion */
 #invoicesTable tbody tr {
     transition: opacity var(--transition-normal);

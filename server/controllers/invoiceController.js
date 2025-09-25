@@ -41,6 +41,8 @@ const showInvoices = async (req, res) => {
             .select('name company')
             .sort('name');
 
+        logger.debug(`invoicesWithBalance: ${JSON.stringify(invoicesWithBalance, null, 2)}`);
+
         res.render('invoices/index', {
             title: 'Invoices - Sahab Solutions',
             layout: 'layout',
@@ -421,7 +423,7 @@ const sendInvoice = async (req, res) => {
  */
 const recordPayment = async (req, res) => {
     try {
-        const { amount, method, reference } = req.body;
+        const { amount, method, reference, datePaid, notes } = req.body;
         const invoice = await Invoice.findById(req.params.id);
 
         if (!invoice) {
@@ -436,36 +438,44 @@ const recordPayment = async (req, res) => {
         const newTotalPaid = currentPaid + paymentAmount;
         const balanceDue = invoice.amount - newTotalPaid;
 
-        if (paymentAmount >= balanceDue || Math.abs(balanceDue) < 0.01) {
+        if (!invoice.paymentHistory) {
+            invoice.paymentHistory = [];
+        }
+
+        invoice.paymentHistory.push({
+            amount: paymentAmount,
+            method: method || 'unspecified',
+            reference: reference || '',
+            datePaid: datePaid || new Date(),
+            dateRecorded: new Date(),
+            notes: notes || '',
+        });
+
+        if (newTotalPaid >= invoice.amount) {
             // Full payment - mark as paid
             invoice.status = 'paid';
             invoice.paidDate = new Date();
-            invoice.amountPaid = invoice.amount;
+            invoice.amountPaid = newTotalPaid;
             if (method) invoice.paymentMethod = method;
             if (reference) invoice.paymentReference = reference;
-
-            await invoice.save();
-
-            // Update client revenue only for the new payment amount
-            await Client.findByIdAndUpdate(invoice.client, {
-                $inc: { totalRevenue: paymentAmount },
-            });
         } else {
             // Partial payment
             invoice.amountPaid = newTotalPaid;
             invoice.status = 'partial';
             if (method) invoice.paymentMethod = method;
             if (reference) invoice.paymentReference = reference;
-
-            await invoice.save();
-
-            // Update client revenue for the partial payment
-            await Client.findByIdAndUpdate(invoice.client, {
-                $inc: { totalRevenue: paymentAmount },
-            });
         }
 
+        await invoice.save();
+
+        // Update client revenue only for the new payment amount
+        await Client.findByIdAndUpdate(invoice.client, {
+            $inc: { totalRevenue: paymentAmount },
+        });
+
         logger.info(`Payment of ${paymentAmount} recorded for invoice: ${invoice._id}`);
+
+        await invoice.populate('client', 'name company');
 
         res.json({
             success: true,
@@ -480,6 +490,49 @@ const recordPayment = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to record payment',
+        });
+    }
+};
+
+/**
+ * Update invoice notes
+ */
+const updateNotes = async (req, res) => {
+    try {
+        const { notes, internalNotes } = req.body;
+
+        const invoice = await Invoice.findById(req.params.id);
+
+        if (!invoice) {
+            return res.status(404).json({
+                success: false,
+                message: 'Invoice not found',
+            });
+        }
+
+        // Update notes
+        if (notes !== undefined) {
+            invoice.notes = notes;
+        }
+        if (internalNotes !== undefined) {
+            invoice.internalNotes = internalNotes;
+        }
+
+        invoice.updatedAt = new Date();
+        await invoice.save();
+
+        logger.info(`Invoice notes updated: ${invoice._id}`);
+
+        res.json({
+            success: true,
+            data: invoice,
+            message: 'Notes updated successfully',
+        });
+    } catch (error) {
+        logger.error('Update invoice notes error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update notes',
         });
     }
 };
@@ -558,4 +611,5 @@ module.exports = {
     recordPayment,
     sendReminder,
     previewInvoice,
+    updateNotes,
 };

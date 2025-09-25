@@ -1,159 +1,9 @@
-<!-- New Invoice Modal -->
-<div class="modal fade" id="newInvoiceModal" tabindex="-1" role="dialog">
+<!-- Partial Payment Modal -->
+<div class="modal fade" id="partialPaymentModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Create New Invoice</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="newInvoiceForm">
-                    <!-- Invoice Information -->
-                    <div class="form-section">
-                        <h6 class="form-section-title">Invoice Information</h6>
-
-                        <div class="form-row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label required">Invoice Number</label>
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        name="invoiceNumber"
-                                        placeholder="e.g., 65432"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label required">Title/Description</label>
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        name="title"
-                                        placeholder="e.g., Website Development"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label class="form-label required">Client</label>
-                                    <select
-                                        class="form-control"
-                                        name="client"
-                                        id="modalClientSelect"
-                                        required
-                                    >
-                                        <option value="">Select a client</option>
-                                        <!-- Options will be populated dynamically -->
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label required">Amount</label>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text">$</span>
-                                        </div>
-                                        <input
-                                            type="number"
-                                            class="form-control"
-                                            name="amount"
-                                            min="0"
-                                            step="0.01"
-                                            required
-                                            placeholder="0.00"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label required">Due Date</label>
-                                    <input
-                                        type="date"
-                                        class="form-control"
-                                        name="dueDate"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Payment Terms</label>
-                                    <select class="form-control" name="paymentTerms">
-                                        <option value="Net 30" selected>Net 30</option>
-                                        <option value="Net 15">Net 15</option>
-                                        <option value="Due on Receipt">Due on Receipt</option>
-                                        <option value="Net 45">Net 45</option>
-                                        <option value="Net 60">Net 60</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Status</label>
-                                    <select class="form-control" name="status">
-                                        <option value="draft">Draft</option>
-                                        <option value="sent" selected>Sent</option>
-                                        <option value="paid">Paid</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Notes</label>
-                            <textarea
-                                class="form-control"
-                                name="notes"
-                                rows="3"
-                                placeholder="Additional details or notes about this invoice..."
-                            ></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">External Invoice Link (Optional)</label>
-                            <input
-                                type="url"
-                                class="form-control"
-                                name="documentUrl"
-                                placeholder="Link to invoice in external system"
-                            />
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitNewInvoice()">
-                    <i class="fas fa-save"></i> Create Invoice
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Partial Payment Modal -->
-<div class="modal fade" id="partialPaymentModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Record Partial Payment</h5>
+                <h5 class="modal-title">Record Payment</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -161,58 +11,115 @@
             <div class="modal-body">
                 <form id="partialPaymentForm">
                     <input type="hidden" id="paymentInvoiceId" />
-                    <div class="form-group">
-                        <label class="form-label">Total Amount Due</label>
-                        <input type="text" class="form-control" id="totalDue" readonly />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Amount Already Paid</label>
-                        <input type="text" class="form-control" id="alreadyPaid" readonly />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Remaining Balance</label>
-                        <input type="text" class="form-control" id="remainingBalance" readonly />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label required">Payment Amount</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">$</span>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Total Amount Due</label>
+                                <input type="text" class="form-control" id="totalDue" readonly />
                             </div>
-                            <input
-                                type="number"
-                                class="form-control"
-                                id="paymentAmount"
-                                name="amount"
-                                min="0.01"
-                                step="0.01"
-                                required
-                                placeholder="0.00"
-                            />
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Already Paid</label>
+                                <input type="text" class="form-control" id="alreadyPaid" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">Remaining Balance</label>
+                                <input
+                                    type="text"
+                                    class="form-control font-weight-bold"
+                                    id="remainingBalance"
+                                    readonly
+                                />
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Payment Method</label>
-                        <select class="form-control" name="method" id="paymentMethod">
-                            <option value="">Select method</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="zelle">Zelle</option>
-                            <option value="check">Check</option>
-                            <option value="cash">Cash</option>
-                            <option value="paypal">PayPal</option>
-                            <option value="stripe">Stripe</option>
-                            <option value="other">Other</option>
-                        </select>
+
+                    <hr />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label required">Payment Amount</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">$</span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        class="form-control"
+                                        id="paymentAmount"
+                                        name="amount"
+                                        min="0.01"
+                                        step="0.01"
+                                        required
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Date Paid</label>
+                                <input
+                                    type="date"
+                                    class="form-control"
+                                    id="paymentDate"
+                                    name="datePaid"
+                                    value="<%= new Date().toISOString().split('T')[0] %>"
+                                />
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label required">Payment Method</label>
+                                <select
+                                    class="form-control"
+                                    name="method"
+                                    id="paymentMethod"
+                                    required
+                                >
+                                    <option value="">Select method</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="zelle">Zelle</option>
+                                    <option value="check">Check</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="paypal">PayPal</option>
+                                    <option value="stripe">Stripe</option>
+                                    <option value="credit_card">Credit Card</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Reference Number</label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    name="reference"
+                                    id="paymentReference"
+                                    placeholder="Transaction or check number"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label class="form-label">Reference Number</label>
-                        <input
-                            type="text"
+                        <label class="form-label">Payment Notes</label>
+                        <textarea
                             class="form-control"
-                            name="reference"
-                            id="paymentReference"
-                            placeholder="Transaction or check number"
-                        />
+                            id="paymentNotes"
+                            name="notes"
+                            rows="2"
+                            placeholder="Any additional notes about this payment..."
+                        ></textarea>
                     </div>
                 </form>
             </div>
@@ -220,6 +127,230 @@
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="submitPartialPayment()">
                     <i class="fas fa-check"></i> Record Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Details Modal -->
+<div class="modal fade" id="invoiceDetailsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="invoiceDetailsTitle">Invoice Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Invoice Header Info -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Invoice Information</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="40%"><strong>Invoice #:</strong></td>
+                                <td id="detailInvoiceNumber">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Title:</strong></td>
+                                <td id="detailTitle">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td id="detailStatus">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Issue Date:</strong></td>
+                                <td id="detailIssueDate">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Due Date:</strong></td>
+                                <td id="detailDueDate">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Payment Terms:</strong></td>
+                                <td id="detailPaymentTerms">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Client Information</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="40%"><strong>Client:</strong></td>
+                                <td id="detailClientName">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td id="detailClientEmail">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Phone:</strong></td>
+                                <td id="detailClientPhone">-</td>
+                            </tr>
+                        </table>
+
+                        <h6 class="text-muted mt-3">Financial Summary</h6>
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="40%"><strong>Total Amount:</strong></td>
+                                <td class="text-dark font-weight-bold" id="detailAmount">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Amount Paid:</strong></td>
+                                <td class="text-success" id="detailAmountPaid">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Balance Due:</strong></td>
+                                <td class="text-warning font-weight-bold" id="detailBalanceDue">
+                                    -
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payment History Section -->
+                <div class="mb-4">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-history"></i> Payment History
+                        <span class="badge badge-secondary ml-2" id="paymentCount">0 payments</span>
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm" id="paymentHistoryTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Date Paid</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Reference</th>
+                                    <th>Date Recorded</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentHistoryBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        No payment history
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">
+                            Invoice Notes
+                            <button
+                                class="btn btn-sm btn-link text-primary p-0 ml-2"
+                                onclick="toggleNotesEdit('notes')"
+                                id="editNotesBtn"
+                            >
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </h6>
+                        <div class="border rounded p-3 bg-light" id="notesViewMode">
+                            <p class="mb-0" id="detailNotes">No notes</p>
+                        </div>
+                        <div id="notesEditMode" style="display: none">
+                            <textarea
+                                class="form-control"
+                                id="detailNotesInput"
+                                rows="4"
+                                placeholder="Add invoice notes..."
+                            ></textarea>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-success" onclick="saveNotes()">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                                <button
+                                    class="btn btn-sm btn-secondary"
+                                    onclick="toggleNotesEdit('notes')"
+                                >
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">
+                            Internal Notes
+                            <button
+                                class="btn btn-sm btn-link text-primary p-0 ml-2"
+                                onclick="toggleNotesEdit('internal')"
+                                id="editInternalNotesBtn"
+                            >
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </h6>
+                        <div class="border rounded p-3 bg-light" id="internalNotesViewMode">
+                            <p class="mb-0" id="detailInternalNotes">No internal notes</p>
+                        </div>
+                        <div id="internalNotesEditMode" style="display: none">
+                            <textarea
+                                class="form-control"
+                                id="detailInternalNotesInput"
+                                rows="4"
+                                placeholder="Add internal notes (not visible to client)..."
+                            ></textarea>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-success" onclick="saveNotes()">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                                <button
+                                    class="btn btn-sm btn-secondary"
+                                    onclick="toggleNotesEdit('internal')"
+                                >
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Link -->
+                <div class="mt-3" id="documentLinkSection" style="display: none">
+                    <h6 class="text-muted">External Document</h6>
+                    <a
+                        href="#"
+                        target="_blank"
+                        id="detailDocumentLink"
+                        class="btn btn-sm btn-outline-primary"
+                    >
+                        <i class="fas fa-external-link-alt"></i> View External Invoice
+                    </a>
+                </div>
+
+                <!-- Reminder History -->
+                <div class="mt-3" id="reminderSection" style="display: none">
+                    <h6 class="text-muted">
+                        <i class="fas fa-bell"></i> Reminder History
+                        <span class="badge badge-secondary ml-2" id="reminderCount"
+                            >0 reminders</span
+                        >
+                    </h6>
+                    <div id="reminderHistory" class="small">
+                        <!-- Reminders will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button
+                    type="button"
+                    class="btn btn-warning"
+                    id="detailRecordPaymentBtn"
+                    onclick=""
+                >
+                    <i class="fas fa-coins"></i> Record Payment
+                </button>
+                <button type="button" class="btn btn-success" id="detailMarkPaidBtn" onclick="">
+                    <i class="fas fa-check"></i> Mark as Paid
                 </button>
             </div>
         </div>

@@ -10,7 +10,40 @@
         </button>
         <button class="btn btn-primary" onclick="openNewInvoiceModal()">
             <i class="fas fa-plus"></i> New Invoice
-        </a>
+        </button>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="stats-grid mb-4">
+    <% 
+        let totalPaid = 0;
+        let totalPending = 0;
+        let totalOverdue = 0;
+        invoices.forEach(inv => {
+            const paidAmount = inv.amountPaid || 0;
+            totalPaid += paidAmount;
+
+            const pending = inv.amount - paidAmount;
+            if (pending > 0) {
+                totalPending += pending;
+                if (inv.isOverdue) {
+                    totalOverdue += pending;
+                }
+            }
+        });
+    %>
+    <div class="stat-card">
+        <div class="stat-label">Total Paid</div>
+        <div class="stat-value text-success">$<%= totalPaid.toFixed(2) %></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Pending</div>
+        <div class="stat-value text-warning">$<%= totalPending.toFixed(2) %></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Overdue</div>
+        <div class="stat-value text-danger">$<%= totalOverdue.toFixed(2) %></div>
     </div>
 </div>
 
@@ -30,6 +63,7 @@
                     <option value="">All Status</option>
                     <option value="draft" <%= filters.status === 'draft' ? 'selected' : '' %>>Draft</option>
                     <option value="sent" <%= filters.status === 'sent' ? 'selected' : '' %>>Sent</option>
+                    <option value="partial" <%= filters.status === 'partial' ? 'selected' : '' %>>Partial</option>
                     <option value="paid" <%= filters.status === 'paid' ? 'selected' : '' %>>Paid</option>
                     <option value="overdue" <%= filters.status === 'overdue' ? 'selected' : '' %>>Overdue</option>
                 </select>
@@ -62,13 +96,25 @@
         <table class="table" id="invoicesTable">
             <thead>
                 <tr>
-                    <th>Invoice</th>
-                    <th>Title</th>
-                    <th>Client</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Due Date</th>
-                    <th>Actions</th>
+                    <th class="sortable" onclick="sortTable('invoiceNumber')" style="cursor: pointer;">
+                        Invoice # <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" onclick="sortTable('title')" style="cursor: pointer;">
+                        Title <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" onclick="sortTable('client')" style="cursor: pointer;">
+                        Client <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" onclick="sortTable('amount')" style="cursor: pointer;">
+                        Amount <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" onclick="sortTable('status')" style="cursor: pointer;">
+                        Status <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th class="sortable" onclick="sortTable('dueDate')" style="cursor: pointer;">
+                        Due Date <i class="fas fa-sort sort-icon"></i>
+                    </th>
+                    <th width="20%">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -78,7 +124,7 @@
                         <div class="empty-state">
                             <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
                             <p>No invoices found</p>
-                            <a href="/invoices/new" class="btn btn-primary btn-sm">Create Your First Invoice</a>
+                            <button onclick="openNewInvoiceModal()" class="btn btn-primary btn-sm">Create Your First Invoice</button>
                         </div>
                     </td>
                 </tr>
@@ -86,11 +132,7 @@
                     <% invoices.forEach(invoice => { %>
                     <tr data-id="<%= invoice._id %>" data-invoice='<%= JSON.stringify(invoice) %>'>
                         <td>
-                            <% if (invoice.invoiceNumber) { %>
-                                <strong>#<%= invoice.invoiceNumber %></strong>
-                            <% } else { %>
-                                <span class="text-muted">-</span>
-                            <% } %>
+                            <strong>#<%= invoice.invoiceNumber || '-' %></strong>
                         </td>
                         <td class="editable-cell">
                             <span class="view-mode"><%= invoice.title %></span>
@@ -111,10 +153,10 @@
                                 <span class="badge badge-<%= 
                                     invoice.status === 'paid' ? 'success' : 
                                     invoice.status === 'partial' ? 'warning' :
-                                    invoice.status === 'overdue' ? 'danger' : 
+                                    invoice.isOverdue ? 'danger' : 
                                     invoice.status === 'sent' ? 'primary' : 'secondary' 
                                 %>">
-                                    <%= invoice.status %>
+                                    <%= invoice.isOverdue && invoice.status !== 'paid' ? 'OVERDUE' : invoice.status.toUpperCase() %>
                                 </span>
                                 <% if (invoice.status === 'partial' && invoice.balanceDue) { %>
                                     <small class="d-block text-muted mt-1">
@@ -144,42 +186,47 @@
                         <td>
                             <div class="action-buttons">
                                 <!-- View mode actions -->
-                                <div class="view-actions">
-                                    <% if (invoice.documentUrl) { %>
-                                        <a href="<%= invoice.documentUrl %>" target="_blank" 
-                                        class="btn btn-sm btn-icon text-primary" title="View Document">
-                                            <i class="fas fa-external-link-alt"></i>
-                                        </a>
-                                    <% } %>
+                                <div class="view-actions d-flex flex-wrap" style="gap: 0.25rem;">
                                     <% if (invoice.status !== 'paid') { %>
-                                        <button class="btn btn-sm btn-icon text-warning" 
-                                                onclick="openPartialPaymentModal('<%= invoice._id %>')" 
-                                                title="Record Partial Payment">
-                                            <i class="fas fa-coins"></i>
+                                        <button class="btn btn-sm btn-outline-warning" 
+                                                onclick="openPartialPaymentModal('<%= invoice._id %>')"
+                                                title="Record Payment">
+                                            Payment
                                         </button>
-                                        <button class="btn btn-sm btn-icon text-success" 
-                                                onclick="markAsPaid('<%= invoice._id %>')" title="Mark as Paid">
-                                            <i class="fas fa-check-circle"></i>
+                                        <button class="btn btn-sm btn-outline-success" 
+                                                onclick="markAsPaid('<%= invoice._id %>')"
+                                                title="Mark as Paid">
+                                            Paid
                                         </button>
                                     <% } %>
-                                    <button class="btn btn-sm btn-icon" 
-                                            onclick="editInvoice('<%= invoice._id %>')" title="Edit">
-                                        <i class="fas fa-edit"></i>
+                                    
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="editInvoice('<%= invoice._id %>')"
+                                            title="Edit">
+                                        Edit
                                     </button>
-                                    <button class="btn btn-sm btn-icon text-danger" 
-                                            onclick="deleteInvoice('<%= invoice._id %>')" title="Delete">
-                                        <i class="fas fa-trash"></i>
+                                    
+                                    <button class="btn btn-sm btn-outline-info" 
+                                            onclick="showInvoiceDetails('<%= invoice._id %>')"
+                                            title="View Details">
+                                        Details
+                                    </button>
+                                    
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteInvoice('<%= invoice._id %>')"
+                                            title="Delete">
+                                        Delete
                                     </button>
                                 </div>
                                 <!-- Edit mode actions -->
                                 <div class="edit-actions" style="display: none;">
                                     <button class="btn btn-sm btn-success" 
                                             onclick="saveInvoice('<%= invoice._id %>')">
-                                        <i class="fas fa-save"></i>
+                                        <i class="fas fa-save"></i> Save
                                     </button>
                                     <button class="btn btn-sm btn-secondary" 
                                             onclick="cancelEdit('<%= invoice._id %>')">
-                                        <i class="fas fa-times"></i>
+                                        <i class="fas fa-times"></i> Cancel
                                     </button>
                                 </div>
                             </div>
