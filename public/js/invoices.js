@@ -183,9 +183,9 @@ function updateInvoiceRow(row, invoice) {
     const titleCell = row.querySelector('.editable-cell .view-mode');
     if (titleCell) titleCell.textContent = invoice.title;
 
-    // Update amount
+    // Update amount - fix the calculation
     const amountCell = row.querySelectorAll('.editable-cell .view-mode')[1];
-    if (amountCell) amountCell.textContent = `$${(invoice.amount / 1000).toFixed(1)}k`;
+    if (amountCell) amountCell.textContent = `$${Number(invoice.amount).toFixed(2)}`;
 
     // Update status badge
     const statusCell = row.querySelectorAll('.editable-cell .view-mode')[2];
@@ -193,12 +193,22 @@ function updateInvoiceRow(row, invoice) {
         const badgeClass =
             invoice.status === 'paid'
                 ? 'success'
+                : invoice.status === 'partial'
+                ? 'warning'
                 : invoice.status === 'overdue'
                 ? 'danger'
                 : invoice.status === 'sent'
                 ? 'primary'
-                : 'warning';
-        statusCell.innerHTML = `<span class="badge badge-${badgeClass}">${invoice.status}</span>`;
+                : 'secondary';
+        let statusHTML = `<span class="badge badge-${badgeClass}">${invoice.status}</span>`;
+
+        // Add balance due for partial payments
+        if (invoice.status === 'partial' && invoice.balanceDue) {
+            statusHTML += `<small class="d-block text-muted mt-1">Balance: $${invoice.balanceDue.toFixed(
+                2
+            )}</small>`;
+        }
+        statusCell.innerHTML = statusHTML;
     }
 
     // Update due date
@@ -214,7 +224,9 @@ function updateInvoiceRow(row, invoice) {
     // Update action buttons based on status
     if (invoice.status === 'paid') {
         const markPaidBtn = row.querySelector('button[onclick*="markAsPaid"]');
+        const partialPayBtn = row.querySelector('button[onclick*="openPartialPaymentModal"]');
         if (markPaidBtn) markPaidBtn.style.display = 'none';
+        if (partialPayBtn) partialPayBtn.style.display = 'none';
     }
 }
 
@@ -357,6 +369,162 @@ async function exportData() {
     }
 }
 
+// Modal functions
+function openNewInvoiceModal() {
+    // Clear form
+    document.getElementById('newInvoiceForm').reset();
+
+    // Populate clients dropdown
+    populateModalClients();
+
+    // Show modal
+    $('#newInvoiceModal').modal('show');
+}
+
+async function populateModalClients() {
+    try {
+        const response = await fetch('/api/clients?status=active');
+        const data = await response.json();
+
+        if (data.success) {
+            const select = document.getElementById('modalClientSelect');
+            select.innerHTML = '<option value="">Select a client</option>';
+
+            data.data.forEach((client) => {
+                const option = document.createElement('option');
+                option.value = client._id;
+                option.textContent = client.company || client.name;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading clients:', error);
+    }
+}
+
+async function submitNewInvoice() {
+    const form = document.getElementById('newInvoiceForm');
+    const formData = new FormData(form);
+
+    // Convert FormData to JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+
+    try {
+        const response = await fetch('/api/invoices', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            $('#newInvoiceModal').modal('hide');
+            showAlert('Invoice created successfully', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message || 'Failed to create invoice', 'danger');
+        }
+    } catch (error) {
+        console.error('Error creating invoice:', error);
+        showAlert('An error occurred while creating the invoice', 'danger');
+    }
+}
+
+// Partial payment functions
+async function openPartialPaymentModal(invoiceId) {
+    try {
+        const response = await fetch(`/api/invoices/${invoiceId}`);
+        const result = await response.json();
+
+        if (result.success) {
+            const invoice = result.data;
+            const balanceDue = invoice.amount - (invoice.amountPaid || 0);
+
+            document.getElementById('paymentInvoiceId').value = invoiceId;
+            document.getElementById('totalDue').value = `$${invoice.amount.toFixed(2)}`;
+            document.getElementById('alreadyPaid').value = `$${(invoice.amountPaid || 0).toFixed(
+                2
+            )}`;
+            document.getElementById('remainingBalance').value = `$${balanceDue.toFixed(2)}`;
+            document.getElementById('paymentAmount').value = '';
+            document.getElementById('paymentAmount').max = balanceDue;
+            document.getElementById('paymentMethod').value = '';
+            document.getElementById('paymentReference').value = '';
+
+            $('#partialPaymentModal').modal('show');
+        } else {
+            showAlert('Failed to load invoice details', 'danger');
+        }
+    } catch (error) {
+        console.error('Error loading invoice:', error);
+        showAlert('An error occurred while loading invoice details', 'danger');
+    }
+}
+
+async function submitPartialPayment() {
+    const invoiceId = document.getElementById('paymentInvoiceId').value;
+    const amount = parseFloat(document.getElementById('paymentAmount').value);
+    const method = document.getElementById('paymentMethod').value;
+    const reference = document.getElementById('paymentReference').value;
+
+    if (!amount || amount <= 0) {
+        showAlert('Please enter a valid payment amount', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/invoices/${invoiceId}/payment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ amount, method, reference }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            $('#partialPaymentModal').modal('hide');
+            showAlert('Payment recorded successfully', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert(result.message || 'Failed to record payment', 'danger');
+        }
+    } catch (error) {
+        console.error('Error recording payment:', error);
+        showAlert('An error occurred while recording payment', 'danger');
+    }
+}
+
+// Helper function to show alerts
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    `;
+
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
 // Make functions globally available
 window.editInvoice = editInvoice;
 window.cancelEdit = cancelEdit;
@@ -366,3 +534,7 @@ window.deleteInvoice = deleteInvoice;
 window.applyFilters = applyFilters;
 window.clearFilters = clearFilters;
 window.exportData = exportData;
+window.openNewInvoiceModal = openNewInvoiceModal;
+window.submitNewInvoice = submitNewInvoice;
+window.openPartialPaymentModal = openPartialPaymentModal;
+window.submitPartialPayment = submitPartialPayment;

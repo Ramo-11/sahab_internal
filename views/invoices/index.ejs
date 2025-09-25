@@ -8,7 +8,7 @@
         <button class="btn btn-secondary" onclick="exportData()">
             <i class="fas fa-download"></i> Export
         </button>
-        <a href="/invoices/new" class="btn btn-primary">
+        <button class="btn btn-primary" onclick="openNewInvoiceModal()">
             <i class="fas fa-plus"></i> New Invoice
         </a>
     </div>
@@ -110,15 +110,22 @@
                             <span class="view-mode">
                                 <span class="badge badge-<%= 
                                     invoice.status === 'paid' ? 'success' : 
+                                    invoice.status === 'partial' ? 'warning' :
                                     invoice.status === 'overdue' ? 'danger' : 
-                                    invoice.status === 'sent' ? 'primary' : 'warning' 
+                                    invoice.status === 'sent' ? 'primary' : 'secondary' 
                                 %>">
                                     <%= invoice.status %>
                                 </span>
+                                <% if (invoice.status === 'partial' && invoice.balanceDue) { %>
+                                    <small class="d-block text-muted mt-1">
+                                        Balance: $<%= invoice.balanceDue.toFixed(2) %>
+                                    </small>
+                                <% } %>
                             </span>
                             <select class="form-control edit-mode" style="display: none;" data-field="status">
                                 <option value="draft" <%= invoice.status === 'draft' ? 'selected' : '' %>>Draft</option>
                                 <option value="sent" <%= invoice.status === 'sent' ? 'selected' : '' %>>Sent</option>
+                                <option value="partial" <%= invoice.status === 'partial' ? 'selected' : '' %>>Partial</option>
                                 <option value="paid" <%= invoice.status === 'paid' ? 'selected' : '' %>>Paid</option>
                                 <option value="overdue" <%= invoice.status === 'overdue' ? 'selected' : '' %>>Overdue</option>
                             </select>
@@ -145,6 +152,11 @@
                                         </a>
                                     <% } %>
                                     <% if (invoice.status !== 'paid') { %>
+                                        <button class="btn btn-sm btn-icon text-warning" 
+                                                onclick="openPartialPaymentModal('<%= invoice._id %>')" 
+                                                title="Record Partial Payment">
+                                            <i class="fas fa-coins"></i>
+                                        </button>
                                         <button class="btn btn-sm btn-icon text-success" 
                                                 onclick="markAsPaid('<%= invoice._id %>')" title="Mark as Paid">
                                             <i class="fas fa-check-circle"></i>
@@ -179,3 +191,5 @@
         </table>
     </div>
 </div>
+
+<%- include('modals') %>

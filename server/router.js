@@ -58,7 +58,6 @@ router.get('/api/proposals/:id/preview', proposalController.previewProposal);
  */
 // Views
 router.get('/invoices', invoiceController.showInvoices);
-router.get('/invoices/new', invoiceController.showNewInvoice);
 router.get('/invoices/:id', invoiceController.showInvoice);
 router.get('/invoices/:id/edit', invoiceController.showEditInvoice);
 

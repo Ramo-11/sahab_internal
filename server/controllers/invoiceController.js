@@ -20,13 +20,23 @@ const showInvoices = async (req, res) => {
             ];
         }
 
-        // Fetch invoices
+        // Fetch invoices with virtual fields
         const invoices = await Invoice.find(filter)
             .populate('client', 'name company')
             .sort(sort)
-            .select('invoiceNumber title client status amount dueDate createdAt documentUrl');
+            .lean(); // Use lean for better performance
 
-        // Fetch all clients for the filter dropdown
+        // Calculate balance due for each invoice
+        const invoicesWithBalance = invoices.map((invoice) => ({
+            ...invoice,
+            balanceDue: invoice.amount - (invoice.amountPaid || 0),
+            isOverdue:
+                invoice.status !== 'paid' &&
+                invoice.status !== 'cancelled' &&
+                new Date() > new Date(invoice.dueDate),
+        }));
+
+        // Fetch all clients for the filter dropdown AND modal
         const clients = await Client.find({ status: { $ne: 'archived' } })
             .select('name company')
             .sort('name');
@@ -34,8 +44,8 @@ const showInvoices = async (req, res) => {
         res.render('invoices/index', {
             title: 'Invoices - Sahab Solutions',
             layout: 'layout',
-            invoices,
-            clients, // Add this line
+            invoices: invoicesWithBalance,
+            clients,
             additionalCSS: ['invoices.css'],
             additionalJS: ['invoices.js'],
             filters: { status, client, search },
@@ -46,40 +56,6 @@ const showInvoices = async (req, res) => {
         res.status(500).render('error', {
             title: 'Error',
             message: 'Failed to load invoices',
-            layout: 'layout',
-        });
-    }
-};
-
-/**
- * Show new invoice form
- */
-const showNewInvoice = async (req, res) => {
-    try {
-        const [clients, proposals] = await Promise.all([
-            Client.find({ status: { $in: ['active', 'lead', 'pending'] } })
-                .sort('company name')
-                .select('name company email'),
-            Proposal.find({ status: 'accepted' })
-                .populate('client', 'name company')
-                .sort('-createdAt')
-                .select('title client pricing'),
-        ]);
-
-        res.render('invoices/new', {
-            title: 'New Invoice - Sahab Solutions',
-            layout: 'layout',
-            clients,
-            additionalCSS: ['invoices.css'],
-            additionalJS: ['invoices.js'],
-            proposals,
-            activeTab: 'invoices',
-        });
-    } catch (error) {
-        logger.error('Show new invoice error:', error);
-        res.status(500).render('error', {
-            title: 'Error',
-            message: 'Failed to load form',
             layout: 'layout',
         });
     }
@@ -455,7 +431,12 @@ const recordPayment = async (req, res) => {
             });
         }
 
-        if (amount >= invoice.balanceDue) {
+        const paymentAmount = parseFloat(amount);
+        const currentPaid = invoice.amountPaid || 0;
+        const newTotalPaid = currentPaid + paymentAmount;
+        const balanceDue = invoice.amount - newTotalPaid;
+
+        if (paymentAmount >= balanceDue || Math.abs(balanceDue) < 0.01) {
             // Full payment - mark as paid
             invoice.status = 'paid';
             invoice.paidDate = new Date();
@@ -465,24 +446,34 @@ const recordPayment = async (req, res) => {
 
             await invoice.save();
 
-            // Update client revenue
+            // Update client revenue only for the new payment amount
             await Client.findByIdAndUpdate(invoice.client, {
-                $inc: { totalRevenue: invoice.amount },
+                $inc: { totalRevenue: paymentAmount },
             });
         } else {
             // Partial payment
-            await invoice.recordPayment(amount);
+            invoice.amountPaid = newTotalPaid;
+            invoice.status = 'partial';
             if (method) invoice.paymentMethod = method;
             if (reference) invoice.paymentReference = reference;
+
             await invoice.save();
+
+            // Update client revenue for the partial payment
+            await Client.findByIdAndUpdate(invoice.client, {
+                $inc: { totalRevenue: paymentAmount },
+            });
         }
 
-        logger.info(`Payment recorded for invoice: ${invoice._id}`);
+        logger.info(`Payment of ${paymentAmount} recorded for invoice: ${invoice._id}`);
 
         res.json({
             success: true,
             data: invoice,
-            message: 'Payment recorded successfully',
+            message:
+                invoice.status === 'paid'
+                    ? 'Invoice marked as paid'
+                    : 'Partial payment recorded successfully',
         });
     } catch (error) {
         logger.error('Record payment error:', error);
@@ -556,7 +547,6 @@ const previewInvoice = async (req, res) => {
 
 module.exports = {
     showInvoices,
-    showNewInvoice,
     showInvoice,
     showEditInvoice,
     getInvoices,

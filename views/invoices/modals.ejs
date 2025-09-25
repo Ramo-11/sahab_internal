@@ -1,0 +1,226 @@
+<!-- New Invoice Modal -->
+<div class="modal fade" id="newInvoiceModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Invoice</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="newInvoiceForm">
+                    <!-- Invoice Information -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">Invoice Information</h6>
+
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Invoice Number</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        name="invoiceNumber"
+                                        placeholder="e.g., 65432"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Title/Description</label>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        name="title"
+                                        placeholder="e.g., Website Development"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label class="form-label required">Client</label>
+                                    <select
+                                        class="form-control"
+                                        name="client"
+                                        id="modalClientSelect"
+                                        required
+                                    >
+                                        <option value="">Select a client</option>
+                                        <!-- Options will be populated dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Amount</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">$</span>
+                                        </div>
+                                        <input
+                                            type="number"
+                                            class="form-control"
+                                            name="amount"
+                                            min="0"
+                                            step="0.01"
+                                            required
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Due Date</label>
+                                    <input
+                                        type="date"
+                                        class="form-control"
+                                        name="dueDate"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Payment Terms</label>
+                                    <select class="form-control" name="paymentTerms">
+                                        <option value="Net 30" selected>Net 30</option>
+                                        <option value="Net 15">Net 15</option>
+                                        <option value="Due on Receipt">Due on Receipt</option>
+                                        <option value="Net 45">Net 45</option>
+                                        <option value="Net 60">Net 60</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" name="status">
+                                        <option value="draft">Draft</option>
+                                        <option value="sent" selected>Sent</option>
+                                        <option value="paid">Paid</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea
+                                class="form-control"
+                                name="notes"
+                                rows="3"
+                                placeholder="Additional details or notes about this invoice..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">External Invoice Link (Optional)</label>
+                            <input
+                                type="url"
+                                class="form-control"
+                                name="documentUrl"
+                                placeholder="Link to invoice in external system"
+                            />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitNewInvoice()">
+                    <i class="fas fa-save"></i> Create Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Partial Payment Modal -->
+<div class="modal fade" id="partialPaymentModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Record Partial Payment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="partialPaymentForm">
+                    <input type="hidden" id="paymentInvoiceId" />
+                    <div class="form-group">
+                        <label class="form-label">Total Amount Due</label>
+                        <input type="text" class="form-control" id="totalDue" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount Already Paid</label>
+                        <input type="text" class="form-control" id="alreadyPaid" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Remaining Balance</label>
+                        <input type="text" class="form-control" id="remainingBalance" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Payment Amount</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            <input
+                                type="number"
+                                class="form-control"
+                                id="paymentAmount"
+                                name="amount"
+                                min="0.01"
+                                step="0.01"
+                                required
+                                placeholder="0.00"
+                            />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-control" name="method" id="paymentMethod">
+                            <option value="">Select method</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="check">Check</option>
+                            <option value="cash">Cash</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="stripe">Stripe</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Reference Number</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="reference"
+                            id="paymentReference"
+                            placeholder="Transaction or check number"
+                        />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitPartialPayment()">
+                    <i class="fas fa-check"></i> Record Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

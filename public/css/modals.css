@@ -1,4 +1,189 @@
 /* Modal Styles */
+/* Modal Styles */
+.modal {
+    display: none;
+}
+
+.modal.fade {
+    opacity: 0;
+    transition: opacity 0.15s linear;
+}
+
+.modal.fade.show {
+    opacity: 1;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: var(--z-modal-backdrop);
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 1.75rem auto;
+    pointer-events: none;
+}
+
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: translate(0, -50px);
+}
+
+.modal.show .modal-dialog {
+    transform: none;
+}
+
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: var(--white);
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius-lg);
+    outline: 0;
+}
+
+.modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--gray-200);
+    border-top-left-radius: calc(var(--border-radius-lg) - 1px);
+    border-top-right-radius: calc(var(--border-radius-lg) - 1px);
+}
+
+.modal-title {
+    margin-bottom: 0;
+    line-height: 1.5;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-semibold);
+}
+
+.modal-header .close {
+    padding: var(--spacing-lg);
+    margin: calc(var(--spacing-lg) * -1) calc(var(--spacing-lg) * -1) calc(var(--spacing-lg) * -1)
+        auto;
+    background-color: transparent;
+    border: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.modal-header .close:hover {
+    opacity: 0.8;
+}
+
+.modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: var(--spacing-lg);
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.modal-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    padding: calc(var(--spacing-lg) * 0.75) var(--spacing-lg);
+    border-top: 1px solid var(--gray-200);
+    border-bottom-right-radius: calc(var(--border-radius-lg) - 1px);
+    border-bottom-left-radius: calc(var(--border-radius-lg) - 1px);
+    gap: var(--spacing-sm);
+}
+
+/* Modal sizes */
+.modal-sm {
+    max-width: 300px;
+}
+
+.modal-lg {
+    max-width: 800px;
+}
+
+.modal-xl {
+    max-width: 1140px;
+}
+
+/* Form row in modal */
+.modal-body .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -5px;
+    margin-left: -5px;
+}
+
+.modal-body .col-md-6,
+.modal-body .col-md-12 {
+    position: relative;
+    width: 100%;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.modal-body .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+
+.modal-body .col-md-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+.modal-body .input-group-text {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: 0;
+    font-size: var(--font-size-base);
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--gray-700);
+    text-align: center;
+    white-space: nowrap;
+    background-color: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-md) 0 0 var(--border-radius-md);
+}
+
+.modal-body .input-group-prepend {
+    margin-right: -1px;
+    display: flex;
+}
+
+.modal-body .input-group > .form-control {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    margin-bottom: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -250,5 +435,10 @@
     .modal-dialog {
         width: 95%;
         margin: var(--spacing-md);
+    }
+
+    .modal-body .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
     }
 }
