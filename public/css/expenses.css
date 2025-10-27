@@ -27,6 +27,50 @@
     margin-top: var(--spacing-xs);
 }
 
+/* Category Analytics */
+.category-analytics {
+    padding: var(--spacing-md);
+}
+
+.analytics-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin-bottom: var(--spacing-md);
+}
+
+.category-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+}
+
+.category-info {
+    display: flex;
+    align-items: center;
+}
+
+.category-name {
+    font-size: 0.875rem;
+    color: var(--gray-700);
+    text-transform: capitalize;
+}
+
+.category-amount {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
 /* Quick Add Section */
 .quick-add-expense {
     display: flex;
