@@ -113,6 +113,25 @@
     color: var(--gray-600);
 }
 
+/* Sortable Headers */
+#expensesTable thead th.sortable {
+    transition: background-color 0.2s ease;
+}
+
+#expensesTable thead th.sortable:hover {
+    background-color: var(--gray-50);
+}
+
+.sort-indicator {
+    margin-left: var(--spacing-xs);
+    color: var(--gray-400);
+    font-size: 0.75rem;
+}
+
+#expensesTable thead th.sortable:hover .sort-indicator {
+    color: var(--gray-600);
+}
+
 /* Edit Mode */
 tr.editing {
     background: var(--gray-50);

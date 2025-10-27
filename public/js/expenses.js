@@ -4,9 +4,119 @@ document.addEventListener('DOMContentLoaded', () => {
     loadClients();
 });
 
+// Sorting state
+let sortState = {
+    column: null,
+    direction: 'asc' // 'asc' or 'desc'
+};
+
 function initExpensePage() {
     initSearch();
     attachFilterListeners();
+    initSorting();
+}
+
+// Initialize sorting
+function initSorting() {
+    const headers = document.querySelectorAll('#expensesTable thead th');
+    const sortableColumns = ['Date', 'Description', 'Amount', 'Category', 'Client'];
+
+    headers.forEach((header, index) => {
+        const columnName = header.textContent.trim();
+        if (sortableColumns.includes(columnName)) {
+            header.style.cursor = 'pointer';
+            header.style.userSelect = 'none';
+            header.classList.add('sortable');
+
+            // Add sort indicator span
+            const indicator = document.createElement('span');
+            indicator.className = 'sort-indicator';
+            indicator.innerHTML = ' <i class="fas fa-sort"></i>';
+            header.appendChild(indicator);
+
+            header.addEventListener('click', () => sortTable(columnName, index));
+        }
+    });
+}
+
+// Sort table
+function sortTable(columnName, columnIndex) {
+    const table = document.getElementById('expensesTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => row.dataset.id);
+
+    if (rows.length === 0) return;
+
+    // Toggle sort direction
+    if (sortState.column === columnName) {
+        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortState.column = columnName;
+        sortState.direction = 'asc';
+    }
+
+    // Sort rows
+    rows.sort((a, b) => {
+        let aVal, bVal;
+
+        switch (columnName) {
+            case 'Date':
+                const aData = JSON.parse(a.dataset.expense);
+                const bData = JSON.parse(b.dataset.expense);
+                aVal = new Date(aData.expenseDate).getTime();
+                bVal = new Date(bData.expenseDate).getTime();
+                break;
+            case 'Description':
+                aVal = a.querySelector('td:nth-child(2) .view-mode').textContent.trim().toLowerCase();
+                bVal = b.querySelector('td:nth-child(2) .view-mode').textContent.trim().toLowerCase();
+                break;
+            case 'Amount':
+                const aExpense = JSON.parse(a.dataset.expense);
+                const bExpense = JSON.parse(b.dataset.expense);
+                aVal = aExpense.amount;
+                bVal = bExpense.amount;
+                break;
+            case 'Category':
+                aVal = a.querySelector('td:nth-child(4) .category-badge').textContent.trim().toLowerCase();
+                bVal = b.querySelector('td:nth-child(4) .category-badge').textContent.trim().toLowerCase();
+                break;
+            case 'Client':
+                const aClient = a.querySelector('td:nth-child(5)').textContent.trim().toLowerCase();
+                const bClient = b.querySelector('td:nth-child(5)').textContent.trim().toLowerCase();
+                aVal = aClient === '-' ? '' : aClient;
+                bVal = bClient === '-' ? '' : bClient;
+                break;
+        }
+
+        // Compare values
+        let comparison = 0;
+        if (aVal < bVal) comparison = -1;
+        if (aVal > bVal) comparison = 1;
+
+        return sortState.direction === 'asc' ? comparison : -comparison;
+    });
+
+    // Re-append rows in sorted order
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Update sort indicators
+    updateSortIndicators(columnIndex);
+}
+
+// Update sort indicators
+function updateSortIndicators(activeIndex) {
+    const headers = document.querySelectorAll('#expensesTable thead th');
+    headers.forEach((header, index) => {
+        const indicator = header.querySelector('.sort-indicator');
+        if (indicator) {
+            if (index === activeIndex) {
+                const icon = sortState.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+                indicator.innerHTML = ` <i class="fas ${icon}"></i>`;
+            } else {
+                indicator.innerHTML = ' <i class="fas fa-sort"></i>';
+            }
+        }
+    });
 }
 
 // Load clients for dropdown
