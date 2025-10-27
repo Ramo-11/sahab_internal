@@ -30,6 +30,7 @@
 /* Quick Add Section */
 .quick-add-expense {
     display: flex;
+    flex-direction: row;
     gap: var(--spacing-sm);
     align-items: flex-end;
     padding: var(--spacing-md);
