@@ -138,11 +138,6 @@ const updateExpense = async (req, res) => {
         const updates = req.body;
         delete updates._id;
 
-        // Don't double convert if already in cents
-        if (updates.amount !== undefined && updates.amount < 1000) {
-            updates.amount = updates.amount * 100;
-        }
-
         const expense = await Expense.findByIdAndUpdate(req.params.id, updates, {
             new: true,
             runValidators: true,
