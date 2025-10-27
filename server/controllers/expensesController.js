@@ -35,6 +35,13 @@ const showExpenses = async (req, res) => {
         // Calculate total
         const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
+        // Calculate category totals
+        const categoryTotals = expenses.reduce((acc, expense) => {
+            const cat = expense.category || 'other';
+            acc[cat] = (acc[cat] || 0) + expense.amount;
+            return acc;
+        }, {});
+
         // Get clients for filter dropdown
         const clients = await Client.find({ status: 'active' })
             .select('name company')
@@ -46,6 +53,7 @@ const showExpenses = async (req, res) => {
             expenses,
             clients,
             total,
+            categoryTotals,
             filters: { category, client, search, month },
             additionalCSS: ['expenses.css'],
             additionalJS: ['expenses.js'],
