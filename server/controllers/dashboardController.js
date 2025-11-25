@@ -141,7 +141,7 @@ const showDashboard = async (req, res) => {
                 {
                     $group: {
                         _id: null,
-                        total: { $sum: { $ifNull: ['$amountPaid', 0] } },
+                        total: { $sum: '$amount' },
                     },
                 },
             ]),
