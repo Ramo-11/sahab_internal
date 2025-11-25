@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice Stats Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        h1 { text-align: center; }
+        .chart-container {
+            width: 800px;
+            margin: 40px auto;
+        }
+        table {
+            margin: 40px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+        }
+        th {
+            background: #f4f4f4;
+        }
+        .good { color: green; }
+        .bad { color: red; }
+    </style>
+</head>
+<body>
+
+<h1>Invoice Statistics Dashboard</h1>
+
+<div class="chart-container">
+    <canvas id="invoiceChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <canvas id="amountChart"></canvas>
+</div>
+
+<h2 style="text-align:center;">Summary</h2>
+<table>
+    <tr><th>Total Invoices</th><td>10</td></tr>
+    <tr><th>Paid</th><td>10</td></tr>
+    <tr><th>Unpaid</th><td>0</td></tr>
+    <tr><th>Total Amount Paid</th><td>$6255.00</td></tr>
+    <tr><th>Total Amount (Paid Invoices)</th><td>$6254.15</td></tr>
+</table>
+
+<h2 style="text-align:center;">Mismatched Invoices</h2>
+
+<table>
+    <tr><th>Invoice ID</th><th>amountPaid</th><th>amount</th></tr>
+    
+            <tr>
+                <td>6908c9541239cbdcd3ecbcb2</td>
+                <td>$1020</td>
+                <td class="bad">$1019.15</td>
+            </tr>
+        
+</table>
+
+<script>
+    const ctx1 = document.getElementById('invoiceChart');
+    new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: ['Total', 'Paid', 'Unpaid'],
+            datasets: [{
+                label: 'Invoice Counts',
+                data: [10, 10, 0],
+                backgroundColor: ['#4c8aff', '#2ecc71', '#e74c3c']
+            }]
+        }
+    });
+
+    const ctx2 = document.getElementById('amountChart');
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: ['Amount Paid', 'Total Amount (Paid Invoices)'],
+            datasets: [{
+                label: 'Amounts',
+                data: [6255, 6254.15],
+                backgroundColor: ['#9b59b6', '#f1c40f']
+            }]
+        }
+    });
+</script>
+
+</body>
+</html>

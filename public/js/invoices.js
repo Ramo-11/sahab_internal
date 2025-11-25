@@ -686,6 +686,16 @@ async function showInvoiceDetails(invoiceId) {
         document.getElementById('detailAmountPaid').textContent = `$${amountPaid.toFixed(2)}`;
         document.getElementById('detailBalanceDue').textContent = `$${balanceDue.toFixed(2)}`;
 
+        // Show overpayment if applicable
+        const overpaidRow = document.getElementById('overpaidRow');
+        if (invoice.status === 'paid' && amountPaid > invoice.amount) {
+            const overpaid = amountPaid - invoice.amount;
+            document.getElementById('detailOverpaid').textContent = `+$${overpaid.toFixed(2)}`;
+            overpaidRow.style.display = '';
+        } else {
+            overpaidRow.style.display = 'none';
+        }
+
         // Populate payment history
         const paymentHistoryBody = document.getElementById('paymentHistoryBody');
         if (invoice.paymentHistory && invoice.paymentHistory.length > 0) {

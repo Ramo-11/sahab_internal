@@ -57,13 +57,7 @@ const showDashboard = async (req, res) => {
                                 $group: {
                                     _id: null,
                                     totalPaid: {
-                                        $sum: {
-                                            $cond: [
-                                                { $eq: ['$status', 'paid'] },
-                                                '$amount',
-                                                { $ifNull: ['$amountPaid', 0] },
-                                            ],
-                                        },
+                                        $sum: { $ifNull: ['$amountPaid', 0] },
                                     },
                                     totalPending: {
                                         $sum: {
@@ -122,13 +116,7 @@ const showDashboard = async (req, res) => {
                     $group: {
                         _id: null,
                         monthlyRevenue: {
-                            $sum: {
-                                $cond: [
-                                    { $eq: ['$status', 'paid'] },
-                                    '$amount',
-                                    { $ifNull: ['$amountPaid', 0] }, // For partial payments, use amountPaid
-                                ],
-                            },
+                            $sum: { $ifNull: ['$amountPaid', 0] },
                         },
                     },
                 },
@@ -153,7 +141,7 @@ const showDashboard = async (req, res) => {
                 {
                     $group: {
                         _id: null,
-                        total: { $sum: '$amount' },
+                        total: { $sum: { $ifNull: ['$amountPaid', 0] } },
                     },
                 },
             ]),
@@ -259,7 +247,7 @@ const getStats = async (req, res) => {
                             date: '$effectiveDate',
                         },
                     },
-                    revenue: { $sum: '$amount' },
+                    revenue: { $sum: { $ifNull: ['$amountPaid', 0] } },
                     count: { $sum: 1 },
                 },
             },
@@ -319,7 +307,7 @@ const getStats = async (req, res) => {
             {
                 $group: {
                     _id: null,
-                    total: { $sum: '$amount' },
+                    total: { $sum: { $ifNull: ['$amountPaid', 0] } },
                 },
             },
         ]);

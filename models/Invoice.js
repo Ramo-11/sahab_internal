@@ -283,9 +283,9 @@ invoiceSchema.statics.getRevenueStats = async function (startDate, endDate) {
         {
             $group: {
                 _id: null,
-                totalRevenue: { $sum: '$amount' },
+                totalRevenue: { $sum: { $ifNull: ['$amountPaid', 0] } },
                 invoiceCount: { $sum: 1 },
-                avgInvoiceAmount: { $avg: '$amount' },
+                avgInvoiceAmount: { $avg: { $ifNull: ['$amountPaid', 0] } },
             },
         },
     ]);

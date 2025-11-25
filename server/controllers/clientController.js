@@ -38,7 +38,7 @@ const showClients = async (req, res) => {
             {
                 $group: {
                     _id: '$client',
-                    total: { $sum: '$amount' },
+                    total: { $sum: { $ifNull: ['$amountPaid', 0] } },
                 },
             },
         ]);
@@ -116,7 +116,7 @@ const showClient = async (req, res) => {
                 {
                     $group: {
                         _id: null,
-                        total: { $sum: '$amount' },
+                        total: { $sum: { $ifNull: ['$amountPaid', 0] } },
                     },
                 },
             ]),

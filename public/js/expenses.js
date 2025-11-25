@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Sorting state
 let sortState = {
     column: null,
-    direction: 'asc' // 'asc' or 'desc'
+    direction: 'asc', // 'asc' or 'desc'
 };
 
 function initExpensePage() {
@@ -43,7 +43,7 @@ function initSorting() {
 function sortTable(columnName, columnIndex) {
     const table = document.getElementById('expensesTable');
     const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => row.dataset.id);
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter((row) => row.dataset.id);
 
     if (rows.length === 0) return;
 
@@ -67,8 +67,14 @@ function sortTable(columnName, columnIndex) {
                 bVal = new Date(bData.expenseDate).getTime();
                 break;
             case 'Description':
-                aVal = a.querySelector('td:nth-child(2) .view-mode').textContent.trim().toLowerCase();
-                bVal = b.querySelector('td:nth-child(2) .view-mode').textContent.trim().toLowerCase();
+                aVal = a
+                    .querySelector('td:nth-child(2) .view-mode')
+                    .textContent.trim()
+                    .toLowerCase();
+                bVal = b
+                    .querySelector('td:nth-child(2) .view-mode')
+                    .textContent.trim()
+                    .toLowerCase();
                 break;
             case 'Amount':
                 const aExpense = JSON.parse(a.dataset.expense);
@@ -77,8 +83,14 @@ function sortTable(columnName, columnIndex) {
                 bVal = bExpense.amount;
                 break;
             case 'Category':
-                aVal = a.querySelector('td:nth-child(4) .category-badge').textContent.trim().toLowerCase();
-                bVal = b.querySelector('td:nth-child(4) .category-badge').textContent.trim().toLowerCase();
+                aVal = a
+                    .querySelector('td:nth-child(4) .category-badge')
+                    .textContent.trim()
+                    .toLowerCase();
+                bVal = b
+                    .querySelector('td:nth-child(4) .category-badge')
+                    .textContent.trim()
+                    .toLowerCase();
                 break;
             case 'Client':
                 const aClient = a.querySelector('td:nth-child(5)').textContent.trim().toLowerCase();
@@ -97,7 +109,7 @@ function sortTable(columnName, columnIndex) {
     });
 
     // Re-append rows in sorted order
-    rows.forEach(row => tbody.appendChild(row));
+    rows.forEach((row) => tbody.appendChild(row));
 
     // Update sort indicators
     updateSortIndicators(columnIndex);
@@ -326,7 +338,9 @@ async function quickAddExpense() {
     try {
         const data = {
             amount: parseFloat(amount),
-            expenseDate: new Date().toISOString(),
+            expenseDate: document.getElementById('quickDate').value
+                ? new Date(document.getElementById('quickDate').value).toISOString()
+                : new Date().toISOString(),
             category: category || 'other',
         };
 

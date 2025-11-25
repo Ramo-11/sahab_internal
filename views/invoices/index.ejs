@@ -21,7 +21,7 @@
         let totalPending = 0;
         let totalOverdue = 0;
         invoices.forEach(inv => {
-            const paidAmount = inv.status === 'paid' ? inv.amount : (inv.amountPaid || 0);
+            const paidAmount = inv.amountPaid || 0;
             totalPaid += paidAmount;
 
             const pending = inv.amount - paidAmount;
@@ -143,6 +143,9 @@
                         <td class="editable-cell">
                             <span class="view-mode">
                                 $<%= Number(invoice.amount).toFixed(2) %>
+                                <% if (invoice.status === 'paid' && invoice.amountPaid > invoice.amount) { %>
+                                    <small class="d-block text-success">Paid: $<%= invoice.amountPaid.toFixed(2) %></small>
+                                <% } %>
                             </span>
                             <input type="number" class="form-control edit-mode" 
                                 style="display: none;" value="<%= invoice.amount %>" 
