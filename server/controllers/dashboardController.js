@@ -5,6 +5,14 @@ const Expense = require('../../models/Expense');
 const { logger } = require('../logger');
 
 /**
+ * Helper to safely get a number value (prevents NaN)
+ */
+const safeNumber = (value, defaultValue = 0) => {
+    const num = Number(value);
+    return isNaN(num) || !isFinite(num) ? defaultValue : num;
+};
+
+/**
  * Show main dashboard
  */
 const showDashboard = async (req, res) => {
@@ -47,7 +55,7 @@ const showDashboard = async (req, res) => {
                     },
                 },
             ]),
-            // Invoice stats
+            // Invoice stats - enhanced
             Invoice.aggregate([
                 {
                     $facet: {
@@ -69,7 +77,7 @@ const showDashboard = async (req, res) => {
                                                 },
                                                 {
                                                     $subtract: [
-                                                        '$amount',
+                                                        { $ifNull: ['$amount', 0] },
                                                         { $ifNull: ['$amountPaid', 0] },
                                                     ],
                                                 },
@@ -77,6 +85,39 @@ const showDashboard = async (req, res) => {
                                             ],
                                         },
                                     },
+                                    totalAmount: {
+                                        $sum: { $ifNull: ['$amount', 0] },
+                                    },
+                                },
+                            },
+                        ],
+                        overdue: [
+                            {
+                                $match: {
+                                    status: { $nin: ['paid', 'cancelled'] },
+                                    dueDate: { $lt: new Date() },
+                                },
+                            },
+                            {
+                                $group: {
+                                    _id: null,
+                                    count: { $sum: 1 },
+                                    amount: { $sum: { $ifNull: ['$amount', 0] } },
+                                },
+                            },
+                        ],
+                        monthly: [
+                            {
+                                $match: {
+                                    status: 'paid',
+                                    paidDate: { $gte: currentMonth },
+                                },
+                            },
+                            {
+                                $group: {
+                                    _id: null,
+                                    revenue: { $sum: { $ifNull: ['$amountPaid', 0] } },
+                                    count: { $sum: 1 },
                                 },
                             },
                         ],
@@ -89,7 +130,7 @@ const showDashboard = async (req, res) => {
                     $group: {
                         _id: '$status',
                         count: { $sum: 1 },
-                        value: { $sum: '$pricing.amount' },
+                        value: { $sum: { $ifNull: ['$pricing.amount', 0] } },
                     },
                 },
             ]),
@@ -131,7 +172,7 @@ const showDashboard = async (req, res) => {
                 {
                     $group: {
                         _id: null,
-                        monthlyExpenses: { $sum: '$amount' },
+                        monthlyExpenses: { $sum: { $ifNull: ['$amount', 0] } },
                         count: { $sum: 1 },
                     },
                 },
@@ -141,45 +182,83 @@ const showDashboard = async (req, res) => {
                 {
                     $group: {
                         _id: null,
-                        total: { $sum: '$amount' },
+                        total: { $sum: { $ifNull: ['$amount', 0] } },
                     },
                 },
             ]),
         ]);
 
-        // Format stats
+        // Calculate proposal conversion rate
+        const proposalSent = safeNumber(proposalStats.find((s) => s._id === 'sent')?.count);
+        const proposalViewed = safeNumber(proposalStats.find((s) => s._id === 'viewed')?.count);
+        const proposalAccepted = safeNumber(proposalStats.find((s) => s._id === 'accepted')?.count);
+        const proposalRejected = safeNumber(proposalStats.find((s) => s._id === 'rejected')?.count);
+        const totalSentProposals =
+            proposalSent + proposalViewed + proposalAccepted + proposalRejected;
+        const conversionRate =
+            totalSentProposals > 0 ? (proposalAccepted / totalSentProposals) * 100 : 0;
+
+        // Get invoice stats data safely
+        const invoiceData = invoiceStats[0] || {
+            byStatus: [],
+            totals: [],
+            overdue: [],
+            monthly: [],
+        };
+
+        // Calculate monthly values
+        const monthlyRevenue = safeNumber(revenueStats[0]?.monthlyRevenue);
+        const monthlyExpenses = safeNumber(expenseStats[0]?.monthlyExpenses);
+        const monthlyProfit = monthlyRevenue - monthlyExpenses;
+
+        // Format stats with safe number handling
         const stats = {
-            clients: clientCount,
-            activeProposals,
-            unpaidInvoices,
-            pendingClients,
-            incomingInvoices,
-            monthlyRevenue: revenueStats[0]?.monthlyRevenue || 0,
+            clients: safeNumber(clientCount),
+            activeProposals: safeNumber(activeProposals),
+            unpaidInvoices: safeNumber(unpaidInvoices),
+            pendingClients: safeNumber(pendingClients),
+            incomingInvoices: safeNumber(incomingInvoices),
+            monthlyRevenue: monthlyRevenue,
             clientStats: {
-                active: clientStats.find((s) => s._id === 'active')?.count || 0,
-                lead: clientStats.find((s) => s._id === 'lead')?.count || 0,
-                inactive: clientStats.find((s) => s._id === 'inactive')?.count || 0,
-                total: clientStats.reduce((sum, s) => sum + s.count, 0),
+                active: safeNumber(clientStats.find((s) => s._id === 'active')?.count),
+                lead: safeNumber(clientStats.find((s) => s._id === 'lead')?.count),
+                inactive: safeNumber(clientStats.find((s) => s._id === 'inactive')?.count),
+                archived: safeNumber(clientStats.find((s) => s._id === 'archived')?.count),
+                total: safeNumber(clientStats.reduce((sum, s) => sum + safeNumber(s.count), 0)),
             },
             invoiceStats: {
-                totalPaid: invoiceStats[0]?.totals[0]?.totalPaid || 0,
-                totalPending: invoiceStats[0]?.totals[0]?.totalPending || 0,
-                sent: invoiceStats[0]?.byStatus.find((s) => s._id === 'sent')?.count || 0,
-                overdue: invoiceStats[0]?.byStatus.find((s) => s._id === 'overdue')?.count || 0,
+                totalPaid: safeNumber(invoiceData.totals[0]?.totalPaid),
+                totalPending: safeNumber(invoiceData.totals[0]?.totalPending),
+                totalAmount: safeNumber(invoiceData.totals[0]?.totalAmount),
+                sent: safeNumber(invoiceData.byStatus.find((s) => s._id === 'sent')?.count),
+                overdue: safeNumber(invoiceData.overdue[0]?.count),
+                overdueAmount: safeNumber(invoiceData.overdue[0]?.amount),
+                draft: safeNumber(invoiceData.byStatus.find((s) => s._id === 'draft')?.count),
+                paid: safeNumber(invoiceData.byStatus.find((s) => s._id === 'paid')?.count),
+                partial: safeNumber(invoiceData.byStatus.find((s) => s._id === 'partial')?.count),
+                cancelled: safeNumber(
+                    invoiceData.byStatus.find((s) => s._id === 'cancelled')?.count
+                ),
+                monthlyRevenue: safeNumber(invoiceData.monthly[0]?.revenue),
+                monthlyCount: safeNumber(invoiceData.monthly[0]?.count),
             },
             proposalStats: {
-                sent: proposalStats.find((s) => s._id === 'sent')?.count || 0,
-                viewed: proposalStats.find((s) => s._id === 'viewed')?.count || 0,
-                accepted: proposalStats.find((s) => s._id === 'accepted')?.count || 0,
-                totalValue: proposalStats.reduce((sum, s) => sum + (s.value || 0), 0),
+                draft: safeNumber(proposalStats.find((s) => s._id === 'draft')?.count),
+                sent: proposalSent,
+                viewed: proposalViewed,
+                accepted: proposalAccepted,
+                rejected: proposalRejected,
+                totalValue: safeNumber(
+                    proposalStats.reduce((sum, s) => sum + safeNumber(s.value), 0)
+                ),
+                acceptedValue: safeNumber(proposalStats.find((s) => s._id === 'accepted')?.value),
+                conversionRate: safeNumber(conversionRate),
             },
             expenseStats: {
-                monthlyExpenses: expenseStats[0]?.monthlyExpenses || 0,
-                totalExpenses: totalExpenses[0]?.total || 0,
-                monthlyCount: expenseStats[0]?.count || 0,
-                monthlyProfit:
-                    (revenueStats[0]?.monthlyRevenue || 0) -
-                    (expenseStats[0]?.monthlyExpenses || 0),
+                monthlyExpenses: monthlyExpenses,
+                totalExpenses: safeNumber(totalExpenses[0]?.total),
+                monthlyCount: safeNumber(expenseStats[0]?.count),
+                monthlyProfit: monthlyProfit,
             },
         };
 
@@ -187,8 +266,9 @@ const showDashboard = async (req, res) => {
             title: 'Dashboard - Sahab Solutions',
             layout: 'layout',
             stats,
+            additionalCSS: ['dashboard.css'],
             additionalJS: ['dashboard.js'],
-            recentClients,
+            recentClients: recentClients || [],
             activeTab: 'dashboard',
         });
     } catch (error) {
@@ -233,7 +313,6 @@ const getStats = async (req, res) => {
             },
             {
                 $addFields: {
-                    // Use paidDate if it exists, otherwise use updatedAt
                     effectiveDate: {
                         $ifNull: ['$paidDate', '$updatedAt'],
                     },
@@ -252,7 +331,7 @@ const getStats = async (req, res) => {
                 },
             },
             { $sort: { _id: 1 } },
-            { $limit: 30 }, // Limit data points for readability
+            { $limit: 30 },
         ]);
 
         // Get expense time series
@@ -270,7 +349,7 @@ const getStats = async (req, res) => {
                             date: '$expenseDate',
                         },
                     },
-                    expenses: { $sum: '$amount' },
+                    expenses: { $sum: { $ifNull: ['$amount', 0] } },
                     count: { $sum: 1 },
                 },
             },
@@ -312,13 +391,10 @@ const getStats = async (req, res) => {
             },
         ]);
 
-        const revenueGrowth = previousRevenue[0]?.total
-            ? (
-                  ((invoiceStats.totalRevenue - previousRevenue[0].total) /
-                      previousRevenue[0].total) *
-                  100
-              ).toFixed(1)
-            : 0;
+        const currentRevenue = safeNumber(invoiceStats?.totalRevenue);
+        const prevRevenue = safeNumber(previousRevenue[0]?.total);
+        const revenueGrowth =
+            prevRevenue > 0 ? safeNumber(((currentRevenue - prevRevenue) / prevRevenue) * 100) : 0;
 
         // Format labels for better display
         const formattedRevenue = revenueTimeSeries.map((item) => ({
@@ -329,8 +405,8 @@ const getStats = async (req, res) => {
                     : days <= 30
                     ? `Week ${item._id.split('-W')[1] || item._id}`
                     : new Date(item._id + '-01').toLocaleDateString('en-US', { month: 'short' }),
-            revenue: item.revenue,
-            count: item.count,
+            revenue: safeNumber(item.revenue),
+            count: safeNumber(item.count),
         }));
 
         const formattedExpenses = expenseTimeSeries.map((item) => ({
@@ -341,8 +417,8 @@ const getStats = async (req, res) => {
                     : days <= 30
                     ? `Week ${item._id.split('-W')[1] || item._id}`
                     : new Date(item._id + '-01').toLocaleDateString('en-US', { month: 'short' }),
-            expenses: item.expenses,
-            count: item.count,
+            expenses: safeNumber(item.expenses),
+            count: safeNumber(item.count),
         }));
 
         res.json({
@@ -411,7 +487,7 @@ const getRecent = async (req, res) => {
                 title: `Invoice #${i.invoiceNumber}`,
                 subtitle: i.client?.company || i.client?.name,
                 status: i.status,
-                amount: i.amount,
+                amount: safeNumber(i.amount),
                 date: i.createdAt,
                 link: `/invoices/${i._id}`,
             })),
@@ -450,8 +526,8 @@ const getAlerts = async (req, res) => {
                 type: 'warning',
                 category: 'invoice',
                 title: `Invoice #${invoice.invoiceNumber} is overdue`,
-                message: `${invoice.daysOverdue} days overdue for ${
-                    invoice.client?.company || invoice.client?.name
+                message: `${invoice.daysOverdue || 0} days overdue for ${
+                    invoice.client?.company || invoice.client?.name || 'Unknown'
                 }`,
                 link: `/invoices/${invoice._id}`,
                 priority: 'high',

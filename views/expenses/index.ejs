@@ -1,141 +1,305 @@
+<%
+// Helper function to safely format numbers - prevents NaN
+const formatCurrency = (value) => {
+    const num = Number(value);
+    if (isNaN(num) || !isFinite(num)) return '$0.00';
+    if (Math.abs(num) >= 1000) {
+        return '$' + (num / 1000).toFixed(1) + 'k';
+    }
+    return '$' + num.toFixed(2);
+};
+
+const formatNumber = (value, decimals = 0) => {
+    const num = Number(value);
+    if (isNaN(num) || !isFinite(num)) return '0';
+    return num.toFixed(decimals);
+};
+
+const formatPercent = (value) => {
+    const num = Number(value);
+    if (isNaN(num) || !isFinite(num)) return '0%';
+    const sign = num > 0 ? '+' : '';
+    return sign + num.toFixed(1) + '%';
+};
+
+// Category colors
+const categoryColors = {
+    office: { bg: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', icon: 'fa-building' },
+    software: { bg: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', icon: 'fa-laptop-code' },
+    travel: { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981', icon: 'fa-plane' },
+    meals: { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', icon: 'fa-utensils' },
+    drinks: { bg: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', icon: 'fa-coffee' },
+    marketing: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', icon: 'fa-bullhorn' },
+    contractors: { bg: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', icon: 'fa-users' },
+    donation: { bg: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', icon: 'fa-heart' },
+    other: { bg: 'rgba(107, 114, 128, 0.1)', color: '#6b7280', icon: 'fa-receipt' }
+};
+
+const getCategoryStyle = (cat) => categoryColors[cat] || categoryColors.other;
+%>
+
 <!-- Page Header -->
 <div class="page-header">
     <div class="page-header-content">
         <h1 class="page-title">Expenses</h1>
-        <p class="page-subtitle">Track business expenses</p>
+        <p class="page-subtitle">Track and manage your business expenses</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-outline" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
     </div>
 </div>
 
-<!-- Stats -->
-<div class="expense-stats">
-    <div class="expense-stat-card">
-        <div class="expense-stat-value">
-            $<%= (total || 0).toFixed(2) %>
-        </div>
-        <div class="expense-stat-label">Total Expenses</div>
-    </div>
-    <div class="expense-stat-card">
-        <div class="expense-stat-value">
-            <%= expenses.length %>
-        </div>
-        <div class="expense-stat-label">Transactions</div>
-    </div>
-</div>
-
-<!-- Category Analytics -->
-<% if (Object.keys(categoryTotals).length > 0) { %>
-<div class="card mb-3">
-    <div class="category-analytics">
-        <h3 class="analytics-title">Spending by Category</h3>
-        <div class="category-breakdown">
-            <% Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).forEach(([category, amount]) => { %>
-            <div class="category-item">
-                <div class="category-info">
-                    <span class="category-name"><%= category %></span>
-                </div>
-                <div class="category-amount">$<%= amount.toFixed(2) %></div>
+<!-- Stats Cards -->
+<div class="expense-stats-grid">
+    <div class="expense-stat-card primary">
+        <div class="stat-card-header">
+            <div class="stat-icon">
+                <i class="fas fa-wallet"></i>
             </div>
-            <% }); %>
+            <div class="stat-trend <%= (stats.monthlyChange || 0) <= 0 ? 'down' : 'up' %>">
+                <i class="fas fa-arrow-<%= (stats.monthlyChange || 0) <= 0 ? 'down' : 'up' %>"></i>
+                <%= formatPercent(stats.monthlyChange || 0) %>
+            </div>
         </div>
+        <div class="stat-card-value"><%= formatCurrency(stats.currentMonthTotal || 0) %></div>
+        <div class="stat-card-label">This Month</div>
+        <div class="stat-card-sublabel"><%= formatNumber(stats.currentMonthCount || 0) %> transactions</div>
+    </div>
+
+    <div class="expense-stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon secondary">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+        </div>
+        <div class="stat-card-value"><%= formatCurrency(stats.lastMonthTotal || 0) %></div>
+        <div class="stat-card-label">Last Month</div>
+        <div class="stat-card-sublabel">Previous period</div>
+    </div>
+
+    <div class="expense-stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon info">
+                <i class="fas fa-calculator"></i>
+            </div>
+        </div>
+        <div class="stat-card-value"><%= formatCurrency(stats.avgExpense || 0) %></div>
+        <div class="stat-card-label">Avg Expense</div>
+        <div class="stat-card-sublabel">Per transaction</div>
+    </div>
+
+    <div class="expense-stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon warning">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+        </div>
+        <div class="stat-card-value"><%= formatCurrency(stats.totalAll || 0) %></div>
+        <div class="stat-card-label">All Time Total</div>
+        <div class="stat-card-sublabel"><%= formatNumber(stats.totalCount || 0) %> total transactions</div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-row">
+    <!-- Monthly Trend Chart -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <i class="fas fa-chart-line"></i> Monthly Trend
+            </h3>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Category Breakdown Chart -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <h3 class="chart-card-title">
+                <i class="fas fa-chart-pie"></i> By Category
+            </h3>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Category Pills -->
+<% if (stats.categoryData && stats.categoryData.length > 0) { %>
+<div class="category-pills-container">
+    <h3 class="section-title">
+        <i class="fas fa-tags"></i> Spending by Category
+    </h3>
+    <div class="category-pills">
+        <% stats.categoryData.forEach(cat => { 
+            const style = getCategoryStyle(cat.category);
+        %>
+        <div class="category-pill" style="background: '<%= style.bg %>; border-color: <%= style.color %>;'">
+            <div class="category-pill-icon" style="background: '<%= style.color %>;'">
+                <i class="fas <%= style.icon %>"></i>
+            </div>
+            <div class="category-pill-info">
+                <span class="category-pill-name"><%= cat.category %></span>
+                <span class="category-pill-amount"><%= formatCurrency(cat.total) %></span>
+            </div>
+            <div class="category-pill-percent" style="color: '<%= style.color %>;'">
+                <%= formatNumber(cat.percentage, 1) %>%
+            </div>
+        </div>
+        <% }); %>
     </div>
 </div>
 <% } %>
 
-<!-- Quick Add -->
-<div class="card quick-add-expense">
-    <div class="form-group">
-        <input type="number" class="form-control" id="quickAmount" placeholder="Amount" step="0.01" required>
+<!-- Quick Add Expense -->
+<div class="quick-add-card">
+    <div class="quick-add-header">
+        <h3 class="quick-add-title">
+            <i class="fas fa-plus-circle"></i> Quick Add Expense
+        </h3>
     </div>
-    <div class="form-group">
-        <input type="text" class="form-control" id="quickDescription" placeholder="Description (optional)">
+    <div class="quick-add-form">
+        <div class="quick-add-row">
+            <div class="form-group">
+                <label class="form-label">Amount *</label>
+                <div class="input-group">
+                    <span class="input-group-prepend">$</span>
+                    <input type="number" class="form-control" id="quickAmount" placeholder="0.00" step="0.01" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" id="quickDate" value="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select class="form-control" id="quickCategory">
+                    <option value="other">Other</option>
+                    <option value="office">Office</option>
+                    <option value="software">Software</option>
+                    <option value="travel">Travel</option>
+                    <option value="meals">Meals</option>
+                    <option value="drinks">Drinks</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="contractors">Contractors</option>
+                    <option value="donation">Donation</option>
+                </select>
+            </div>
+            <div class="form-group flex-2">
+                <label class="form-label">Description</label>
+                <input type="text" class="form-control" id="quickDescription" placeholder="What was this expense for?">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Client</label>
+                <select class="form-control" id="quickClient">
+                    <option value="">No Client</option>
+                    <% clients.forEach(client => { %>
+                    <option value="<%= client._id %>"><%= client.company || client.name %></option>
+                    <% }); %>
+                </select>
+            </div>
+            <div class="form-group form-group-btn">
+                <button class="btn btn-primary btn-add" onclick="quickAddExpense()">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <input type="date" class="form-control" id="quickDate" value="<%= new Date().toISOString().split('T')[0] %>">
-    </div>
-    <div class="form-group">
-        <select class="form-control" id="quickCategory">
-            <option value="other">Other</option>
-            <option value="office">Office</option>
-            <option value="software">Software</option>
-            <option value="travel">Travel</option>
-            <option value="meals">Meals</option>
-            <option value="drinks">Drinks</option>
-            <option value="marketing">Marketing</option>
-            <option value="contractors">Contractors</option>
-            <option value="donation">Donation</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <select class="form-control" id="quickClient">
-            <option value="">No Client</option>
-            <% clients.forEach(client => { %>
-            <option value="<%= client._id %>"><%= client.company || client.name %></option>
-            <% }); %>
-        </select>
-    </div>
-    <button class="btn btn-primary" onclick="quickAddExpense()">
-        <i class="fas fa-plus"></i> Add Expense
-    </button>
 </div>
 
 <!-- Filters -->
-<div class="card mb-3">
-    <div class="filters">
-        <div class="filter-row">
-            <div class="filter-group">
-                <input type="text" 
-                       class="form-control" 
-                       id="searchInput" 
-                       placeholder="Search description..."
-                       value="<%= filters.search || '' %>">
-            </div>
-            <div class="filter-group">
-                <select class="form-control" id="categoryFilter">
-                    <option value="">All Categories</option>
-                    <option value="office" <%= filters.category === 'office' ? 'selected' : '' %>>Office</option>
-                    <option value="software" <%= filters.category === 'software' ? 'selected' : '' %>>Software</option>
-                    <option value="travel" <%= filters.category === 'travel' ? 'selected' : '' %>>Travel</option>
-                    <option value="meals" <%= filters.category === 'meals' ? 'selected' : '' %>>Meals</option>
-                    <option value="drinks" <%= filters.category === 'drinks' ? 'selected' : '' %>>Drinks</option>
-                    <option value="marketing" <%= filters.category === 'marketing' ? 'selected' : '' %>>Marketing</option>
-                    <option value="contractors" <%= filters.category === 'contractors' ? 'selected' : '' %>>Contractors</option>
-                    <option value="donation" <%= filters.category === 'donation' ? 'selected' : '' %>>Donation</option>
-                    <option value="other" <%= filters.category === 'other' ? 'selected' : '' %>>Other</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <select class="form-control" id="clientFilter">
-                    <option value="">All Clients</option>
-                    <% clients.forEach(client => { %>
-                        <option value="<%= client._id %>" <%= filters.client === String(client._id) ? 'selected' : '' %>>
-                            <%= client.company || client.name %>
-                        </option>
-                    <% }) %>
-                </select>
-            </div>
-            <div class="filter-group">
-                <input type="month" 
-                       class="form-control" 
-                       id="monthFilter" 
-                       value="<%= filters.month || '' %>">
-            </div>
+<div class="filters-card">
+    <div class="filters-header">
+        <h3 class="filters-title">
+            <i class="fas fa-filter"></i> Filters
+        </h3>
+        <% if (filters.search || filters.category || filters.client || filters.month) { %>
+        <span class="filters-active">Filters Active</span>
+        <% } %>
+    </div>
+    <div class="filters-row">
+        <div class="filter-group">
+            <label class="filter-label">Search</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="searchInput" 
+                   placeholder="Search description..."
+                   value="<%= filters.search || '' %>">
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Category</label>
+            <select class="form-control" id="categoryFilter">
+                <option value="">All Categories</option>
+                <option value="office" <%= filters.category === 'office' ? 'selected' : '' %>>Office</option>
+                <option value="software" <%= filters.category === 'software' ? 'selected' : '' %>>Software</option>
+                <option value="travel" <%= filters.category === 'travel' ? 'selected' : '' %>>Travel</option>
+                <option value="meals" <%= filters.category === 'meals' ? 'selected' : '' %>>Meals</option>
+                <option value="drinks" <%= filters.category === 'drinks' ? 'selected' : '' %>>Drinks</option>
+                <option value="marketing" <%= filters.category === 'marketing' ? 'selected' : '' %>>Marketing</option>
+                <option value="contractors" <%= filters.category === 'contractors' ? 'selected' : '' %>>Contractors</option>
+                <option value="donation" <%= filters.category === 'donation' ? 'selected' : '' %>>Donation</option>
+                <option value="other" <%= filters.category === 'other' ? 'selected' : '' %>>Other</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Client</label>
+            <select class="form-control" id="clientFilter">
+                <option value="">All Clients</option>
+                <% clients.forEach(client => { %>
+                    <option value="<%= client._id %>" <%= filters.client === String(client._id) ? 'selected' : '' %>>
+                        <%= client.company || client.name %>
+                    </option>
+                <% }) %>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Month</label>
+            <input type="month" 
+                   class="form-control" 
+                   id="monthFilter" 
+                   value="<%= filters.month || '' %>">
+        </div>
+        <div class="filter-actions">
             <button class="btn btn-primary" onclick="applyFilters()">
-                <i class="fas fa-filter"></i> Apply
+                <i class="fas fa-search"></i> Apply
             </button>
-            <button class="btn btn-secondary" onclick="clearFilters()">
+            <button class="btn btn-outline" onclick="clearFilters()">
                 <i class="fas fa-times"></i> Clear
             </button>
         </div>
     </div>
 </div>
 
+<!-- Results Summary -->
+<% if (filters.search || filters.category || filters.client || filters.month) { %>
+<div class="results-summary">
+    <span class="results-count">
+        <strong><%= expenses.length %></strong> expense<%= expenses.length !== 1 ? 's' : '' %> found
+    </span>
+    <span class="results-total">
+        Total: <strong><%= formatCurrency(stats.filteredTotal || 0) %></strong>
+    </span>
+</div>
+<% } %>
+
 <!-- Expenses Table -->
-<div class="card">
+<div class="expenses-table-card">
+    <div class="table-header">
+        <h3 class="table-title">
+            <i class="fas fa-list"></i> All Expenses
+        </h3>
+        <span class="table-count"><%= expenses.length %> records</span>
+    </div>
     <div class="table-responsive">
-        <table class="table" id="expensesTable">
+        <table class="table expenses-table" id="expensesTable">
             <thead>
                 <tr>
-                    <th>Purchase Date</th>
+                    <th>Date</th>
                     <th>Description</th>
                     <th>Amount</th>
                     <th>Category</th>
@@ -148,17 +312,24 @@
                 <tr>
                     <td colspan="6" class="text-center">
                         <div class="empty-state">
-                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
-                            <p>No expenses found</p>
+                            <div class="empty-state-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <h4>No expenses found</h4>
+                            <p>Add your first expense using the form above</p>
                         </div>
                     </td>
                 </tr>
                 <% } else { %>
-                    <% expenses.forEach(expense => { %>
-                    <tr data-id="<%= expense._id %>" data-expense='<%= JSON.stringify(expense) %>'>
+                    <% expenses.forEach(expense => { 
+                        const catStyle = getCategoryStyle(expense.category);
+                    %>
+                    <tr data-id="<%= expense._id %>" data-expense='<%- JSON.stringify(expense) %>'>
                         <td class="editable-cell">
                             <span class="view-mode">
-                                <%= new Date(expense.expenseDate).toLocaleDateString() %>
+                                <span class="expense-date">
+                                    <%= new Date(expense.expenseDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                </span>
                             </span>
                             <input type="date" class="form-control edit-mode" 
                                    style="display: none;" 
@@ -166,7 +337,7 @@
                                    data-field="expenseDate">
                         </td>
                         <td class="editable-cell">
-                            <span class="view-mode">
+                            <span class="view-mode expense-description">
                                 <%= expense.description || '-' %>
                             </span>
                             <input type="text" class="form-control edit-mode" 
@@ -174,7 +345,7 @@
                         </td>
                         <td class="editable-cell">
                             <span class="view-mode expense-amount">
-                                $<%= expense.amount.toFixed(2) %>
+                                <%= formatCurrency(expense.amount) %>
                             </span>
                             <input type="number" class="form-control edit-mode" 
                                 style="display: none;" 
@@ -183,7 +354,8 @@
                         </td>
                         <td class="editable-cell">
                             <span class="view-mode">
-                                <span class="category-badge">
+                                <span class="category-badge" style="background: '<%= catStyle.bg %>'; color: '<%= catStyle.color %>;'">
+                                    <i class="fas <%= catStyle.icon %>"></i>
                                     <%= expense.category %>
                                 </span>
                             </span>
@@ -202,6 +374,7 @@
                         <td>
                             <% if (expense.client) { %>
                                 <span class="expense-client">
+                                    <i class="fas fa-user"></i>
                                     <%= expense.client.company || expense.client.name %>
                                 </span>
                             <% } else { %>
@@ -216,7 +389,7 @@
                                             onclick="editExpense('<%= expense._id %>')" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-icon text-danger" 
+                                    <button class="btn btn-sm btn-icon btn-danger-icon" 
                                             onclick="deleteExpense('<%= expense._id %>')" title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -225,7 +398,7 @@
                                 <div class="edit-actions" style="display: none;">
                                     <button class="btn btn-sm btn-success" 
                                             onclick="saveExpense('<%= expense._id %>')">
-                                        <i class="fas fa-save"></i>
+                                        <i class="fas fa-check"></i>
                                     </button>
                                     <button class="btn btn-sm btn-secondary" 
                                             onclick="cancelEdit('<%= expense._id %>')">
@@ -240,4 +413,11 @@
             </tbody>
         </table>
     </div>
+</div>
+
+<!-- Hidden data for charts -->
+<div id="expenseData" 
+     style="display: none;"
+     data-stats='<%- JSON.stringify(stats) %>'
+     data-category-totals='<%- JSON.stringify(categoryTotals) %>'>
 </div>

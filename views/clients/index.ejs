@@ -8,9 +8,38 @@
         <button class="btn btn-secondary" onclick="exportData()">
             <i class="fas fa-download"></i> Export
         </button>
-        <a href="/clients/new" class="btn btn-primary">
+        <button class="btn btn-primary" onclick="openNewClientModal()">
             <i class="fas fa-plus"></i> Add Client
-        </a>
+        </button>
+    </div>
+</div>
+
+<!-- Stats Summary -->
+<div class="stats-grid mb-4">
+    <% 
+        let activeCount = clients.filter(c => c.status === 'active').length;
+        let leadCount = clients.filter(c => c.status === 'lead').length;
+        let totalRevenue = clients.reduce((sum, c) => sum + (c.totalRevenue || 0), 0);
+    %>
+    <div class="stat-card">
+        <div class="stat-icon success"><i class="fas fa-user-check"></i></div>
+        <div class="stat-value"><%= activeCount %></div>
+        <div class="stat-label">Active Clients</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon info"><i class="fas fa-user-clock"></i></div>
+        <div class="stat-value"><%= leadCount %></div>
+        <div class="stat-label">Leads</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon primary"><i class="fas fa-users"></i></div>
+        <div class="stat-value"><%= clients.length %></div>
+        <div class="stat-label">Total Clients</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning"><i class="fas fa-dollar-sign"></i></div>
+        <div class="stat-value">$<%= (totalRevenue / 1000).toFixed(1) %>k</div>
+        <div class="stat-label">Total Revenue</div>
     </div>
 </div>
 
@@ -61,13 +90,12 @@
         <table class="table" id="clientsTable">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Company</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Status</th>
-                    <th>Revenue</th>
-                    <th>Actions</th>
+                    <th class="sortable" onclick="sortTable('name')">Name <i class="fas fa-sort sort-icon"></i></th>
+                    <th class="sortable" onclick="sortTable('company')">Company <i class="fas fa-sort sort-icon"></i></th>
+                    <th>Contact</th>
+                    <th class="sortable" onclick="sortTable('status')">Status <i class="fas fa-sort sort-icon"></i></th>
+                    <th class="sortable" onclick="sortTable('revenue')">Revenue <i class="fas fa-sort sort-icon"></i></th>
+                    <th width="15%">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -77,107 +105,58 @@
                         <div class="empty-state">
                             <i class="fas fa-users fa-3x text-muted mb-3"></i>
                             <p>No clients found</p>
-                            <a href="/clients/new" class="btn btn-primary btn-sm">Add Your First Client</a>
+                            <button onclick="openNewClientModal()" class="btn btn-primary btn-sm">Add Your First Client</button>
                         </div>
                     </td>
                 </tr>
                 <% } else { %>
                     <% clients.forEach(client => { %>
-                    <tr data-id="<%= client._id %>" data-client='<%= JSON.stringify(client) %>'>
-                        <td class="editable-cell">
-                            <span class="view-mode">
-                                <a href="/clients/<%= client._id %>" class="text-dark">
-                                    <strong><%= client.name %></strong>
+                    <tr data-id="<%= client._id %>" data-client='<%- JSON.stringify(client) %>'>
+                        <td>
+                            <div class="client-name-cell">
+                                <strong><%= client.name %></strong>
+                            </div>
+                        </td>
+                        <td><%= client.company || '<span class="text-muted">-</span>' %></td>
+                        <td class="contact-cell">
+                            <% if (client.email) { %>
+                                <a href="mailto:<%= client.email %>" class="contact-link">
+                                    <i class="fas fa-envelope"></i> <%= client.email %>
                                 </a>
+                            <% } %>
+                            <% if (client.phone) { %>
+                                <a href="tel:<%= client.phone.replace(/\D/g,'') %>" class="contact-link">
+                                    <i class="fas fa-phone"></i> <%= client.phone %>
+                                </a>
+                            <% } %>
+                            <% if (!client.email && !client.phone) { %>
+                                <span class="text-muted">-</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <span class="badge badge-<%= 
+                                client.status === 'active' ? 'success' : 
+                                client.status === 'lead' ? 'info' : 
+                                client.status === 'inactive' ? 'warning' : 'secondary' 
+                            %>">
+                                <%= client.status %>
                             </span>
-                            <input type="text" class="form-control edit-mode" 
-                                   style="display: none;" value="<%= client.name %>" data-field="name">
                         </td>
-                        <td class="editable-cell">
-                            <span class="view-mode"><%= client.company || '-' %></span>
-                            <input type="text" class="form-control edit-mode" 
-                                   style="display: none;" value="<%= client.company || '' %>" 
-                                   data-field="company">
-                        </td>
-                        <td class="editable-cell">
-                            <div class="view-mode">
-                                <% if (client.email) { %>
-                                    <a href="mailto:<%= client.email %>" class="d-block">
-                                        <i class="fas fa-envelope"></i> <%= client.email %>
-                                    </a>
-                                <% } %>
-                                <% if (!client.email) { %>
-                                    <span class="text-muted">-</span>
-                                <% } %>
-                            </div>
-                            <div class="edit-mode" style="display: none;">
-                                <input type="email" class="form-control mb-1" 
-                                       placeholder="Email" value="<%= client.email || '' %>" 
-                                       data-field="email">
-                            </div>
-                        </td>
-                        <td class="editable-cell">
-                            <div class="view-mode">
-                                <% if (client.phone) { %>
-                                    <a href="tel:<%= client.phone.replace(/\D/g,'') %>" class="d-block">
-                                        <i class="fas fa-phone"></i> <%= formatPhone(client.phone) %>
-                                    </a>
-                                <% } %>
-                                <% if (!client.phone) { %>
-                                    <span class="text-muted">-</span>
-                                <% } %>
-                            </div>
-                            <div class="edit-mode" style="display: none;">
-                                <input type="tel" class="form-control" 
-                                       placeholder="Phone" value="<%= client.phone || '' %>" 
-                                       data-field="phone">
-                            </div>
-                        </td>
-                        <td class="editable-cell">
-                            <span class="view-mode">
-                                <span class="badge badge-<%= 
-                                    client.status === 'active' ? 'success' : 
-                                    client.status === 'lead' ? 'info' : 
-                                    client.status === 'inactive' ? 'warning' : 'secondary' 
-                                %>">
-                                    <%= client.status %>
-                                </span>
-                            </span>
-                            <select class="form-control edit-mode" style="display: none;" data-field="status">
-                                <option value="lead" <%= client.status === 'lead' ? 'selected' : '' %>>Lead</option>
-                                <option value="active" <%= client.status === 'active' ? 'selected' : '' %>>Active</option>
-                                <option value="inactive" <%= client.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
-                                <option value="archived" <%= client.status === 'archived' ? 'selected' : '' %>>Archived</option>
-                            </select>
-                        </td>
-                        <td>$<%= (client.totalRevenue / 1000).toFixed(1) %>k</td>
+                        <td class="revenue-cell">$<%= ((client.totalRevenue || 0) / 1000).toFixed(1) %>k</td>
                         <td>
                             <div class="action-buttons">
-                                <!-- View mode actions -->
-                                <div class="view-actions">
-                                    <a href="/clients/<%= client._id %>" class="btn btn-sm btn-icon" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <button class="btn btn-sm btn-icon" 
-                                            onclick="editClient('<%= client._id %>')" title="Quick Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-icon text-danger" 
-                                            onclick="deleteClient('<%= client._id %>')" title="Delete">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                                <!-- Edit mode actions -->
-                                <div class="edit-actions" style="display: none;">
-                                    <button class="btn btn-sm btn-success" 
-                                            onclick="saveInlineClient('<%= client._id %>')">
-                                        <i class="fas fa-save"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-secondary" 
-                                            onclick="cancelInlineEdit('<%= client._id %>')">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="viewClient('<%= client._id %>')" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" 
+                                        onclick="editClient('<%= client._id %>')" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="deleteClient('<%= client._id %>')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -188,14 +167,385 @@
     </div>
 </div>
 
-<%
-// Helper function for phone formatting
-function formatPhone(phone) {
-    if (!phone) return '';
-    const cleaned = phone.replace(/\D/g, '');
-    if (cleaned.length === 10) {
-        return `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6)}`;
-    }
-    return phone;
-}
-%>
+<!-- New Client Modal -->
+<div class="modal fade" id="newClientModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus"></i> Add New Client</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="newClientForm">
+                    <div class="form-section">
+                        <h6 class="form-section-title">Basic Information</h6>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Full Name</label>
+                                    <input type="text" class="form-control" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Company</label>
+                                    <input type="text" class="form-control" name="company">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" name="email">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" name="phone">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Website</label>
+                                    <input type="url" class="form-control" name="website" placeholder="https://">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" name="status">
+                                        <option value="lead">Lead</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">Business Details</h6>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Industry</label>
+                                    <select class="form-control" name="industry">
+                                        <option value="other">Other</option>
+                                        <option value="technology">Technology</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="retail">Retail</option>
+                                        <option value="education">Education</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Company Size</label>
+                                    <select class="form-control" name="companySize">
+                                        <option value="">Select size</option>
+                                        <option value="1-10">1-10 employees</option>
+                                        <option value="11-50">11-50 employees</option>
+                                        <option value="51-200">51-200 employees</option>
+                                        <option value="201-500">201-500 employees</option>
+                                        <option value="500+">500+ employees</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="3" placeholder="Any additional notes..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitNewClient()">
+                    <i class="fas fa-save"></i> Create Client
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Client Modal -->
+<div class="modal fade" id="viewClientModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewClientTitle">Client Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="client-detail-header mb-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 id="viewClientName" class="mb-1">-</h3>
+                            <p id="viewClientCompany" class="text-muted mb-2">-</p>
+                            <span id="viewClientStatus" class="badge badge-success">-</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="revenue-display">
+                                <span class="revenue-label">Total Revenue</span>
+                                <span id="viewClientRevenue" class="revenue-amount">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6><i class="fas fa-address-card"></i> Contact Information</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="35%"><strong>Email:</strong></td>
+                                    <td id="viewClientEmail">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td id="viewClientPhone">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Website:</strong></td>
+                                    <td id="viewClientWebsite">-</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6><i class="fas fa-briefcase"></i> Business Details</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td width="35%"><strong>Industry:</strong></td>
+                                    <td id="viewClientIndustry">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Company Size:</strong></td>
+                                    <td id="viewClientSize">-</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Added:</strong></td>
+                                    <td id="viewClientCreated">-</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-card mt-3">
+                    <h6><i class="fas fa-sticky-note"></i> Notes</h6>
+                    <p id="viewClientNotes" class="text-muted mb-0">No notes</p>
+                </div>
+
+                <!-- Tabs for Proposals & Invoices -->
+                <div class="mt-4">
+                    <ul class="nav nav-tabs" id="clientTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="proposals-tab" data-toggle="tab" href="#clientProposals" role="tab">
+                                Proposals <span id="proposalCount" class="badge badge-secondary ml-1">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="invoices-tab" data-toggle="tab" href="#clientInvoices" role="tab">
+                                Invoices <span id="invoiceCount" class="badge badge-secondary ml-1">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="clientTabContent">
+                        <div class="tab-pane fade show active" id="clientProposals" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clientProposalsBody">
+                                        <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="clientInvoices" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Due Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="clientInvoicesBody">
+                                        <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="viewToEditBtn">
+                    <i class="fas fa-edit"></i> Edit Client
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Client Modal -->
+<div class="modal fade" id="editClientModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Client</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editClientForm">
+                    <input type="hidden" id="editClientId" name="_id">
+                    <div class="form-section">
+                        <h6 class="form-section-title">Basic Information</h6>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label required">Full Name</label>
+                                    <input type="text" class="form-control" id="editName" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Company</label>
+                                    <input type="text" class="form-control" id="editCompany" name="company">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="editEmail" name="email">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Phone</label>
+                                    <input type="tel" class="form-control" id="editPhone" name="phone">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Website</label>
+                                    <input type="url" class="form-control" id="editWebsite" name="website" placeholder="https://">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" id="editStatus" name="status">
+                                        <option value="lead">Lead</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="archived">Archived</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">Business Details</h6>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Industry</label>
+                                    <select class="form-control" id="editIndustry" name="industry">
+                                        <option value="other">Other</option>
+                                        <option value="technology">Technology</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="retail">Retail</option>
+                                        <option value="education">Education</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Company Size</label>
+                                    <select class="form-control" id="editCompanySize" name="companySize">
+                                        <option value="">Select size</option>
+                                        <option value="1-10">1-10 employees</option>
+                                        <option value="11-50">11-50 employees</option>
+                                        <option value="51-200">51-200 employees</option>
+                                        <option value="201-500">201-500 employees</option>
+                                        <option value="500+">500+ employees</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="editNotes" name="notes" rows="3" placeholder="Any additional notes..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger mr-auto" id="deleteFromEditBtn">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitEditClient()">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Confirm Delete</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteClientName">this client</strong>?</p>
+                <p class="text-muted mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <input type="hidden" id="deleteClientId">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

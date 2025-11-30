@@ -1,183 +1,313 @@
+<%
+// Helper function to safely format numbers - prevents NaN
+const formatCurrency = (value) => {
+    const num = Number(value);
+    if (isNaN(num) || !isFinite(num)) return '$0.00';
+    if (Math.abs(num) >= 1000) {
+        return '$' + (num / 1000).toFixed(1) + 'k';
+    }
+    return '$' + num.toFixed(2);
+};
+
+const formatNumber = (value, decimals = 0) => {
+    const num = Number(value);
+    if (isNaN(num) || !isFinite(num)) return '0';
+    return num.toFixed(decimals);
+};
+
+const formatPercent = (value) => {
+    const num = Number(value);
+    if (isNaN(num) || !isFinite(num)) return '0%';
+    return num.toFixed(1) + '%';
+};
+
+// Safe access to nested stats with defaults
+const clientStats = stats?.clientStats || {};
+const proposalStats = stats?.proposalStats || {};
+const invoiceStats = stats?.invoiceStats || {};
+const expenseStats = stats?.expenseStats || {};
+
+// Calculate key metrics safely
+const totalRevenue = Number(invoiceStats.totalPaid) || 0;
+const totalExpenses = Number(expenseStats.totalExpenses) || 0;
+const netBalance = totalRevenue - totalExpenses;
+const monthlyProfit = Number(expenseStats.monthlyProfit) || 0;
+const conversionRate = Number(proposalStats.conversionRate) || 0;
+const monthlyRevenue = Number(invoiceStats.monthlyRevenue) || 0;
+%>
+
 <!-- Dashboard Header -->
 <div class="dashboard-header">
-    <h1 class="dashboard-title">Dashboard</h1>
-    <p class="dashboard-subtitle">
-        Welcome back! Here's what's happening with your business today.
-    </p>
-</div>
-
-<div class="stats-section">
-    <h3 class="section-title">Current Total</h3>
-    <div class="stat-card big-highlight">
-        <div class="stat-icon primary">
-            <i class="fas fa-balance-scale"></i>
-        </div>
-        <div class="stat-value">
-            $<%= ((stats.invoiceStats?.totalPaid || 0) - (stats.expenseStats?.totalExpenses || 0)).toFixed(1) %>
-        </div>
-        <div class="stat-label">Total the business have</div>
+    <div class="dashboard-header-content">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <p class="dashboard-subtitle">
+            Welcome back! Here's your business overview for <%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %>
+        </p>
+    </div>
+    <div class="dashboard-actions">
+        <button class="btn btn-outline" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+        <a href="/analysis" class="btn btn-primary">
+            <i class="fas fa-chart-bar"></i> Full Report
+        </a>
     </div>
 </div>
 
+<!-- Main Balance Card -->
+<div class="highlight-card <%= netBalance >= 0 ? 'positive' : 'negative' %>">
+    <div class="highlight-card-content">
+        <div class="highlight-icon">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <div class="highlight-info">
+            <span class="highlight-label">Net Balance</span>
+            <span class="highlight-value"><%= formatCurrency(netBalance) %></span>
+            <span class="highlight-sublabel">Total Revenue − Total Expenses</span>
+        </div>
+    </div>
+    <div class="highlight-breakdown">
+        <div class="breakdown-item">
+            <span class="breakdown-label">Total Revenue</span>
+            <span class="breakdown-value success"><%= formatCurrency(totalRevenue) %></span>
+        </div>
+        <div class="breakdown-divider">−</div>
+        <div class="breakdown-item">
+            <span class="breakdown-label">Total Expenses</span>
+            <span class="breakdown-value danger"><%= formatCurrency(totalExpenses) %></span>
+        </div>
+    </div>
+</div>
+
+<!-- Key Performance Indicators -->
+<div class="kpi-section">
+    <h3 class="section-title">Key Performance Indicators</h3>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon success">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="kpi-trend <%= monthlyProfit >= 0 ? 'up' : 'down' %>">
+                    <i class="fas fa-arrow-<%= monthlyProfit >= 0 ? 'up' : 'down' %>"></i>
+                    <%= monthlyProfit >= 0 ? '+' : '' %><%= formatCurrency(monthlyProfit) %>
+                </div>
+            </div>
+            <div class="kpi-value"><%= formatCurrency(monthlyRevenue) %></div>
+            <div class="kpi-label">Monthly Revenue</div>
+            <div class="kpi-sublabel"><%= formatNumber(invoiceStats.monthlyCount || 0) %> invoices paid this month</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="kpi-value"><%= formatCurrency(invoiceStats.totalPending || 0) %></div>
+            <div class="kpi-label">Outstanding</div>
+            <div class="kpi-sublabel">Awaiting payment</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon primary">
+                    <i class="fas fa-percentage"></i>
+                </div>
+            </div>
+            <div class="kpi-value"><%= formatPercent(conversionRate) %></div>
+            <div class="kpi-label">Conversion Rate</div>
+            <div class="kpi-sublabel">Proposals to deals</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon info">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="kpi-value"><%= formatNumber(clientStats.active || 0) %></div>
+            <div class="kpi-label">Active Clients</div>
+            <div class="kpi-sublabel"><%= formatNumber(clientStats.total || 0) %> total</div>
+        </div>
+    </div>
+</div>
 
 <!-- Financial Overview Section -->
 <div class="stats-section">
-    <h3 class="section-title">Financial Overview</h3>
+    <h3 class="section-title">
+        <i class="fas fa-dollar-sign"></i> Financial Overview
+    </h3>
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon success">
                 <i class="fas fa-arrow-up"></i>
             </div>
-            <div class="stat-value">$<%= ((stats.invoiceStats?.totalPaid || 0)).toFixed(1) %></div>
-            <div class="stat-label">Total Revenue</div>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatCurrency(totalRevenue) %></div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
         </div>
 
         <div class="stat-card">
             <div class="stat-icon danger">
                 <i class="fas fa-arrow-down"></i>
             </div>
-            <div class="stat-value">
-                $<%= ((stats.expenseStats?.totalExpenses || 0)).toFixed(1) %>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatCurrency(totalExpenses) %></div>
+                <div class="stat-label">Total Expenses</div>
             </div>
-            <div class="stat-label">Total Expenses</div>
         </div>
 
         <div class="stat-card">
-            <div
-                class="stat-icon <%= stats.expenseStats?.monthlyProfit >= 0 ? 'success' : 'danger' %>"
-            >
+            <div class="stat-icon <%= monthlyProfit >= 0 ? 'success' : 'danger' %>">
                 <i class="fas fa-chart-line"></i>
             </div>
-            <div class="stat-value">
-                $<%= ((stats.expenseStats?.monthlyProfit || 0)).toFixed(1) %>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatCurrency(monthlyProfit) %></div>
+                <div class="stat-label">Monthly Profit</div>
             </div>
-            <div class="stat-label">Monthly Profit</div>
         </div>
 
         <div class="stat-card">
             <div class="stat-icon warning">
                 <i class="fas fa-receipt"></i>
             </div>
-            <div class="stat-value"><%= stats.expenseStats?.monthlyCount || 0 %></div>
-            <div class="stat-label">Expenses This Month</div>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatNumber(expenseStats.monthlyCount || 0) %></div>
+                <div class="stat-label">Expenses This Month</div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Client Stats Section -->
-<div class="stats-section">
-    <h3 class="section-title">Clients</h3>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon primary">
-                <i class="fas fa-users"></i>
+<!-- Client & Invoice Stats Row -->
+<div class="stats-row">
+    <!-- Client Stats Section -->
+    <div class="stats-section half">
+        <h3 class="section-title">
+            <i class="fas fa-users"></i> Clients
+        </h3>
+        <div class="stats-grid compact">
+            <div class="stat-card mini">
+                <div class="stat-icon-mini primary"></div>
+                <div class="stat-info">
+                    <span class="stat-value-mini"><%= formatNumber(clientStats.active || 0) %></span>
+                    <span class="stat-label-mini">Active</span>
+                </div>
             </div>
-            <div class="stat-value"><%= stats.clientStats?.active || 0 %></div>
-            <div class="stat-label">Active</div>
-        </div>
 
-        <div class="stat-card">
-            <div class="stat-icon info">
-                <i class="fas fa-user-clock"></i>
+            <div class="stat-card mini">
+                <div class="stat-icon-mini info"></div>
+                <div class="stat-info">
+                    <span class="stat-value-mini"><%= formatNumber(clientStats.lead || 0) %></span>
+                    <span class="stat-label-mini">Leads</span>
+                </div>
             </div>
-            <div class="stat-value"><%= stats.clientStats?.lead || 0 %></div>
-            <div class="stat-label">Leads</div>
-        </div>
 
-        <div class="stat-card">
-            <div class="stat-icon warning">
-                <i class="fas fa-user-minus"></i>
+            <div class="stat-card mini">
+                <div class="stat-icon-mini warning"></div>
+                <div class="stat-info">
+                    <span class="stat-value-mini"><%= formatNumber(clientStats.inactive || 0) %></span>
+                    <span class="stat-label-mini">Inactive</span>
+                </div>
             </div>
-            <div class="stat-value"><%= stats.clientStats?.inactive || 0 %></div>
-            <div class="stat-label">Inactive</div>
-        </div>
 
-        <div class="stat-card">
-            <div class="stat-icon secondary">
-                <i class="fas fa-user-check"></i>
+            <div class="stat-card mini">
+                <div class="stat-icon-mini secondary"></div>
+                <div class="stat-info">
+                    <span class="stat-value-mini"><%= formatNumber(clientStats.total || 0) %></span>
+                    <span class="stat-label-mini">Total</span>
+                </div>
             </div>
-            <div class="stat-value"><%= stats.clientStats?.total || 0 %></div>
-            <div class="stat-label">Total Clients</div>
         </div>
     </div>
-</div>
 
-<!-- Invoice Stats Section -->
-<div class="stats-section">
-    <h3 class="section-title">Invoices</h3>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon success">
-                <i class="fas fa-dollar-sign"></i>
+    <!-- Invoice Stats Section -->
+    <div class="stats-section half">
+        <h3 class="section-title">
+            <i class="fas fa-file-invoice-dollar"></i> Invoices
+        </h3>
+        <div class="stats-grid compact">
+            <div class="stat-card mini">
+                <div class="stat-icon-mini success"></div>
+                <div class="stat-info">
+                    <span class="stat-value-mini"><%= formatNumber(invoiceStats.paid || 0) %></span>
+                    <span class="stat-label-mini">Paid</span>
+                </div>
             </div>
-            <div class="stat-value">$<%= ((stats.invoiceStats?.totalPaid || 0)).toFixed(1) %></div>
-            <div class="stat-label">Total Paid</div>
-        </div>
 
-        <div class="stat-card">
-            <div class="stat-icon warning">
-                <i class="fas fa-file-invoice-dollar"></i>
+            <div class="stat-card mini">
+                <div class="stat-icon-mini warning"></div>
+                <div class="stat-info">
+                    <span class="stat-value-mini"><%= formatNumber(invoiceStats.sent || 0) %></span>
+                    <span class="stat-label-mini">Sent</span>
+                </div>
             </div>
-            <div class="stat-value">
-                $<%= ((stats.invoiceStats?.totalPending || 0)).toFixed(1) %>
-            </div>
-            <div class="stat-label">Pending</div>
-        </div>
 
-        <div class="stat-card">
-            <div class="stat-icon info">
-                <i class="fas fa-paper-plane"></i>
+            <div class="stat-card mini">
+                <div class="stat-icon-mini info"></div>
+                <div class="stat-info">
+                    <span class="stat-value-mini"><%= formatNumber(invoiceStats.draft || 0) %></span>
+                    <span class="stat-label-mini">Draft</span>
+                </div>
             </div>
-            <div class="stat-value"><%= stats.invoiceStats?.sent || 0 %></div>
-            <div class="stat-label">Sent</div>
-        </div>
 
-        <div class="stat-card">
-            <div class="stat-icon danger">
-                <i class="fas fa-exclamation-triangle"></i>
+            <div class="stat-card mini">
+                <div class="stat-icon-mini danger"></div>
+                <div class="stat-info">
+                    <span class="stat-value-mini"><%= formatNumber(invoiceStats.overdue || 0) %></span>
+                    <span class="stat-label-mini">Overdue</span>
+                </div>
             </div>
-            <div class="stat-value"><%= stats.invoiceStats?.overdue || 0 %></div>
-            <div class="stat-label">Overdue</div>
         </div>
     </div>
 </div>
 
 <!-- Proposal Stats Section -->
 <div class="stats-section">
-    <h3 class="section-title">Proposals</h3>
+    <h3 class="section-title">
+        <i class="fas fa-file-alt"></i> Proposals
+    </h3>
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon primary">
-                <i class="fas fa-file-alt"></i>
+                <i class="fas fa-paper-plane"></i>
             </div>
-            <div class="stat-value"><%= stats.proposalStats?.sent || 0 %></div>
-            <div class="stat-label">Sent</div>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatNumber(proposalStats.sent || 0) %></div>
+                <div class="stat-label">Sent</div>
+            </div>
         </div>
 
         <div class="stat-card">
             <div class="stat-icon info">
                 <i class="fas fa-eye"></i>
             </div>
-            <div class="stat-value"><%= stats.proposalStats?.viewed || 0 %></div>
-            <div class="stat-label">Viewed</div>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatNumber(proposalStats.viewed || 0) %></div>
+                <div class="stat-label">Viewed</div>
+            </div>
         </div>
 
         <div class="stat-card">
             <div class="stat-icon success">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <div class="stat-value"><%= stats.proposalStats?.accepted || 0 %></div>
-            <div class="stat-label">Accepted</div>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatNumber(proposalStats.accepted || 0) %></div>
+                <div class="stat-label">Accepted</div>
+            </div>
         </div>
 
         <div class="stat-card">
             <div class="stat-icon secondary">
-                <i class="fas fa-file-signature"></i>
+                <i class="fas fa-dollar-sign"></i>
             </div>
-            <div class="stat-value">
-                $<%= ((stats.proposalStats?.totalValue || 0)).toFixed(1) %>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatCurrency(proposalStats.acceptedValue || 0) %></div>
+                <div class="stat-label">Won Value</div>
             </div>
-            <div class="stat-label">Total Value</div>
         </div>
     </div>
 </div>
@@ -210,74 +340,154 @@
     </div>
 </div>
 
-<!-- Recent Activity & Quick Actions -->
-<div class="charts-row">
-    <!-- Recent Activity -->
-    <div class="card">
+<!-- Alerts & Activity Row -->
+<div class="alerts-activity-row">
+    <!-- Alerts Section -->
+    <div class="card alerts-card">
         <div class="card-header">
-            <h3 class="card-title">Recent Activity</h3>
+            <h3 class="card-title">
+                <i class="fas fa-bell"></i> Alerts & Notifications
+            </h3>
         </div>
-        <div class="activity-list">
-            <% if (recentClients && recentClients.length > 0) { %> <%
-            recentClients.forEach(function(client) { %>
-            <div class="activity-item">
-                <div
-                    class="activity-icon"
-                    style="background: rgba(113, 23, 242, 0.1); color: var(--primary-color)"
-                >
+        <div class="alerts-list" id="alertsList">
+            <% if ((invoiceStats.overdue || 0) > 0) { %>
+            <div class="alert-item danger">
+                <div class="alert-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title"><%= formatNumber(invoiceStats.overdue) %> Overdue Invoice<%= (invoiceStats.overdue || 0) > 1 ? 's' : '' %></div>
+                    <div class="alert-desc"><%= formatCurrency(invoiceStats.overdueAmount || 0) %> outstanding</div>
+                </div>
+                <a href="/invoices?status=overdue" class="alert-action">View</a>
+            </div>
+            <% } %>
+            
+            <% if ((invoiceStats.totalPending || 0) > 0) { %>
+            <div class="alert-item warning">
+                <div class="alert-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title">Pending Payments</div>
+                    <div class="alert-desc"><%= formatCurrency(invoiceStats.totalPending) %> awaiting payment</div>
+                </div>
+                <a href="/invoices?status=sent" class="alert-action">View</a>
+            </div>
+            <% } %>
+            
+            <% const pendingProposals = (proposalStats.sent || 0) + (proposalStats.viewed || 0); %>
+            <% if (pendingProposals > 0) { %>
+            <div class="alert-item info">
+                <div class="alert-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title"><%= formatNumber(pendingProposals) %> Pending Proposal<%= pendingProposals > 1 ? 's' : '' %></div>
+                    <div class="alert-desc">Awaiting client response</div>
+                </div>
+                <a href="/proposals?status=sent" class="alert-action">View</a>
+            </div>
+            <% } %>
+            
+            <% if ((clientStats.lead || 0) > 0) { %>
+            <div class="alert-item primary">
+                <div class="alert-icon">
                     <i class="fas fa-user-plus"></i>
                 </div>
-                <div class="activity-content">
-                    <div class="activity-title">New client added</div>
-                    <div class="activity-desc"><%= client.company || client.name %></div>
+                <div class="alert-content">
+                    <div class="alert-title"><%= formatNumber(clientStats.lead) %> Lead<%= (clientStats.lead || 0) > 1 ? 's' : '' %> to Follow Up</div>
+                    <div class="alert-desc">Convert them to active clients</div>
                 </div>
-                <div class="activity-time">
-                    <%= new Date(client.createdAt).toLocaleDateString() %>
+                <a href="/clients?status=lead" class="alert-action">View</a>
+            </div>
+            <% } %>
+            
+            <% if ((invoiceStats.overdue || 0) === 0 && (invoiceStats.totalPending || 0) === 0 && (clientStats.lead || 0) === 0 && pendingProposals === 0) { %>
+            <div class="alert-item success">
+                <div class="alert-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title">All Caught Up!</div>
+                    <div class="alert-desc">No urgent items require your attention</div>
                 </div>
             </div>
-            <% }); %> <% } else { %>
-            <p class="text-center text-muted">No recent activity</p>
             <% } %>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="card">
+    <!-- Recent Activity -->
+    <div class="card activity-card">
         <div class="card-header">
-            <h3 class="card-title">Quick Actions</h3>
+            <h3 class="card-title">
+                <i class="fas fa-history"></i> Recent Activity
+            </h3>
         </div>
-        <div class="quick-actions">
-            <a href="/clients/new" class="quick-action-btn">
-                <div class="quick-action-icon">
-                    <i class="fas fa-user-plus"></i>
+        <div class="activity-list">
+            <% if (recentClients && recentClients.length > 0) { %>
+                <% recentClients.forEach(function(client) { %>
+                <div class="activity-item">
+                    <div class="activity-icon" style="background: rgba(113, 23, 242, 0.1); color: var(--primary-color)">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">New client added</div>
+                        <div class="activity-desc"><%= client.company || client.name %></div>
+                    </div>
+                    <div class="activity-time">
+                        <%= new Date(client.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %>
+                    </div>
                 </div>
-                <div class="quick-action-text">Add Client</div>
-            </a>
-            <a href="/proposals/new" class="quick-action-btn">
-                <div class="quick-action-icon">
-                    <i class="fas fa-file-alt"></i>
+                <% }); %>
+            <% } else { %>
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No recent activity</p>
                 </div>
-                <div class="quick-action-text">Create Proposal</div>
-            </a>
-            <a href="/invoices/new" class="quick-action-btn">
-                <div class="quick-action-icon">
-                    <i class="fas fa-file-invoice"></i>
-                </div>
-                <div class="quick-action-text">New Invoice</div>
-            </a>
-            <a href="/expenses" class="quick-action-btn">
-                <div class="quick-action-icon">
-                    <i class="fas fa-receipt"></i>
-                </div>
-                <div class="quick-action-text">Track Expense</div>
-            </a>
-            <a href="/analysis" class="quick-action-btn">
-                <div class="quick-action-icon">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <div class="quick-action-text">View Reports</div>
-            </a>
+            <% } %>
         </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card quick-actions-card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-bolt"></i> Quick Actions
+        </h3>
+    </div>
+    <div class="quick-actions">
+        <a href="/clients/new" class="quick-action-btn">
+            <div class="quick-action-icon primary">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="quick-action-text">Add Client</div>
+        </a>
+        <a href="/proposals/new" class="quick-action-btn">
+            <div class="quick-action-icon info">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="quick-action-text">Create Proposal</div>
+        </a>
+        <a href="/invoices/new" class="quick-action-btn">
+            <div class="quick-action-icon success">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="quick-action-text">New Invoice</div>
+        </a>
+        <a href="/expenses" class="quick-action-btn">
+            <div class="quick-action-icon warning">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="quick-action-text">Track Expense</div>
+        </a>
+        <a href="/analysis" class="quick-action-btn">
+            <div class="quick-action-icon secondary">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="quick-action-text">View Reports</div>
+        </a>
     </div>
 </div>
 
@@ -285,6 +495,6 @@
 <div
     id="dashboardData"
     style="display: none"
-    data-stats="<%= encodeURIComponent(JSON.stringify(stats)) %>"
-    data-recent-clients="<%= encodeURIComponent(JSON.stringify(recentClients)) %>"
+    data-stats="<%= encodeURIComponent(JSON.stringify(stats || {})) %>"
+    data-recent-clients="<%= encodeURIComponent(JSON.stringify(recentClients || [])) %>"
 ></div>
