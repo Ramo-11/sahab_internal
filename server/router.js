@@ -8,6 +8,7 @@ const proposalController = require('./controllers/proposalController');
 const invoiceController = require('./controllers/invoiceController');
 const analysisController = require('./controllers/analysisController');
 const expensesController = require('./controllers/expensesController');
+const toolsController = require('./controllers/toolsController');
 
 /**
  * Dashboard Routes
@@ -96,6 +97,21 @@ router.post('/api/expenses', expensesController.createExpense);
 router.put('/api/expenses/:id', expensesController.updateExpense);
 router.delete('/api/expenses/:id', expensesController.deleteExpense);
 router.get('/api/expenses/stats', expensesController.getExpenseStats);
+
+/**
+ * Tools Routes
+ */
+// Views
+router.get('/tools', toolsController.showTools);
+
+// API - Invoice Number Generator
+router.get('/api/tools/invoice-numbers', toolsController.getInvoiceNumbers);
+router.post('/api/tools/invoice-numbers', toolsController.generateInvoiceNumber);
+router.put('/api/tools/invoice-numbers/:id', toolsController.updateInvoiceNumber);
+router.delete('/api/tools/invoice-numbers/:id', toolsController.deleteInvoiceNumber);
+
+// API - PDF Processor
+router.post('/api/tools/process-pdf', toolsController.uploadPDF, toolsController.processPDF);
 
 /**
  * Utility Routes

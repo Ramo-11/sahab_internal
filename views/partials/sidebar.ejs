@@ -73,7 +73,7 @@
                 class="nav-link <%= locals.activeTab === 'expenses' ? 'active' : '' %>"
             >
                 <span class="nav-icon">
-                    <i class="fas fa-file-invoice-dollar"></i>
+                    <i class="fas fa-receipt"></i>
                 </span>
                 <span class="nav-text">Expenses</span>
             </a>
@@ -88,6 +88,15 @@
                     <i class="fas fa-chart-line"></i>
                 </span>
                 <span class="nav-text">Analysis</span>
+            </a>
+        </div>
+
+        <div class="nav-item">
+            <a href="/tools" class="nav-link <%= locals.activeTab === 'tools' ? 'active' : '' %>">
+                <span class="nav-icon">
+                    <i class="fas fa-toolbox"></i>
+                </span>
+                <span class="nav-text">Tools</span>
             </a>
         </div>
     </div>

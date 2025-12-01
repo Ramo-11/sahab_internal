@@ -1,0 +1,222 @@
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">Tools</h1>
+        <p class="page-subtitle">Utilities to streamline your workflow</p>
+    </div>
+</div>
+
+<!-- Tools Grid -->
+<div class="tools-grid">
+    <!-- Invoice Number Generator -->
+    <div class="card tool-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-hashtag text-primary"></i>
+                Invoice Number Generator
+            </h3>
+        </div>
+        <div class="card-body">
+            <p class="tool-description">
+                Generate unique 5-digit invoice numbers. Numbers are stored to prevent duplicates.
+            </p>
+
+            <div class="generate-section">
+                <div class="form-group">
+                    <label class="form-label">Used For (optional)</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="invoiceUsedFor"
+                        placeholder="e.g., Client XYZ - Website Project"
+                    />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notes (optional)</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="invoiceNotes"
+                        placeholder="e.g., Q4 2024 invoice"
+                    />
+                </div>
+                <button class="btn btn-primary btn-block" onclick="generateInvoiceNumber()">
+                    <i class="fas fa-magic"></i> Generate Number
+                </button>
+            </div>
+
+            <div class="generated-number-display" id="generatedNumberDisplay" style="display: none">
+                <div class="number-label">Generated Invoice Number</div>
+                <div class="number-value" id="generatedNumber"></div>
+                <button class="btn btn-sm btn-secondary" onclick="copyToClipboard()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+
+            <div class="recent-numbers-section">
+                <h4 class="section-subtitle">
+                    <i class="fas fa-history"></i> Recent Numbers
+                    <span class="badge badge-secondary ml-2"><%= recentNumbers.length %></span>
+                </h4>
+                <div class="recent-numbers-list" id="recentNumbersList">
+                    <% if (recentNumbers.length === 0) { %>
+                    <div class="empty-state-small">
+                        <i class="fas fa-inbox"></i>
+                        <p>No numbers generated yet</p>
+                    </div>
+                    <% } else { %> <% recentNumbers.forEach(num => { %>
+                    <div class="number-item" data-id="<%= num._id %>">
+                        <div class="number-info">
+                            <span class="number-badge"><%= num.number %></span>
+                            <span class="number-date">
+                                <%= new Date(num.createdAt).toLocaleDateString('en-US', { month:
+                                'short', day: 'numeric', year: 'numeric' }) %>
+                            </span>
+                            <% if (num.usedFor) { %>
+                            <span class="number-used-for" title="<%= num.usedFor %>">
+                                <i class="fas fa-tag"></i> <%= num.usedFor.substring(0, 30) %><%=
+                                num.usedFor.length > 30 ? '...' : '' %>
+                            </span>
+                            <% } %>
+                        </div>
+                        <div class="number-actions">
+                            <button
+                                class="btn btn-sm btn-icon"
+                                onclick="copyNumber('<%= num.number %>')"
+                                title="Copy"
+                            >
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button
+                                class="btn btn-sm btn-icon text-danger"
+                                onclick="deleteNumber('<%= num._id %>')"
+                                title="Delete"
+                            >
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <% }); %> <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Watermark Remover -->
+    <div class="card tool-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-file-pdf text-danger"></i>
+                PDF Watermark Remover
+            </h3>
+        </div>
+        <div class="card-body">
+            <p class="tool-description">
+                Remove the footer/watermark from invoice PDFs by redacting the bottom portion of
+                each page.
+            </p>
+
+            <form id="pdfProcessForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">Select PDF File</label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <input
+                            type="file"
+                            class="file-input"
+                            id="pdfFileInput"
+                            name="pdfFile"
+                            accept=".pdf"
+                            required
+                        />
+                        <div class="file-upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop your PDF here or click to browse</p>
+                            <span class="file-name" id="selectedFileName">No file selected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Footer Height (pixels)</label>
+                    <input
+                        type="number"
+                        class="form-control"
+                        id="footerHeight"
+                        name="footerHeight"
+                        value="100"
+                        min="10"
+                        max="500"
+                    />
+                    <small class="form-help">
+                        Height of the area to remove from the bottom of each page. Default is 100px
+                        (Wave watermark).
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Preview Settings</label>
+                    <div class="footer-preview">
+                        <div class="preview-page">
+                            <div class="preview-content">Page Content</div>
+                            <div class="preview-footer" id="previewFooter" style="height: 20px">
+                                <span>Area to remove</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="processBtn">
+                    <i class="fas fa-magic"></i> Process PDF
+                </button>
+            </form>
+
+            <div class="processing-status" id="processingStatus" style="display: none">
+                <div class="spinner"></div>
+                <span>Processing PDF...</span>
+            </div>
+
+            <div class="process-result" id="processResult" style="display: none">
+                <i class="fas fa-check-circle text-success"></i>
+                <span>PDF processed successfully! Download should start automatically.</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Tools Section -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-toolbox"></i>
+            Quick Actions
+        </h3>
+    </div>
+    <div class="card-body">
+        <div class="quick-tools-grid">
+            <a href="/invoices/new" class="quick-tool-btn">
+                <div class="quick-tool-icon primary">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <span>New Invoice</span>
+            </a>
+            <a href="/clients/new" class="quick-tool-btn">
+                <div class="quick-tool-icon success">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <span>Add Client</span>
+            </a>
+            <a href="/proposals/new" class="quick-tool-btn">
+                <div class="quick-tool-icon info">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <span>New Proposal</span>
+            </a>
+            <a href="/expenses" class="quick-tool-btn">
+                <div class="quick-tool-icon warning">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <span>Track Expense</span>
+            </a>
+        </div>
+    </div>
+</div>
