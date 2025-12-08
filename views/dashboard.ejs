@@ -26,9 +26,10 @@ const clientStats = stats?.clientStats || {};
 const proposalStats = stats?.proposalStats || {};
 const invoiceStats = stats?.invoiceStats || {};
 const expenseStats = stats?.expenseStats || {};
+const investmentStats = stats?.investmentStats || {};
 
 // Calculate key metrics safely
-const totalRevenue = Number(invoiceStats.totalPaid) || 0;
+const totalRevenue = Number(invoiceStats.totalPaid) + Number(investmentStats.totalReturns) || 0;
 const totalExpenses = Number(expenseStats.totalExpenses) || 0;
 const netBalance = totalRevenue - totalExpenses;
 const monthlyProfit = Number(expenseStats.monthlyProfit) || 0;
@@ -130,6 +131,17 @@ const monthlyRevenue = Number(invoiceStats.monthlyRevenue) || 0;
             <div class="kpi-label">Active Clients</div>
             <div class="kpi-sublabel"><%= formatNumber(clientStats.total || 0) %> total</div>
         </div>
+
+        <div class="kpi-card">
+            <div class="kpi-header">
+                <div class="kpi-icon success">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+            <div class="kpi-value"><%= formatCurrency(investmentStats.monthlyReturns || 0) %></div>
+            <div class="kpi-label">Investment Returns</div>
+            <div class="kpi-sublabel">This month</div>
+        </div>
     </div>
 </div>
 
@@ -176,6 +188,16 @@ const monthlyRevenue = Number(invoiceStats.monthlyRevenue) || 0;
             <div class="stat-content">
                 <div class="stat-value"><%= formatNumber(expenseStats.monthlyCount || 0) %></div>
                 <div class="stat-label">Expenses This Month</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon <%= (investmentStats.totalReturns || 0) >= 0 ? 'success' : 'danger' %>">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value"><%= formatCurrency(investmentStats.totalReturns || 0) %></div>
+                <div class="stat-label">Investment Returns</div>
             </div>
         </div>
     </div>
@@ -376,6 +398,19 @@ const monthlyRevenue = Number(invoiceStats.monthlyRevenue) || 0;
             </div>
             <% } %>
             
+            <% if ((investmentStats.activeCount || 0) > 0) { %>
+            <div class="alert-item success">
+                <div class="alert-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title"><%= formatNumber(investmentStats.activeCount) %> Active Investment<%= (investmentStats.activeCount || 0) > 1 ? 's' : '' %></div>
+                    <div class="alert-desc"><%= formatCurrency(investmentStats.totalReturns || 0) %> total returns</div>
+                </div>
+                <a href="/investments" class="alert-action">View</a>
+            </div>
+            <% } %>
+
             <% const pendingProposals = (proposalStats.sent || 0) + (proposalStats.viewed || 0); %>
             <% if (pendingProposals > 0) { %>
             <div class="alert-item info">
@@ -463,6 +498,12 @@ const monthlyRevenue = Number(invoiceStats.monthlyRevenue) || 0;
                 <i class="fas fa-user-plus"></i>
             </div>
             <div class="quick-action-text">Add Client</div>
+        </a>
+        <a href="/investments" class="quick-action-btn">
+            <div class="quick-action-icon success">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="quick-action-text">Investments</div>
         </a>
         <a href="/proposals/new" class="quick-action-btn">
             <div class="quick-action-icon info">

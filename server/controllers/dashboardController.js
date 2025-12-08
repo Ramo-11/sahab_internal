@@ -2,6 +2,8 @@ const Client = require('../../models/Client');
 const Proposal = require('../../models/Proposal');
 const Invoice = require('../../models/Invoice');
 const Expense = require('../../models/Expense');
+const Investment = require('../../models/Investment');
+const InvestmentReturn = require('../../models/InvestmentReturn');
 const { logger } = require('../logger');
 
 /**
@@ -36,6 +38,9 @@ const showDashboard = async (req, res) => {
             revenueStats,
             expenseStats,
             totalExpenses,
+            investmentStats,
+            investmentReturnsStats,
+            currentMonthInvestmentReturns,
         ] = await Promise.all([
             Client.countDocuments({ status: 'active' }),
             Proposal.countDocuments({ status: { $in: ['sent', 'viewed'] } }),
@@ -186,6 +191,15 @@ const showDashboard = async (req, res) => {
                     },
                 },
             ]),
+            // Investment stats
+            Investment.getStats(),
+            // Investment returns all-time stats
+            InvestmentReturn.getAllTimeStats(),
+            // Current month investment returns
+            InvestmentReturn.getMonthlyTotal(
+                currentMonth.getFullYear(),
+                currentMonth.getMonth() + 1
+            ),
         ]);
 
         // Calculate proposal conversion rate
@@ -206,8 +220,10 @@ const showDashboard = async (req, res) => {
             monthly: [],
         };
 
-        // Calculate monthly values
-        const monthlyRevenue = safeNumber(revenueStats[0]?.monthlyRevenue);
+        // Calculate monthly values (include investment returns in revenue)
+        const monthlyInvoiceRevenue = safeNumber(revenueStats[0]?.monthlyRevenue);
+        const monthlyInvestmentReturns = safeNumber(currentMonthInvestmentReturns?.total);
+        const monthlyRevenue = monthlyInvoiceRevenue + monthlyInvestmentReturns;
         const monthlyExpenses = safeNumber(expenseStats[0]?.monthlyExpenses);
         const monthlyProfit = monthlyRevenue - monthlyExpenses;
 
@@ -259,6 +275,18 @@ const showDashboard = async (req, res) => {
                 totalExpenses: safeNumber(totalExpenses[0]?.total),
                 monthlyCount: safeNumber(expenseStats[0]?.count),
                 monthlyProfit: monthlyProfit,
+            },
+            investmentStats: {
+                activeCount: safeNumber(
+                    investmentStats?.byStatus?.find((s) => s._id === 'active')?.count
+                ),
+                totalCount: safeNumber(investmentStats?.totals?.[0]?.totalInvestments),
+                totalPrincipal: safeNumber(investmentStats?.totals?.[0]?.totalPrincipal),
+                activePrincipal: safeNumber(investmentStats?.totals?.[0]?.activePrincipal),
+                totalReturns: safeNumber(investmentReturnsStats?.totalReturns),
+                totalGains: safeNumber(investmentReturnsStats?.totalGains),
+                totalLosses: safeNumber(investmentReturnsStats?.totalLosses),
+                monthlyReturns: safeNumber(currentMonthInvestmentReturns?.total),
             },
         };
 
@@ -357,6 +385,29 @@ const getStats = async (req, res) => {
             { $limit: 30 },
         ]);
 
+        // Get investment returns time series
+        const investmentTimeSeries = await InvestmentReturn.aggregate([
+            {
+                $match: {
+                    returnDate: { $gte: startDate },
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: {
+                            format: groupFormat,
+                            date: '$returnDate',
+                        },
+                    },
+                    returns: { $sum: { $ifNull: ['$amount', 0] } },
+                    count: { $sum: 1 },
+                },
+            },
+            { $sort: { _id: 1 } },
+            { $limit: 30 },
+        ]);
+
         const [clientStats, proposalStats, invoiceStats] = await Promise.all([
             Client.getStats ? Client.getStats() : Client.find().countDocuments(),
             Proposal.getConversionStats
@@ -421,6 +472,18 @@ const getStats = async (req, res) => {
             count: safeNumber(item.count),
         }));
 
+        const formattedInvestments = investmentTimeSeries.map((item) => ({
+            _id: item._id,
+            label:
+                days <= 7
+                    ? new Date(item._id).toLocaleDateString('en-US', { weekday: 'short' })
+                    : days <= 30
+                    ? `Week ${item._id.split('-W')[1] || item._id}`
+                    : new Date(item._id + '-01').toLocaleDateString('en-US', { month: 'short' }),
+            returns: safeNumber(item.returns),
+            count: safeNumber(item.count),
+        }));
+
         res.json({
             success: true,
             data: {
@@ -432,6 +495,9 @@ const getStats = async (req, res) => {
                 },
                 expenses: {
                     timeline: formattedExpenses,
+                },
+                investments: {
+                    timeline: formattedInvestments,
                 },
                 growth: {
                     revenue: revenueGrowth,

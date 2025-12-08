@@ -8,6 +8,7 @@ const proposalController = require('./controllers/proposalController');
 const invoiceController = require('./controllers/invoiceController');
 const analysisController = require('./controllers/analysisController');
 const expensesController = require('./controllers/expensesController');
+const investmentsController = require('./controllers/investmentsController');
 const toolsController = require('./controllers/toolsController');
 
 /**
@@ -97,6 +98,24 @@ router.post('/api/expenses', expensesController.createExpense);
 router.put('/api/expenses/:id', expensesController.updateExpense);
 router.delete('/api/expenses/:id', expensesController.deleteExpense);
 router.get('/api/expenses/stats', expensesController.getExpenseStats);
+
+/**
+ * Investment Routes
+ */
+// Views
+router.get('/investments', investmentsController.showInvestments);
+
+// API
+router.get('/api/investments', investmentsController.getInvestments);
+router.post('/api/investments', investmentsController.createInvestment);
+router.get('/api/investments/stats', investmentsController.getInvestmentStats);
+router.get('/api/investments/:id', investmentsController.getInvestment);
+router.put('/api/investments/:id', investmentsController.updateInvestment);
+router.delete('/api/investments/:id', investmentsController.deleteInvestment);
+router.get('/api/investments/:id/returns', investmentsController.getReturns);
+router.post('/api/investments/:id/returns', investmentsController.addReturn);
+router.put('/api/investments/:id/returns/:returnId', investmentsController.updateReturn);
+router.delete('/api/investments/:id/returns/:returnId', investmentsController.deleteReturn);
 
 /**
  * Tools Routes

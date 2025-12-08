@@ -113,6 +113,80 @@ const API = {
         delete: (id) => API.delete(`/api/expenses/${id}`),
     },
 
+    // Investments API
+    investments: {
+        getAll: async (params = {}) => {
+            const queryString = new URLSearchParams(params).toString();
+            const response = await fetch(`/api/investments${queryString ? '?' + queryString : ''}`);
+            return response.json();
+        },
+
+        get: async (id) => {
+            const response = await fetch(`/api/investments/${id}`);
+            return response.json();
+        },
+
+        create: async (data) => {
+            const response = await fetch('/api/investments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            return response.json();
+        },
+
+        update: async (id, data) => {
+            const response = await fetch(`/api/investments/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            return response.json();
+        },
+
+        delete: async (id) => {
+            const response = await fetch(`/api/investments/${id}`, {
+                method: 'DELETE',
+            });
+            return response.json();
+        },
+
+        getReturns: async (investmentId) => {
+            const response = await fetch(`/api/investments/${investmentId}/returns`);
+            return response.json();
+        },
+
+        addReturn: async (investmentId, data) => {
+            const response = await fetch(`/api/investments/${investmentId}/returns`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            return response.json();
+        },
+
+        updateReturn: async (investmentId, returnId, data) => {
+            const response = await fetch(`/api/investments/${investmentId}/returns/${returnId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            return response.json();
+        },
+
+        deleteReturn: async (investmentId, returnId) => {
+            const response = await fetch(`/api/investments/${investmentId}/returns/${returnId}`, {
+                method: 'DELETE',
+            });
+            return response.json();
+        },
+
+        getStats: async () => {
+            const response = await fetch('/api/investments/stats');
+            return response.json();
+        },
+    },
+
     // Dashboard endpoints
     dashboard: {
         getStats: (period) => API.get('/api/dashboard/stats', { period }),
