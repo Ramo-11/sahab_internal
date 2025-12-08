@@ -32,6 +32,7 @@ const categoryColors = {
     marketing: { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', icon: 'fa-bullhorn' },
     contractors: { bg: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', icon: 'fa-users' },
     donation: { bg: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', icon: 'fa-heart' },
+    investment: { bg: 'rgba(250, 204, 21, 0.1)', color: '#facc15', icon: 'fa-chart-line' },
     other: { bg: 'rgba(107, 114, 128, 0.1)', color: '#6b7280', icon: 'fa-receipt' }
 };
 
@@ -188,6 +189,7 @@ const getCategoryStyle = (cat) => categoryColors[cat] || categoryColors.other;
                     <option value="marketing">Marketing</option>
                     <option value="contractors">Contractors</option>
                     <option value="donation">Donation</option>
+                    <option value="investment">Investment</option>
                 </select>
             </div>
             <div class="form-group flex-2">
@@ -243,6 +245,7 @@ const getCategoryStyle = (cat) => categoryColors[cat] || categoryColors.other;
                 <option value="marketing" <%= filters.category === 'marketing' ? 'selected' : '' %>>Marketing</option>
                 <option value="contractors" <%= filters.category === 'contractors' ? 'selected' : '' %>>Contractors</option>
                 <option value="donation" <%= filters.category === 'donation' ? 'selected' : '' %>>Donation</option>
+                <option value="investment" <%= filters.category === 'investment' ? 'selected' : '' %>>Investment</option>
                 <option value="other" <%= filters.category === 'other' ? 'selected' : '' %>>Other</option>
             </select>
         </div>
@@ -368,6 +371,7 @@ const getCategoryStyle = (cat) => categoryColors[cat] || categoryColors.other;
                                 <option value="marketing" <%= expense.category === 'marketing' ? 'selected' : '' %>>Marketing</option>
                                 <option value="contractors" <%= expense.category === 'contractors' ? 'selected' : '' %>>Contractors</option>
                                 <option value="donation" <%= expense.category === 'donation' ? 'selected' : '' %>>Donation</option>
+                                <option value="investment" <%= expense.category === 'investment' ? 'selected' : '' %>>Investment</option>
                                 <option value="other" <%= expense.category === 'other' ? 'selected' : '' %>>Other</option>
                             </select>
                         </td>

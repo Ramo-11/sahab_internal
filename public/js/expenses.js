@@ -190,6 +190,7 @@ function initCategoryChart(categoryData) {
         marketing: '#ef4444',
         contractors: '#6366f1',
         donation: '#22c55e',
+        investment: '#facc15',
         other: '#6b7280',
     };
 

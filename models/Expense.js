@@ -23,6 +23,7 @@ const expenseSchema = new mongoose.Schema(
                 'marketing',
                 'contractors',
                 'donation',
+                'investment',
                 'other',
             ],
             default: 'other',
