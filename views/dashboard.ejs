@@ -31,7 +31,8 @@ const investmentStats = stats?.investmentStats || {};
 // Calculate key metrics safely
 const totalRevenue = Number(invoiceStats.totalPaid) + Number(investmentStats.totalReturns) || 0;
 const totalExpenses = Number(expenseStats.totalExpenses) || 0;
-const netBalance = totalRevenue - totalExpenses;
+const investmentPrincipal = Number(investmentStats.activePrincipal) || 0;
+const netBalance = totalRevenue - totalExpenses - investmentPrincipal;
 const monthlyProfit = Number(expenseStats.monthlyProfit) || 0;
 const conversionRate = Number(proposalStats.conversionRate) || 0;
 const monthlyRevenue = Number(invoiceStats.monthlyRevenue) || 0;
@@ -64,7 +65,7 @@ const monthlyRevenue = Number(invoiceStats.monthlyRevenue) || 0;
         <div class="highlight-info">
             <span class="highlight-label">Net Balance</span>
             <span class="highlight-value"><%= formatCurrency(netBalance) %></span>
-            <span class="highlight-sublabel">Total Revenue − Total Expenses</span>
+            <span class="highlight-sublabel">Total Revenue (invoices + investments) − Total Expenses (expenses + investment principles)</span>
         </div>
     </div>
     <div class="highlight-breakdown">
