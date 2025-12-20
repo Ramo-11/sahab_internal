@@ -1,6 +1,7 @@
 const Client = require('../../models/Client');
 const Proposal = require('../../models/Proposal');
 const Invoice = require('../../models/Invoice');
+const Expense = require('../../models/Expense');
 const { logger } = require('../logger');
 const { add } = require('winston');
 
@@ -28,17 +29,42 @@ const showClients = async (req, res) => {
 
         const clientIds = clients.map((c) => c._id);
 
+        // Get revenue from paid and partially paid invoices
         const invoices = await Invoice.aggregate([
             {
                 $match: {
                     client: { $in: clientIds },
-                    status: 'paid',
+                    status: { $in: ['paid', 'partial'] },
                 },
             },
             {
                 $group: {
                     _id: '$client',
-                    total: { $sum: { $ifNull: ['$amountPaid', 0] } },
+                    // Use amountPaid if > 0, otherwise use amount for paid invoices
+                    total: {
+                        $sum: {
+                            $cond: [
+                                { $gt: ['$amountPaid', 0] },
+                                '$amountPaid',
+                                { $cond: [{ $eq: ['$status', 'paid'] }, '$amount', '$amountPaid'] }
+                            ]
+                        }
+                    },
+                },
+            },
+        ]);
+
+        // Get expenses for each client
+        const expenses = await Expense.aggregate([
+            {
+                $match: {
+                    client: { $in: clientIds },
+                },
+            },
+            {
+                $group: {
+                    _id: '$client',
+                    total: { $sum: '$amount' },
                 },
             },
         ]);
@@ -48,8 +74,14 @@ const showClients = async (req, res) => {
             revenueMap[i._id.toString()] = i.total;
         });
 
+        const expensesMap = {};
+        expenses.forEach((e) => {
+            expensesMap[e._id.toString()] = e.total;
+        });
+
         clients.forEach((c) => {
             c.totalRevenue = revenueMap[c._id.toString()] || 0;
+            c.totalExpenses = expensesMap[c._id.toString()] || 0;
         });
 
         res.render('clients/index', {
@@ -110,13 +142,22 @@ const showClient = async (req, res) => {
                 {
                     $match: {
                         client: clientObject._id,
-                        status: 'paid',
+                        status: { $in: ['paid', 'partial'] },
                     },
                 },
                 {
                     $group: {
                         _id: null,
-                        total: { $sum: { $ifNull: ['$amountPaid', 0] } },
+                        // Use amountPaid if > 0, otherwise use amount for paid invoices
+                        total: {
+                            $sum: {
+                                $cond: [
+                                    { $gt: ['$amountPaid', 0] },
+                                    '$amountPaid',
+                                    { $cond: [{ $eq: ['$status', 'paid'] }, '$amount', '$amountPaid'] }
+                                ]
+                            }
+                        },
                     },
                 },
             ]),
@@ -231,9 +272,58 @@ const getClient = async (req, res) => {
             });
         }
 
+        // Get expenses for this client
+        const expenses = await Expense.find({ client: req.params.id })
+            .sort('-expenseDate')
+            .select('description category amount expenseDate notes');
+
+        // Calculate totals
+        const revenueResult = await Invoice.aggregate([
+            {
+                $match: {
+                    client: client._id,
+                    status: { $in: ['paid', 'partial'] },
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    // Use amountPaid if > 0, otherwise use amount for paid invoices
+                    total: {
+                        $sum: {
+                            $cond: [
+                                { $gt: ['$amountPaid', 0] },
+                                '$amountPaid',
+                                { $cond: [{ $eq: ['$status', 'paid'] }, '$amount', '$amountPaid'] }
+                            ]
+                        }
+                    },
+                },
+            },
+        ]);
+
+        const expenseResult = await Expense.aggregate([
+            {
+                $match: {
+                    client: client._id,
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: '$amount' },
+                },
+            },
+        ]);
+
+        const clientData = client.toObject();
+        clientData.expenses = expenses;
+        clientData.totalRevenue = revenueResult[0]?.total || 0;
+        clientData.totalExpenses = expenseResult[0]?.total || 0;
+
         res.json({
             success: true,
-            data: client,
+            data: clientData,
         });
     } catch (error) {
         logger.error('Get client error:', error);

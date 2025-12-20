@@ -68,9 +68,13 @@ function sortTable(field) {
                 bVal = (bData.company || '').toLowerCase();
                 break;
             case 'status':
-                const statusOrder = { active: 0, lead: 1, inactive: 2, archived: 3 };
-                aVal = statusOrder[aData.status] || 4;
-                bVal = statusOrder[bData.status] || 4;
+                const statusOrder = { active: 0, lead: 1, paused: 2, lost: 3, completed: 4, inactive: 5, archived: 6 };
+                aVal = statusOrder[aData.status] || 7;
+                bVal = statusOrder[bData.status] || 7;
+                break;
+            case 'netTotal':
+                aVal = (aData.totalRevenue || 0) - (aData.totalExpenses || 0);
+                bVal = (bData.totalRevenue || 0) - (bData.totalExpenses || 0);
                 break;
             case 'revenue':
                 aVal = aData.totalRevenue || 0;
@@ -164,6 +168,30 @@ async function submitNewClient() {
     }
 }
 
+// Helper function to format currency
+function formatMoney(amount) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(amount || 0);
+}
+
+// Helper function to get status badge class
+function getStatusBadgeClass(status) {
+    const statusClasses = {
+        active: 'success',
+        lead: 'info',
+        paused: 'warning',
+        lost: 'danger',
+        completed: 'primary',
+        inactive: 'secondary',
+        archived: 'secondary',
+    };
+    return statusClasses[status] || 'secondary';
+}
+
 // ========== View Client Modal ==========
 async function viewClient(id) {
     currentClientId = id;
@@ -182,19 +210,19 @@ async function viewClient(id) {
 
         const statusBadge = document.getElementById('viewClientStatus');
         statusBadge.textContent = client.status;
-        statusBadge.className = `badge badge-${
-            client.status === 'active'
-                ? 'success'
-                : client.status === 'lead'
-                ? 'info'
-                : client.status === 'inactive'
-                ? 'warning'
-                : 'secondary'
-        }`;
+        statusBadge.className = `badge badge-${getStatusBadgeClass(client.status)}`;
 
-        document.getElementById('viewClientRevenue').textContent = `$${(
-            (client.totalRevenue || 0) / 1000
-        ).toFixed(1)}k`;
+        // Set initial financial values from row data
+        const totalRevenue = client.totalRevenue || 0;
+        const totalExpenses = client.totalExpenses || 0;
+        const netTotal = totalRevenue - totalExpenses;
+
+        document.getElementById('viewClientRevenue').textContent = formatMoney(totalRevenue);
+        document.getElementById('viewClientExpenses').textContent = formatMoney(totalExpenses);
+        const netTotalEl = document.getElementById('viewClientNetTotal');
+        netTotalEl.textContent = formatMoney(netTotal);
+        netTotalEl.className = `financial-amount ${netTotal >= 0 ? 'text-success' : 'text-danger'}`;
+
         document.getElementById('viewClientEmail').innerHTML = client.email
             ? `<a href="mailto:${client.email}">${client.email}</a>`
             : '-';
@@ -214,13 +242,25 @@ async function viewClient(id) {
             '<tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>';
         document.getElementById('clientInvoicesBody').innerHTML =
             '<tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>';
+        document.getElementById('clientExpensesBody').innerHTML =
+            '<tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>';
 
         $('#viewClientModal').modal('show');
 
-        // Fetch full client data with proposals and invoices
+        // Fetch full client data with proposals, invoices, and expenses
         const fullResponse = await API.clients.get(id);
         if (fullResponse.success) {
             const fullClient = fullResponse.data;
+
+            // Update financial summary with accurate data from API
+            const apiRevenue = fullClient.totalRevenue || 0;
+            const apiExpenses = fullClient.totalExpenses || 0;
+            const apiNetTotal = apiRevenue - apiExpenses;
+
+            document.getElementById('viewClientRevenue').textContent = formatMoney(apiRevenue);
+            document.getElementById('viewClientExpenses').textContent = formatMoney(apiExpenses);
+            netTotalEl.textContent = formatMoney(apiNetTotal);
+            netTotalEl.className = `financial-amount ${apiNetTotal >= 0 ? 'text-success' : 'text-danger'}`;
 
             // Update proposals tab
             const proposals = fullClient.proposals || [];
@@ -232,7 +272,7 @@ async function viewClient(id) {
                         (p) => `
                     <tr>
                         <td>${p.title}</td>
-                        <td>$${((p.pricing?.amount || 0) / 1000).toFixed(1)}k</td>
+                        <td>${formatMoney(p.pricing?.amount || 0)}</td>
                         <td><span class="badge badge-${
                             p.status === 'accepted' ? 'success' : 'info'
                         }">${p.status}</span></td>
@@ -256,10 +296,12 @@ async function viewClient(id) {
                         (i) => `
                     <tr>
                         <td>#${i.invoiceNumber || '-'}</td>
-                        <td>$${(i.amount || 0).toFixed(2)}</td>
+                        <td>${formatMoney(i.amount || 0)}</td>
                         <td><span class="badge badge-${
                             i.status === 'paid'
                                 ? 'success'
+                                : i.status === 'partial'
+                                ? 'info'
                                 : i.status === 'overdue'
                                 ? 'danger'
                                 : 'warning'
@@ -272,6 +314,28 @@ async function viewClient(id) {
             } else {
                 document.getElementById('clientInvoicesBody').innerHTML =
                     '<tr><td colspan="4" class="text-center text-muted">No invoices</td></tr>';
+            }
+
+            // Update expenses tab
+            const expenses = fullClient.expenses || [];
+            document.getElementById('expenseCount').textContent = expenses.length;
+
+            if (expenses.length > 0) {
+                document.getElementById('clientExpensesBody').innerHTML = expenses
+                    .map(
+                        (e) => `
+                    <tr>
+                        <td>${e.description || '-'}</td>
+                        <td><span class="badge badge-secondary">${e.category || '-'}</span></td>
+                        <td>${formatMoney(e.amount || 0)}</td>
+                        <td>${new Date(e.expenseDate).toLocaleDateString()}</td>
+                    </tr>
+                `
+                    )
+                    .join('');
+            } else {
+                document.getElementById('clientExpensesBody').innerHTML =
+                    '<tr><td colspan="4" class="text-center text-muted">No expenses</td></tr>';
             }
         }
     } catch (error) {

@@ -265,14 +265,14 @@ invoiceSchema.statics.getUnpaid = function () {
 
 // Static method for revenue stats
 invoiceSchema.statics.getRevenueStats = async function (startDate, endDate) {
-    const filter = { status: 'paid' };
+    const filter = { status: { $in: ['paid', 'partial'] } };
     if (startDate && endDate) {
         filter.$or = [
             { paidDate: { $gte: startDate, $lte: endDate } },
             // Fallback for invoices without paidDate
             {
                 paidDate: { $exists: false },
-                status: 'paid',
+                status: { $in: ['paid', 'partial'] },
                 updatedAt: { $gte: startDate, $lte: endDate },
             },
         ];
@@ -283,9 +283,26 @@ invoiceSchema.statics.getRevenueStats = async function (startDate, endDate) {
         {
             $group: {
                 _id: null,
-                totalRevenue: { $sum: { $ifNull: ['$amountPaid', 0] } },
+                // Use amountPaid if available, otherwise use amount for paid invoices
+                totalRevenue: {
+                    $sum: {
+                        $cond: [
+                            { $gt: ['$amountPaid', 0] },
+                            '$amountPaid',
+                            { $cond: [{ $eq: ['$status', 'paid'] }, '$amount', '$amountPaid'] }
+                        ]
+                    }
+                },
                 invoiceCount: { $sum: 1 },
-                avgInvoiceAmount: { $avg: { $ifNull: ['$amountPaid', 0] } },
+                avgInvoiceAmount: {
+                    $avg: {
+                        $cond: [
+                            { $gt: ['$amountPaid', 0] },
+                            '$amountPaid',
+                            { $cond: [{ $eq: ['$status', 'paid'] }, '$amount', '$amountPaid'] }
+                        ]
+                    }
+                },
             },
         },
     ]);

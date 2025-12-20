@@ -2,8 +2,10 @@
 let charts = {};
 let analysisData = {};
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     loadAnalysisData();
+    await loadRevenueData();
+    await loadInvoiceData();
     initCharts();
     attachEventListeners();
     loadClientAnalysis();
@@ -23,8 +25,43 @@ function loadAnalysisData() {
 function initCharts() {
     initRevenueChart();
     initClientCharts();
-    initProposalCharts();
     initInvoiceCharts();
+}
+
+// Load revenue data from API
+async function loadRevenueData() {
+    try {
+        const response = await API.analysis.getRevenue({ period: 'monthly' });
+        if (response.success && response.data.revenue) {
+            analysisData.revenueData = response.data.revenue;
+        }
+    } catch (error) {
+        console.error('Failed to load revenue data:', error);
+        analysisData.revenueData = [];
+    }
+}
+
+// Load invoice data from API
+async function loadInvoiceData() {
+    try {
+        const response = await API.analysis.getInvoices();
+        if (response.success && response.data) {
+            analysisData.invoiceData = response.data;
+        }
+    } catch (error) {
+        console.error('Failed to load invoice data:', error);
+        analysisData.invoiceData = {};
+    }
+}
+
+// Helper function to format currency
+function formatCurrency(value) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(value || 0);
 }
 
 // Initialize revenue chart
@@ -32,14 +69,19 @@ function initRevenueChart() {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
 
+    // Use real data from API
+    const revenueData = analysisData.revenueData || [];
+    const labels = revenueData.map((d) => d._id);
+    const data = revenueData.map((d) => d.revenue);
+
     charts.revenue = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
-            labels: generateMonthLabels(),
+            labels: labels.length > 0 ? labels : generateMonthLabels(),
             datasets: [
                 {
                     label: 'Revenue',
-                    data: generateSampleRevenue(),
+                    data: data.length > 0 ? data : [],
                     borderColor: '#7117f2',
                     backgroundColor: 'rgba(113, 23, 242, 0.1)',
                     tension: 0.4,
@@ -52,12 +94,17 @@ function initRevenueChart() {
             maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => formatCurrency(context.parsed.y),
+                    },
+                },
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: (value) => `$${value / 1000}k`,
+                        callback: (value) => formatCurrency(value),
                     },
                 },
             },
@@ -70,23 +117,33 @@ function initClientCharts() {
     // Client distribution chart
     const distCtx = document.getElementById('clientDistChart');
     if (distCtx) {
+        const byStatus = analysisData.stats?.clients?.byStatus || [];
+        const getStatusCount = (status) => byStatus.find((s) => s._id === status)?.count || 0;
+
         charts.clientDist = new Chart(distCtx.getContext('2d'), {
             type: 'pie',
             data: {
-                labels: ['Active', 'Lead', 'Inactive', 'Archived'],
+                labels: ['Active', 'Lead', 'Paused', 'Lost', 'Completed', 'Inactive', 'Archived'],
                 datasets: [
                     {
                         data: [
-                            analysisData.stats?.clients?.byStatus?.find((s) => s._id === 'active')
-                                ?.count || 0,
-                            analysisData.stats?.clients?.byStatus?.find((s) => s._id === 'lead')
-                                ?.count || 0,
-                            analysisData.stats?.clients?.byStatus?.find((s) => s._id === 'inactive')
-                                ?.count || 0,
-                            analysisData.stats?.clients?.byStatus?.find((s) => s._id === 'archived')
-                                ?.count || 0,
+                            getStatusCount('active'),
+                            getStatusCount('lead'),
+                            getStatusCount('paused'),
+                            getStatusCount('lost'),
+                            getStatusCount('completed'),
+                            getStatusCount('inactive'),
+                            getStatusCount('archived'),
                         ],
-                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#6b7280'],
+                        backgroundColor: [
+                            '#10b981', // Active - green
+                            '#3b82f6', // Lead - blue
+                            '#f59e0b', // Paused - amber
+                            '#ef4444', // Lost - red
+                            '#7117f2', // Completed - purple
+                            '#6b7280', // Inactive - gray
+                            '#374151', // Archived - dark gray
+                        ],
                     },
                 ],
             },
@@ -127,53 +184,44 @@ function initClientCharts() {
     }
 }
 
-// Initialize proposal charts
-function initProposalCharts() {
-    const ctx = document.getElementById('proposalFunnelChart');
-    if (!ctx) return;
-
-    const stats = analysisData.stats?.proposals || {};
-    charts.proposalFunnel = new Chart(ctx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: ['Total', 'Sent', 'Viewed', 'Accepted', 'Rejected'],
-            datasets: [
-                {
-                    label: 'Proposals',
-                    data: [
-                        stats.total || 0,
-                        stats.sent || 0,
-                        stats.viewed || 0,
-                        stats.accepted || 0,
-                        stats.rejected || 0,
-                    ],
-                    backgroundColor: ['#6b7280', '#3b82f6', '#7117f2', '#10b981', '#ef4444'],
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-            },
-        },
-    });
-}
-
 // Initialize invoice charts
 function initInvoiceCharts() {
+    const invoiceData = analysisData.invoiceData || {};
+    const statusBreakdown = invoiceData.statusBreakdown || [];
+    const agingData = invoiceData.aging || [];
+
     // Payment status chart
     const statusCtx = document.getElementById('paymentStatusChart');
     if (statusCtx) {
+        // Map status breakdown to chart data
+        const statusMap = {
+            paid: { label: 'Paid', color: '#10b981' },
+            pending: { label: 'Pending', color: '#f59e0b' },
+            overdue: { label: 'Overdue', color: '#ef4444' },
+            partial: { label: 'Partial', color: '#3b82f6' },
+            draft: { label: 'Draft', color: '#6b7280' },
+            cancelled: { label: 'Cancelled', color: '#374151' },
+        };
+
+        const labels = [];
+        const data = [];
+        const colors = [];
+
+        statusBreakdown.forEach((s) => {
+            const status = statusMap[s._id] || { label: s._id, color: '#6b7280' };
+            labels.push(status.label);
+            data.push(s.count);
+            colors.push(status.color);
+        });
+
         charts.paymentStatus = new Chart(statusCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
-                labels: ['Paid', 'Pending', 'Overdue', 'Partial'],
+                labels: labels.length > 0 ? labels : ['No Data'],
                 datasets: [
                     {
-                        data: [45, 25, 15, 15],
-                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
+                        data: data.length > 0 ? data : [1],
+                        backgroundColor: colors.length > 0 ? colors : ['#e5e7eb'],
                     },
                 ],
             },
@@ -190,14 +238,32 @@ function initInvoiceCharts() {
     // Aging chart
     const agingCtx = document.getElementById('agingChart');
     if (agingCtx) {
+        // Map aging buckets to readable labels
+        const agingLabels = ['Current', '1-30 days', '31-60 days', '61-90 days', '90+ days'];
+        const agingAmounts = [0, 0, 0, 0, 0];
+
+        agingData.forEach((bucket) => {
+            if (bucket._id === -365 || bucket._id < 0) {
+                agingAmounts[0] = bucket.amount || 0; // Current (not overdue)
+            } else if (bucket._id === 0 || bucket._id < 30) {
+                agingAmounts[1] = bucket.amount || 0; // 1-30 days
+            } else if (bucket._id === 30 || bucket._id < 60) {
+                agingAmounts[2] = bucket.amount || 0; // 31-60 days
+            } else if (bucket._id === 60 || bucket._id < 90) {
+                agingAmounts[3] = bucket.amount || 0; // 61-90 days
+            } else {
+                agingAmounts[4] = bucket.amount || 0; // 90+ days
+            }
+        });
+
         charts.aging = new Chart(agingCtx.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Current', '1-30 days', '31-60 days', '61-90 days', '90+ days'],
+                labels: agingLabels,
                 datasets: [
                     {
                         label: 'Amount',
-                        data: [35000, 15000, 8000, 5000, 3000],
+                        data: agingAmounts,
                         backgroundColor: '#7117f2',
                     },
                 ],
@@ -207,11 +273,16 @@ function initInvoiceCharts() {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => formatCurrency(context.parsed.y),
+                        },
+                    },
                 },
                 scales: {
                     y: {
                         ticks: {
-                            callback: (value) => `$${value / 1000}k`,
+                            callback: (value) => formatCurrency(value),
                         },
                     },
                 },
@@ -307,7 +378,7 @@ function updateTopClientsTable(clients) {
             <td>${client.name || client.company}</td>
             <td>${client.industry || 'N/A'}</td>
             <td>${client.totalProjects || 0}</td>
-            <td>$${(client.totalRevenue / 1000).toFixed(1)}k</td>
+            <td>${formatCurrency(client.totalRevenue || 0)}</td>
         </tr>
     `
         )
@@ -344,11 +415,7 @@ function generateMonthLabels() {
     for (let i = 5; i >= 0; i--) {
         const date = new Date();
         date.setMonth(date.getMonth() - i);
-        labels.push(date.toLocaleDateString('en-US', { month: 'short' }));
+        labels.push(date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
     }
     return labels;
-}
-
-function generateSampleRevenue() {
-    return [45000, 52000, 48000, 61000, 58000, 72000];
 }

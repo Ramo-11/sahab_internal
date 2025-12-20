@@ -23,18 +23,19 @@
         <div class="stat-icon success">
             <i class="fas fa-dollar-sign"></i>
         </div>
-        <div class="stat-value">$<%= (stats.invoices.totalRevenue / 1000).toFixed(1) %>k</div>
-        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value">$<%= (stats.allTimeInvoices.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
+        <div class="stat-label">Total Revenue (All Time)</div>
     </div>
-    
+
     <div class="stat-card">
         <div class="stat-icon primary">
             <i class="fas fa-percentage"></i>
         </div>
-        <div class="stat-value"><%= ((stats.proposals.accepted / (stats.proposals.sent || 1)) * 100).toFixed(1) %>%</div>
-        <div class="stat-label">Conversion Rate</div>
+        <div class="stat-value"><%= stats.clientConversion.conversionRate %>%</div>
+        <div class="stat-label">Client Conversion Rate</div>
+        <div class="stat-detail"><%= stats.clientConversion.converted %> converted / <%= stats.clientConversion.lost %> lost</div>
     </div>
-    
+
     <div class="stat-card">
         <div class="stat-icon info">
             <i class="fas fa-users"></i>
@@ -42,12 +43,12 @@
         <div class="stat-value"><%= stats.clients.totals[0]?.totalClients || 0 %></div>
         <div class="stat-label">Total Clients</div>
     </div>
-    
+
     <div class="stat-card">
         <div class="stat-icon warning">
-            <i class="fas fa-clock"></i>
+            <i class="fas fa-file-invoice-dollar"></i>
         </div>
-        <div class="stat-value"><%= stats.invoices.avgInvoiceAmount ? (stats.invoices.avgInvoiceAmount / 1000).toFixed(1) + 'k' : '0' %></div>
+        <div class="stat-value">$<%= (stats.allTimeInvoices.avgInvoiceAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
         <div class="stat-label">Avg Invoice Value</div>
     </div>
 </div>
@@ -57,7 +58,6 @@
     <div class="tab-nav">
         <button class="tab-link active" data-tab="revenue">Revenue Analysis</button>
         <button class="tab-link" data-tab="clients">Client Analysis</button>
-        <button class="tab-link" data-tab="proposals">Proposal Performance</button>
         <button class="tab-link" data-tab="invoices">Invoice Analysis</button>
     </div>
     
@@ -78,19 +78,20 @@
             
             <div class="metrics-grid">
                 <div class="metric-card">
-                    <div class="metric-label">This Month</div>
-                    <div class="metric-value">$<%= ((stats.invoices.totalRevenue || 0) / 1000).toFixed(1) %>k</div>
-                    <div class="metric-change positive">+12%</div>
+                    <div class="metric-label">This Period (<%= period %> days)</div>
+                    <div class="metric-value">$<%= (stats.invoices.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
+                    <div class="metric-change"><%= stats.invoices.invoiceCount || 0 %> invoices paid</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Outstanding</div>
-                    <div class="metric-value">$<%= ((stats.invoices.totalUnpaid || 0) / 1000).toFixed(1) %>k</div>
-                    <div class="metric-change negative">-5%</div>
+                    <div class="metric-value text-warning">$<%= (stats.invoices.totalUnpaid || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
+                    <div class="metric-change"><%= stats.invoices.unpaidCount || 0 %> unpaid invoices</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Projected</div>
-                    <div class="metric-value">$<%= ((stats.invoices.totalRevenue * 1.2 || 0) / 1000).toFixed(1) %>k</div>
-                    <div class="metric-change">Next Month</div>
+                    <div class="metric-label">Collection Rate</div>
+                    <% const totalBilled = (stats.allTimeInvoices.totalRevenue || 0) + (stats.invoices.totalUnpaid || 0); %>
+                    <div class="metric-value"><%= totalBilled > 0 ? ((stats.allTimeInvoices.totalRevenue / totalBilled) * 100).toFixed(1) : 0 %>%</div>
+                    <div class="metric-change">All time</div>
                 </div>
             </div>
         </div>
@@ -131,35 +132,6 @@
                             </tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Proposals Tab -->
-        <div class="tab-pane" id="proposals">
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">Proposal Conversion Funnel</h3>
-                </div>
-                <canvas id="proposalFunnelChart"></canvas>
-            </div>
-            
-            <div class="metrics-grid mt-3">
-                <div class="metric-card">
-                    <div class="metric-label">Total Sent</div>
-                    <div class="metric-value"><%= stats.proposals.sent || 0 %></div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Accepted</div>
-                    <div class="metric-value"><%= stats.proposals.accepted || 0 %></div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Total Value</div>
-                    <div class="metric-value">$<%= ((stats.proposals.acceptedValue || 0) / 1000).toFixed(1) %>k</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Win Rate</div>
-                    <div class="metric-value"><%= stats.proposals.sent ? ((stats.proposals.accepted / stats.proposals.sent) * 100).toFixed(1) : 0 %>%</div>
                 </div>
             </div>
         </div>
@@ -214,10 +186,6 @@
             <button class="export-btn" onclick="exportData('clients')">
                 <i class="fas fa-users"></i>
                 <span>Client Report</span>
-            </button>
-            <button class="export-btn" onclick="exportData('proposals')">
-                <i class="fas fa-file-alt"></i>
-                <span>Proposal Report</span>
             </button>
             <button class="export-btn" onclick="exportData('invoices')">
                 <i class="fas fa-file-invoice-dollar"></i>

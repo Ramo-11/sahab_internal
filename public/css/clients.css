@@ -231,6 +231,94 @@
     transition: opacity var(--transition-fast);
 }
 
+/* Contact Info Styling */
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.contact-info .contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--gray-700);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+    transition: color var(--transition-fast);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+}
+
+.contact-info .contact-link:hover {
+    color: var(--primary-color);
+}
+
+.contact-info .contact-link i {
+    color: var(--gray-400);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.contact-info .contact-link:hover i {
+    color: var(--primary-color);
+}
+
+.contact-info .contact-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Financial Summary in View Modal */
+.financial-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-md);
+    min-width: 180px;
+}
+
+.financial-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.financial-item.financial-net {
+    padding-top: 8px;
+    border-top: 1px solid var(--gray-200);
+    margin-top: 4px;
+}
+
+.financial-label {
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+}
+
+.financial-amount {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-base);
+}
+
+.financial-net .financial-label {
+    font-weight: var(--font-weight-medium);
+}
+
+.financial-net .financial-amount {
+    font-size: 1.1rem;
+}
+
+/* Net Total Cell in Table */
+.net-total-cell {
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .page-header {

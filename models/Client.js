@@ -60,7 +60,7 @@ const clientSchema = new mongoose.Schema(
         // Status
         status: {
             type: String,
-            enum: ['lead', 'active', 'inactive', 'archived'],
+            enum: ['lead', 'active', 'paused', 'lost', 'completed', 'inactive', 'archived'],
             default: 'lead',
             index: true,
         },

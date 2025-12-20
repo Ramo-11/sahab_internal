@@ -20,10 +20,14 @@ const showAnalysis = async (req, res) => {
             dateRange.start.setDate(dateRange.start.getDate() - parseInt(period));
         }
 
-        const [clientStats, proposalStats, invoiceStats] = await Promise.all([
+        const [clientStats, proposalStats, invoiceStats, allTimeInvoiceStats, conversionStats] = await Promise.all([
             Client.getStats(),
             Proposal.getConversionStats(dateRange.start, dateRange.end),
             Invoice.getRevenueStats(dateRange.start, dateRange.end),
+            // Get all-time revenue (no date filter)
+            Invoice.getRevenueStats(),
+            // Get client conversion stats (leads that converted vs lost)
+            getClientConversionRate(),
         ]);
 
         res.render('analysis/index', {
@@ -33,6 +37,8 @@ const showAnalysis = async (req, res) => {
                 clients: clientStats,
                 proposals: proposalStats,
                 invoices: invoiceStats,
+                allTimeInvoices: allTimeInvoiceStats,
+                clientConversion: conversionStats,
             },
             additionalCSS: ['analysis.css'],
             additionalJS: ['analysis.js'],
@@ -49,6 +55,62 @@ const showAnalysis = async (req, res) => {
         });
     }
 };
+
+/**
+ * Calculate client conversion rate (converted clients vs lost leads)
+ */
+async function getClientConversionRate() {
+    const stats = await Client.aggregate([
+        {
+            $group: {
+                _id: null,
+                // Converted clients (active, paused, completed)
+                converted: {
+                    $sum: {
+                        $cond: [
+                            { $in: ['$status', ['active', 'paused', 'completed']] },
+                            1,
+                            0
+                        ]
+                    }
+                },
+                // Lost leads
+                lost: {
+                    $sum: {
+                        $cond: [{ $eq: ['$status', 'lost'] }, 1, 0]
+                    }
+                },
+                // Still leads (potential)
+                leads: {
+                    $sum: {
+                        $cond: [{ $eq: ['$status', 'lead'] }, 1, 0]
+                    }
+                },
+                // Inactive (not counted in conversion)
+                inactive: {
+                    $sum: {
+                        $cond: [{ $in: ['$status', ['inactive', 'archived']] }, 1, 0]
+                    }
+                },
+                total: { $sum: 1 }
+            }
+        }
+    ]);
+
+    const result = stats[0] || { converted: 0, lost: 0, leads: 0, inactive: 0, total: 0 };
+
+    // Conversion rate = converted / (converted + lost)
+    // Only count clients that have been decided (not leads or inactive)
+    const decidedClients = result.converted + result.lost;
+    const conversionRate = decidedClients > 0
+        ? ((result.converted / decidedClients) * 100).toFixed(1)
+        : 0;
+
+    return {
+        ...result,
+        conversionRate
+    };
+}
 
 /**
  * Get revenue analysis

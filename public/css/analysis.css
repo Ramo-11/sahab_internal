@@ -6,6 +6,13 @@
     margin-bottom: var(--spacing-xl);
 }
 
+/* Stat Detail - for additional info below stat label */
+.stat-detail {
+    font-size: var(--font-size-xs);
+    color: var(--gray-400);
+    margin-top: var(--spacing-xs);
+}
+
 /* Metrics Grid */
 .metrics-grid {
     display: grid;
