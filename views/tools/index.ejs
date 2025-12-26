@@ -181,6 +181,135 @@
             </div>
         </div>
     </div>
+
+    <!-- Invoice Generator -->
+    <div class="card tool-card invoice-generator-card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-file-invoice-dollar text-success"></i>
+                Invoice Generator
+            </h3>
+        </div>
+        <div class="card-body">
+            <p class="tool-description">
+                Generate professional PDF invoices. Select a customer, add line items, and download instantly.
+            </p>
+
+            <form id="invoiceGeneratorForm">
+                <!-- Invoice Details Row -->
+                <div class="invoice-details-row">
+                    <div class="form-group">
+                        <label class="form-label">Invoice Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="invNumber"
+                                placeholder="Auto-generating..."
+                                required
+                            />
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="generateNewInvoiceNumber()" title="Generate New">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Invoice Date</label>
+                        <input
+                            type="date"
+                            class="form-control"
+                            id="invDate"
+                            required
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Date</label>
+                        <input
+                            type="date"
+                            class="form-control"
+                            id="invDueDate"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <!-- Customer Selection -->
+                <div class="form-group">
+                    <label class="form-label">Customer <span class="text-danger">*</span></label>
+                    <select class="form-control" id="invCustomer" required>
+                        <option value="">Loading customers...</option>
+                    </select>
+                </div>
+
+                <!-- Line Items Section -->
+                <div class="line-items-section">
+                    <div class="section-header">
+                        <h4 class="section-subtitle">
+                            <i class="fas fa-list"></i> Line Items
+                        </h4>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="addInvoiceLineItem()">
+                            <i class="fas fa-plus"></i> Add Item
+                        </button>
+                    </div>
+
+                    <div class="line-items-table-wrapper">
+                        <table class="line-items-table" id="lineItemsTable">
+                            <thead>
+                                <tr>
+                                    <th class="item-col">Item</th>
+                                    <th class="qty-col">Qty</th>
+                                    <th class="price-col">Price</th>
+                                    <th class="amount-col">Amount</th>
+                                    <th class="action-col"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="lineItemsBody">
+                                <!-- Line items will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totals -->
+                    <div class="invoice-totals">
+                        <div class="total-row">
+                            <span class="total-label">Subtotal:</span>
+                            <span class="total-value" id="invSubtotal">$0.00</span>
+                        </div>
+                        <div class="total-row total-final">
+                            <span class="total-label">Total:</span>
+                            <span class="total-value" id="invTotal">$0.00</span>
+                        </div>
+                        <div class="total-row amount-due">
+                            <span class="total-label">Amount Due (USD):</span>
+                            <span class="total-value" id="invAmountDue">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label class="form-label">Notes / Terms</label>
+                    <textarea
+                        class="form-control"
+                        id="invNotes"
+                        rows="2"
+                        placeholder="Payment instructions, terms, etc."
+                    >Please send the payment to sahab@sahab-solutions.com on Zelle</textarea>
+                </div>
+
+                <!-- Generate Button -->
+                <button type="submit" class="btn btn-success btn-block" id="generateInvoiceBtn">
+                    <i class="fas fa-file-pdf"></i> Generate Invoice PDF
+                </button>
+            </form>
+
+            <!-- Generation Status -->
+            <div class="generation-status" id="generationStatus" style="display: none">
+                <div class="spinner"></div>
+                <span>Generating PDF...</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Additional Tools Section -->
