@@ -665,6 +665,391 @@
     margin-top: var(--spacing-lg);
 }
 
+/* ============================================
+   PROPOSAL & CONTRACT GENERATOR STYLES
+   ============================================ */
+
+/* Generator Card Layout */
+.generator-card {
+    grid-column: span 2;
+}
+
+@media (max-width: 900px) {
+    .generator-card {
+        grid-column: span 1;
+    }
+}
+
+.generator-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.generator-card .card-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Form Sections */
+.form-section {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-section-title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--gray-700);
+    margin: 0 0 var(--spacing-md) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.form-section-title i {
+    color: var(--primary-color);
+}
+
+/* Form Row Layouts */
+.form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+    .form-row-2,
+    .form-row-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Scope of Work Sections */
+.scope-section {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.scope-section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.scope-section-header .scope-title {
+    flex: 1;
+    font-weight: var(--font-weight-semibold);
+}
+
+.scope-items {
+    margin-bottom: var(--spacing-sm);
+}
+
+.scope-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.scope-item-bullet {
+    color: var(--primary-color);
+    font-weight: var(--font-weight-bold);
+    font-size: 16px;
+    width: 16px;
+    text-align: center;
+}
+
+.scope-item input {
+    flex: 1;
+}
+
+/* List Items (Deliverables, Retainer Includes, etc.) */
+.list-items {
+    margin-bottom: var(--spacing-sm);
+}
+
+.list-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    background: var(--white);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.list-item-bullet {
+    color: var(--primary-color);
+    font-weight: var(--font-weight-bold);
+    font-size: 16px;
+    width: 16px;
+    text-align: center;
+}
+
+.list-item-number {
+    color: var(--primary-color);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-sm);
+    min-width: 24px;
+}
+
+.list-item input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: var(--spacing-xs);
+}
+
+.list-item input:focus {
+    outline: none;
+    background: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+}
+
+.list-items.numbered .list-item {
+    counter-increment: term-counter;
+}
+
+/* Payment Schedule */
+.payment-schedule-list {
+    margin-bottom: var(--spacing-sm);
+}
+
+.payment-item {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.payment-item-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .payment-item-row {
+        grid-template-columns: 1fr;
+    }
+
+    .payment-item-row .payment-amount {
+        max-width: 150px;
+    }
+}
+
+.payment-amount {
+    display: flex;
+}
+
+.payment-amount .input-group-text {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-right: none;
+    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+.payment-amount .form-control {
+    border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--gray-300);
+    border-radius: 24px;
+    transition: all var(--transition-fast);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* Signature Blocks */
+.signature-block {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+}
+
+.signature-block > .form-label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--gray-700);
+    margin-bottom: var(--spacing-sm);
+    display: block;
+}
+
+.signature-block .form-group {
+    margin-bottom: var(--spacing-sm);
+}
+
+.signature-block .form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Generator Actions */
+.generator-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--gray-200);
+    margin-top: var(--spacing-md);
+}
+
+/* Saved Items Modal */
+.saved-items-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.saved-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--gray-50);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-sm);
+    border: 1px solid var(--gray-200);
+    transition: all var(--transition-fast);
+}
+
+.saved-item:hover {
+    background: var(--white);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.saved-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.saved-item-title {
+    font-weight: var(--font-weight-semibold);
+    color: var(--gray-800);
+    margin-bottom: var(--spacing-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.saved-item-meta {
+    display: flex;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--gray-500);
+    flex-wrap: wrap;
+}
+
+.saved-item-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    margin-left: var(--spacing-md);
+}
+
+/* Loading State */
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xl);
+    color: var(--gray-500);
+}
+
+/* Button Icon */
+.btn-icon {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--gray-500);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+    background: var(--gray-100);
+    color: var(--primary-color);
+}
+
+.btn-icon.text-danger:hover {
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ML helpers */
+.ml-2 {
+    margin-left: var(--spacing-sm);
+}
+
+.ml-3 {
+    margin-left: var(--spacing-md);
+}
+
+.mt-2 {
+    margin-top: var(--spacing-sm);
+}
+
 /* Responsive adjustments for line items */
 @media (max-width: 600px) {
     .line-items-table th,

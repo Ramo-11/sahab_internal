@@ -132,6 +132,20 @@ router.delete('/api/tools/invoice-numbers/:id', toolsController.deleteInvoiceNum
 // API - PDF Processor
 router.post('/api/tools/process-pdf', toolsController.uploadPDF, toolsController.processPDF);
 
+// API - Generated Proposals
+router.get('/api/tools/generated-proposals', toolsController.getGeneratedProposals);
+router.post('/api/tools/generated-proposals', toolsController.createGeneratedProposal);
+router.get('/api/tools/generated-proposals/:id', toolsController.getGeneratedProposal);
+router.put('/api/tools/generated-proposals/:id', toolsController.updateGeneratedProposal);
+router.delete('/api/tools/generated-proposals/:id', toolsController.deleteGeneratedProposal);
+
+// API - Generated Contracts
+router.get('/api/tools/generated-contracts', toolsController.getGeneratedContracts);
+router.post('/api/tools/generated-contracts', toolsController.createGeneratedContract);
+router.get('/api/tools/generated-contracts/:id', toolsController.getGeneratedContract);
+router.put('/api/tools/generated-contracts/:id', toolsController.updateGeneratedContract);
+router.delete('/api/tools/generated-contracts/:id', toolsController.deleteGeneratedContract);
+
 /**
  * Utility Routes
  */

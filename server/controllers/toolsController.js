@@ -1,4 +1,7 @@
 const InvoiceNumber = require('../../models/InvoiceNumber');
+const GeneratedProposal = require('../../models/GeneratedProposal');
+const GeneratedContract = require('../../models/GeneratedContract');
+const Client = require('../../models/Client');
 const { logger } = require('../logger');
 const multer = require('multer');
 const path = require('path');
@@ -49,7 +52,7 @@ const showTools = async (req, res) => {
             layout: 'layout',
             recentNumbers,
             additionalCSS: ['tools.css'],
-            additionalJS: ['tools.js'],
+            additionalJS: ['tools.js', 'proposal-generator.js', 'contract-generator.js'],
             activeTab: 'tools',
         });
     } catch (error) {
@@ -306,6 +309,346 @@ except Exception as e:
  */
 const uploadPDF = upload.single('pdfFile');
 
+// ============================================
+// GENERATED PROPOSALS
+// ============================================
+
+/**
+ * Get all generated proposals
+ */
+const getGeneratedProposals = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, status, client } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const filter = {};
+        if (status) filter.status = status;
+        if (client) filter.client = client;
+
+        const [proposals, total] = await Promise.all([
+            GeneratedProposal.find(filter)
+                .populate('client', 'name company email')
+                .sort('-createdAt')
+                .skip(skip)
+                .limit(parseInt(limit)),
+            GeneratedProposal.countDocuments(filter),
+        ]);
+
+        res.json({
+            success: true,
+            data: proposals,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit)),
+            },
+        });
+    } catch (error) {
+        logger.error('Get generated proposals error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch proposals',
+        });
+    }
+};
+
+/**
+ * Get single generated proposal
+ */
+const getGeneratedProposal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const proposal = await GeneratedProposal.findById(id).populate(
+            'client',
+            'name company email phone contactPerson'
+        );
+
+        if (!proposal) {
+            return res.status(404).json({
+                success: false,
+                message: 'Proposal not found',
+            });
+        }
+
+        res.json({
+            success: true,
+            data: proposal,
+        });
+    } catch (error) {
+        logger.error('Get generated proposal error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch proposal',
+        });
+    }
+};
+
+/**
+ * Create generated proposal
+ */
+const createGeneratedProposal = async (req, res) => {
+    try {
+        const proposalData = req.body;
+
+        const proposal = new GeneratedProposal(proposalData);
+        await proposal.save();
+
+        // Populate client info for response
+        await proposal.populate('client', 'name company email');
+
+        logger.info(`Created generated proposal: ${proposal.proposalNumber}`);
+
+        res.status(201).json({
+            success: true,
+            data: proposal,
+            message: 'Proposal created successfully',
+        });
+    } catch (error) {
+        logger.error('Create generated proposal error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to create proposal',
+        });
+    }
+};
+
+/**
+ * Update generated proposal
+ */
+const updateGeneratedProposal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        const proposal = await GeneratedProposal.findByIdAndUpdate(id, updateData, {
+            new: true,
+            runValidators: true,
+        }).populate('client', 'name company email');
+
+        if (!proposal) {
+            return res.status(404).json({
+                success: false,
+                message: 'Proposal not found',
+            });
+        }
+
+        logger.info(`Updated generated proposal: ${proposal.proposalNumber}`);
+
+        res.json({
+            success: true,
+            data: proposal,
+            message: 'Proposal updated successfully',
+        });
+    } catch (error) {
+        logger.error('Update generated proposal error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to update proposal',
+        });
+    }
+};
+
+/**
+ * Delete generated proposal
+ */
+const deleteGeneratedProposal = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const proposal = await GeneratedProposal.findByIdAndDelete(id);
+
+        if (!proposal) {
+            return res.status(404).json({
+                success: false,
+                message: 'Proposal not found',
+            });
+        }
+
+        logger.info(`Deleted generated proposal: ${proposal.proposalNumber}`);
+
+        res.json({
+            success: true,
+            message: 'Proposal deleted successfully',
+        });
+    } catch (error) {
+        logger.error('Delete generated proposal error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete proposal',
+        });
+    }
+};
+
+// ============================================
+// GENERATED CONTRACTS
+// ============================================
+
+/**
+ * Get all generated contracts
+ */
+const getGeneratedContracts = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, status, client } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const filter = {};
+        if (status) filter.status = status;
+        if (client) filter.client = client;
+
+        const [contracts, total] = await Promise.all([
+            GeneratedContract.find(filter)
+                .populate('client', 'name company email')
+                .populate('linkedProposal', 'proposalNumber title')
+                .sort('-createdAt')
+                .skip(skip)
+                .limit(parseInt(limit)),
+            GeneratedContract.countDocuments(filter),
+        ]);
+
+        res.json({
+            success: true,
+            data: contracts,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit)),
+            },
+        });
+    } catch (error) {
+        logger.error('Get generated contracts error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch contracts',
+        });
+    }
+};
+
+/**
+ * Get single generated contract
+ */
+const getGeneratedContract = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const contract = await GeneratedContract.findById(id)
+            .populate('client', 'name company email phone contactPerson')
+            .populate('linkedProposal');
+
+        if (!contract) {
+            return res.status(404).json({
+                success: false,
+                message: 'Contract not found',
+            });
+        }
+
+        res.json({
+            success: true,
+            data: contract,
+        });
+    } catch (error) {
+        logger.error('Get generated contract error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch contract',
+        });
+    }
+};
+
+/**
+ * Create generated contract
+ */
+const createGeneratedContract = async (req, res) => {
+    try {
+        const contractData = req.body;
+
+        const contract = new GeneratedContract(contractData);
+        await contract.save();
+
+        // Populate client info for response
+        await contract.populate('client', 'name company email');
+
+        logger.info(`Created generated contract: ${contract.contractNumber}`);
+
+        res.status(201).json({
+            success: true,
+            data: contract,
+            message: 'Contract created successfully',
+        });
+    } catch (error) {
+        logger.error('Create generated contract error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to create contract',
+        });
+    }
+};
+
+/**
+ * Update generated contract
+ */
+const updateGeneratedContract = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        const contract = await GeneratedContract.findByIdAndUpdate(id, updateData, {
+            new: true,
+            runValidators: true,
+        }).populate('client', 'name company email');
+
+        if (!contract) {
+            return res.status(404).json({
+                success: false,
+                message: 'Contract not found',
+            });
+        }
+
+        logger.info(`Updated generated contract: ${contract.contractNumber}`);
+
+        res.json({
+            success: true,
+            data: contract,
+            message: 'Contract updated successfully',
+        });
+    } catch (error) {
+        logger.error('Update generated contract error:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to update contract',
+        });
+    }
+};
+
+/**
+ * Delete generated contract
+ */
+const deleteGeneratedContract = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const contract = await GeneratedContract.findByIdAndDelete(id);
+
+        if (!contract) {
+            return res.status(404).json({
+                success: false,
+                message: 'Contract not found',
+            });
+        }
+
+        logger.info(`Deleted generated contract: ${contract.contractNumber}`);
+
+        res.json({
+            success: true,
+            message: 'Contract deleted successfully',
+        });
+    } catch (error) {
+        logger.error('Delete generated contract error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to delete contract',
+        });
+    }
+};
+
 module.exports = {
     showTools,
     generateInvoiceNumber,
@@ -314,4 +657,16 @@ module.exports = {
     updateInvoiceNumber,
     processPDF,
     uploadPDF,
+    // Generated Proposals
+    getGeneratedProposals,
+    getGeneratedProposal,
+    createGeneratedProposal,
+    updateGeneratedProposal,
+    deleteGeneratedProposal,
+    // Generated Contracts
+    getGeneratedContracts,
+    getGeneratedContract,
+    createGeneratedContract,
+    updateGeneratedContract,
+    deleteGeneratedContract,
 };
