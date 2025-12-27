@@ -25,7 +25,7 @@ const DEFAULT_TERMS = [
     'Sahab Solutions is not liable for indirect or consequential damages or downtime.',
     'Both parties agree to maintain confidentiality regarding project details, system credentials, and intellectual property.',
     'Delays caused by the client may extend the timeline.',
-    'All intellectual property will be transferred upon full payment and upon request, except for the codebase itself, which requires a separate buyout agreement.'
+    'All intellectual property will be transferred upon full payment and upon request, except for the codebase itself, which requires a separate buyout agreement.',
 ];
 
 /**
@@ -46,7 +46,7 @@ async function initContractGenerator() {
     addContractDeliverable();
 
     // Add default terms
-    DEFAULT_TERMS.forEach(term => {
+    DEFAULT_TERMS.forEach((term) => {
         addContractTerm(term);
     });
 
@@ -58,7 +58,7 @@ async function initContractGenerator() {
 
     // Client change handler - auto-fill company name
     document.getElementById('contClient')?.addEventListener('change', (e) => {
-        const client = contractClients.find(c => c._id === e.target.value);
+        const client = contractClients.find((c) => c._id === e.target.value);
         if (client) {
             document.getElementById('contClientCompanyName').value = client.company || client.name;
             const contactName = client.contactPerson?.name || client.name;
@@ -78,16 +78,18 @@ async function loadContractClients() {
 
     try {
         // Only fetch active clients
-        const response = await fetch('/api/clients?status=active&limit=1000');
+        const response = await fetch('/api/clients');
         const result = await response.json();
 
         if (result.success && result.data) {
             contractClients = result.data;
 
             select.innerHTML = '<option value="">Select a client...</option>';
-            contractClients.forEach(client => {
+            contractClients.forEach((client) => {
                 const displayName = client.company || client.name;
-                select.innerHTML += `<option value="${client._id}">${escapeHtml(displayName)}</option>`;
+                select.innerHTML += `<option value="${client._id}">${escapeHtml(
+                    displayName
+                )}</option>`;
             });
         } else {
             select.innerHTML = '<option value="">No clients found</option>';
@@ -113,9 +115,11 @@ async function loadContractProposals() {
             contractProposals = result.data;
 
             select.innerHTML = '<option value="">None (create from scratch)</option>';
-            contractProposals.forEach(proposal => {
+            contractProposals.forEach((proposal) => {
                 const displayName = proposal.title || proposal.proposalNumber;
-                select.innerHTML += `<option value="${proposal._id}">${escapeHtml(displayName)}</option>`;
+                select.innerHTML += `<option value="${proposal._id}">${escapeHtml(
+                    displayName
+                )}</option>`;
             });
         }
     } catch (error) {
@@ -142,19 +146,23 @@ async function loadProposalIntoContract() {
             document.getElementById('contClient').dispatchEvent(new Event('change'));
 
             // Set basic info
-            document.getElementById('contTitle').value = `Service Agreement for ${proposal.projectName || proposal.title}`;
+            document.getElementById('contTitle').value = `Service Agreement for ${
+                proposal.projectName || proposal.title
+            }`;
             document.getElementById('contProjectName').value = proposal.projectName || '';
-            document.getElementById('contProjectDescription').value = proposal.executiveSummary || '';
+            document.getElementById('contProjectDescription').value =
+                proposal.executiveSummary || '';
 
             // Set payment
             document.getElementById('contTotalAmount').value = proposal.pricing?.totalAmount || 0;
-            document.getElementById('contPaymentDescription').value = proposal.pricing?.description || 'One-Time';
+            document.getElementById('contPaymentDescription').value =
+                proposal.pricing?.description || 'One-Time';
 
             // Load scope of work
             const scopeContainer = document.getElementById('contScopeOfWork');
             scopeContainer.innerHTML = '';
             contScopeSectionCounter = 0;
-            (proposal.scopeOfWork || []).forEach(section => {
+            (proposal.scopeOfWork || []).forEach((section) => {
                 addContractScopeSection();
                 const sectionEl = scopeContainer.lastElementChild;
                 sectionEl.querySelector('.scope-title').value = section.sectionTitle || '';
@@ -162,7 +170,7 @@ async function loadProposalIntoContract() {
 
                 const itemsContainer = sectionEl.querySelector('.scope-items');
                 itemsContainer.innerHTML = '';
-                (section.items || []).forEach(item => {
+                (section.items || []).forEach((item) => {
                     const sectionId = sectionEl.id;
                     addContractScopeItem(sectionId);
                     const inputs = itemsContainer.querySelectorAll('.scope-item input');
@@ -174,7 +182,7 @@ async function loadProposalIntoContract() {
             const deliverablesContainer = document.getElementById('contDeliverables');
             deliverablesContainer.innerHTML = '';
             contDeliverableCounter = 0;
-            (proposal.deliverables || []).forEach(item => {
+            (proposal.deliverables || []).forEach((item) => {
                 addContractDeliverable();
                 const inputs = deliverablesContainer.querySelectorAll('.list-item input');
                 inputs[inputs.length - 1].value = item;
@@ -184,7 +192,7 @@ async function loadProposalIntoContract() {
             const scheduleContainer = document.getElementById('contPaymentSchedule');
             scheduleContainer.innerHTML = '';
             contPaymentItemCounter = 0;
-            (proposal.pricing?.paymentSchedule || []).forEach(payment => {
+            (proposal.pricing?.paymentSchedule || []).forEach((payment) => {
                 addContractPaymentItem();
                 const items = scheduleContainer.querySelectorAll('.payment-item');
                 const lastItem = items[items.length - 1];
@@ -200,11 +208,12 @@ async function loadProposalIntoContract() {
                 document.getElementById('contRetainerEnabled').checked = true;
                 toggleContractRetainer();
                 document.getElementById('contRetainerAmount').value = proposal.retainer.amount || 0;
-                document.getElementById('contRetainerFrequency').value = proposal.retainer.frequency || 'monthly';
+                document.getElementById('contRetainerFrequency').value =
+                    proposal.retainer.frequency || 'monthly';
 
                 const includesContainer = document.getElementById('contRetainerIncludes');
                 includesContainer.innerHTML = '';
-                (proposal.retainer.includes || []).forEach(item => {
+                (proposal.retainer.includes || []).forEach((item) => {
                     addContractRetainerInclude();
                     const inputs = includesContainer.querySelectorAll('.list-item input');
                     inputs[inputs.length - 1].value = item;
@@ -397,7 +406,9 @@ function addContractTerm(defaultValue = '') {
     item.id = itemId;
     item.innerHTML = `
         <span class="list-item-number">${container.children.length + 1}.</span>
-        <input type="text" class="form-control" placeholder="Term or condition" value="${escapeHtml(defaultValue)}" />
+        <input type="text" class="form-control" placeholder="Term or condition" value="${escapeHtml(
+            defaultValue
+        )}" />
         <button type="button" class="btn btn-sm btn-icon text-danger" onclick="removeContractTerm('${itemId}')" title="Remove">
             <i class="fas fa-times"></i>
         </button>
@@ -443,16 +454,16 @@ function removeContractListItem(itemId) {
  */
 function collectContractData() {
     const clientId = document.getElementById('contClient').value;
-    const client = contractClients.find(c => c._id === clientId);
+    const client = contractClients.find((c) => c._id === clientId);
 
     // Collect scope of work
     const scopeOfWork = [];
-    document.querySelectorAll('#contScopeOfWork .scope-section').forEach(section => {
+    document.querySelectorAll('#contScopeOfWork .scope-section').forEach((section) => {
         const sectionTitle = section.querySelector('.scope-title')?.value.trim();
         const description = section.querySelector('.scope-description')?.value.trim();
         const items = [];
 
-        section.querySelectorAll('.scope-item input').forEach(input => {
+        section.querySelectorAll('.scope-item input').forEach((input) => {
             const value = input.value.trim();
             if (value) items.push(value);
         });
@@ -464,14 +475,14 @@ function collectContractData() {
 
     // Collect deliverables
     const deliverables = [];
-    document.querySelectorAll('#contDeliverables .list-item input').forEach(input => {
+    document.querySelectorAll('#contDeliverables .list-item input').forEach((input) => {
         const value = input.value.trim();
         if (value) deliverables.push(value);
     });
 
     // Collect payment schedule
     const paymentSchedule = [];
-    document.querySelectorAll('#contPaymentSchedule .payment-item').forEach(item => {
+    document.querySelectorAll('#contPaymentSchedule .payment-item').forEach((item) => {
         const description = item.querySelector('.payment-desc')?.value.trim();
         const amount = parseFloat(item.querySelector('.payment-amount input')?.value) || 0;
         const dueDate = item.querySelector('.payment-date')?.value;
@@ -483,14 +494,14 @@ function collectContractData() {
 
     // Collect retainer includes
     const retainerIncludes = [];
-    document.querySelectorAll('#contRetainerIncludes .list-item input').forEach(input => {
+    document.querySelectorAll('#contRetainerIncludes .list-item input').forEach((input) => {
         const value = input.value.trim();
         if (value) retainerIncludes.push(value);
     });
 
     // Collect terms
     const termsAndConditions = [];
-    document.querySelectorAll('#contTermsAndConditions .list-item input').forEach(input => {
+    document.querySelectorAll('#contTermsAndConditions .list-item input').forEach((input) => {
         const value = input.value.trim();
         if (value) termsAndConditions.push(value);
     });
@@ -511,14 +522,16 @@ function collectContractData() {
             description: document.getElementById('contPaymentDescription').value.trim(),
             schedule: paymentSchedule,
             operationalCostsNote: document.getElementById('contOperationalCostsNote').value.trim(),
-            paymentInstructions: document.getElementById('contPaymentInstructions').value.trim()
+            paymentInstructions: document.getElementById('contPaymentInstructions').value.trim(),
         },
         retainer: {
             enabled: document.getElementById('contRetainerEnabled').checked,
             amount: parseFloat(document.getElementById('contRetainerAmount')?.value) || 0,
             frequency: document.getElementById('contRetainerFrequency')?.value || 'monthly',
-            startsAfter: document.getElementById('contRetainerStartsAfter')?.value.trim() || 'after the final installment payment is made',
-            includes: retainerIncludes
+            startsAfter:
+                document.getElementById('contRetainerStartsAfter')?.value.trim() ||
+                'after the final installment payment is made',
+            includes: retainerIncludes,
         },
         resaleRights: document.getElementById('contResaleRights').value.trim(),
         termsAndConditions,
@@ -526,12 +539,12 @@ function collectContractData() {
             sahabName: document.getElementById('contSahabName').value.trim(),
             sahabTitle: document.getElementById('contSahabTitle').value.trim(),
             clientName: document.getElementById('contSignClientName').value.trim(),
-            clientTitle: document.getElementById('contSignClientTitle').value.trim()
+            clientTitle: document.getElementById('contSignClientTitle').value.trim(),
         },
         internalNotes: document.getElementById('contInternalNotes').value.trim(),
         preparedBy: 'Sahab Solutions',
         contactEmail: 'sahab@sahab-solutions.com',
-        contactWebsite: 'sahab-solutions.com'
+        contactWebsite: 'sahab-solutions.com',
     };
 }
 
@@ -560,7 +573,7 @@ async function saveContractDraft() {
         const response = await fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
         });
 
         const result = await response.json();
@@ -609,7 +622,7 @@ async function generateContractPDF() {
         const doc = new jsPDF({
             orientation: 'portrait',
             unit: 'pt',
-            format: 'letter'
+            format: 'letter',
         });
 
         const pageWidth = 612;
@@ -665,12 +678,26 @@ async function generateContractPDF() {
         doc.setFontSize(10);
         doc.text('Provider: Sahab Solutions ("Sahab")', margin + 15, y);
         y += 14;
-        doc.text(`Client: ${data.clientCompanyName || data.clientData?.company || data.clientData?.name || ''} ("Client")`, margin + 15, y);
+        doc.text(
+            `Client: ${
+                data.clientCompanyName || data.clientData?.company || data.clientData?.name || ''
+            } ("Client")`,
+            margin + 15,
+            y
+        );
         y += 25;
 
         // ========== PROJECT OVERVIEW ==========
         if (data.projectName || data.projectDescription) {
-            y = addContractSection(doc, 'Project Overview', y, margin, pageWidth, primaryColor, textDark);
+            y = addContractSection(
+                doc,
+                'Project Overview',
+                y,
+                margin,
+                pageWidth,
+                primaryColor,
+                textDark
+            );
 
             if (data.projectName) {
                 doc.setFont('helvetica', 'bold');
@@ -682,7 +709,10 @@ async function generateContractPDF() {
             if (data.projectDescription) {
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-                const descLines = doc.splitTextToSize(data.projectDescription, pageWidth - 2 * margin);
+                const descLines = doc.splitTextToSize(
+                    data.projectDescription,
+                    pageWidth - 2 * margin
+                );
                 doc.text(descLines, margin, y);
                 y += descLines.length * 12 + 15;
             }
@@ -691,9 +721,17 @@ async function generateContractPDF() {
         // ========== SCOPE OF WORK ==========
         if (data.scopeOfWork.length > 0) {
             y = checkContractPageBreak(doc, y, pageHeight, margin);
-            y = addContractSection(doc, 'Scope of Work', y, margin, pageWidth, primaryColor, textDark);
+            y = addContractSection(
+                doc,
+                'Scope of Work',
+                y,
+                margin,
+                pageWidth,
+                primaryColor,
+                textDark
+            );
 
-            data.scopeOfWork.forEach(section => {
+            data.scopeOfWork.forEach((section) => {
                 y = checkContractPageBreak(doc, y, pageHeight, margin);
 
                 if (section.sectionTitle) {
@@ -708,12 +746,15 @@ async function generateContractPDF() {
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(10);
                     doc.setTextColor(...textGray);
-                    const descLines = doc.splitTextToSize(section.description, pageWidth - 2 * margin - 15);
+                    const descLines = doc.splitTextToSize(
+                        section.description,
+                        pageWidth - 2 * margin - 15
+                    );
                     doc.text(descLines, margin + 10, y);
                     y += descLines.length * 12 + 6;
                 }
 
-                section.items.forEach(item => {
+                section.items.forEach((item) => {
                     y = checkContractPageBreak(doc, y, pageHeight, margin);
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(10);
@@ -731,9 +772,17 @@ async function generateContractPDF() {
         // ========== DELIVERABLES ==========
         if (data.deliverables.length > 0) {
             y = checkContractPageBreak(doc, y, pageHeight, margin);
-            y = addContractSection(doc, 'Deliverables', y, margin, pageWidth, primaryColor, textDark);
+            y = addContractSection(
+                doc,
+                'Deliverables',
+                y,
+                margin,
+                pageWidth,
+                primaryColor,
+                textDark
+            );
 
-            data.deliverables.forEach(item => {
+            data.deliverables.forEach((item) => {
                 y = checkContractPageBreak(doc, y, pageHeight, margin);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
@@ -754,7 +803,13 @@ async function generateContractPDF() {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
         doc.setTextColor(...textDark);
-        doc.text(`Total Project Fee: ${formatCurrency(data.payment.totalAmount)} (${data.payment.description})`, margin, y);
+        doc.text(
+            `Total Project Fee: ${formatCurrency(data.payment.totalAmount)} (${
+                data.payment.description
+            })`,
+            margin,
+            y
+        );
         y += 20;
 
         if (data.payment.schedule.length > 0) {
@@ -763,11 +818,17 @@ async function generateContractPDF() {
             doc.text('Payment Schedule:', margin, y);
             y += 14;
 
-            data.payment.schedule.forEach(payment => {
+            data.payment.schedule.forEach((payment) => {
                 y = checkContractPageBreak(doc, y, pageHeight, margin);
                 doc.setFont('helvetica', 'normal');
-                const dateStr = payment.dueDate ? ` - Due: ${formatDisplayDate(payment.dueDate)}` : '';
-                doc.text(`• ${payment.description}: ${formatCurrency(payment.amount)}${dateStr}`, margin + 10, y);
+                const dateStr = payment.dueDate
+                    ? ` - Due: ${formatDisplayDate(payment.dueDate)}`
+                    : '';
+                doc.text(
+                    `• ${payment.description}: ${formatCurrency(payment.amount)}${dateStr}`,
+                    margin + 10,
+                    y
+                );
                 y += 12;
             });
 
@@ -779,7 +840,10 @@ async function generateContractPDF() {
             doc.setFont('helvetica', 'italic');
             doc.setFontSize(9);
             doc.setTextColor(...textGray);
-            const noteLines = doc.splitTextToSize(data.payment.operationalCostsNote, pageWidth - 2 * margin);
+            const noteLines = doc.splitTextToSize(
+                data.payment.operationalCostsNote,
+                pageWidth - 2 * margin
+            );
             doc.text(noteLines, margin, y);
             y += noteLines.length * 11 + 10;
         }
@@ -795,12 +859,24 @@ async function generateContractPDF() {
         // ========== RETAINER ==========
         if (data.retainer.enabled) {
             y = checkContractPageBreak(doc, y, pageHeight, margin);
-            y = addContractSection(doc, 'Maintenance & Hosting Retainer', y, margin, pageWidth, primaryColor, textDark);
+            y = addContractSection(
+                doc,
+                'Maintenance & Hosting Retainer',
+                y,
+                margin,
+                pageWidth,
+                primaryColor,
+                textDark
+            );
 
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
             doc.setTextColor(...textDark);
-            doc.text(`${formatCurrency(data.retainer.amount)}/${data.retainer.frequency}`, margin, y);
+            doc.text(
+                `${formatCurrency(data.retainer.amount)}/${data.retainer.frequency}`,
+                margin,
+                y
+            );
             y += 16;
 
             doc.setFont('helvetica', 'normal');
@@ -812,7 +888,7 @@ async function generateContractPDF() {
                 doc.text('Includes:', margin, y);
                 y += 14;
 
-                data.retainer.includes.forEach(item => {
+                data.retainer.includes.forEach((item) => {
                     y = checkContractPageBreak(doc, y, pageHeight, margin);
                     doc.text(`• ${item}`, margin + 10, y);
                     y += 12;
@@ -825,7 +901,15 @@ async function generateContractPDF() {
         // ========== RESALE RIGHTS ==========
         if (data.resaleRights) {
             y = checkContractPageBreak(doc, y, pageHeight, margin);
-            y = addContractSection(doc, 'Resale Rights & Revenue Sharing', y, margin, pageWidth, primaryColor, textDark);
+            y = addContractSection(
+                doc,
+                'Resale Rights & Revenue Sharing',
+                y,
+                margin,
+                pageWidth,
+                primaryColor,
+                textDark
+            );
 
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
@@ -838,7 +922,15 @@ async function generateContractPDF() {
         // ========== TERMS AND CONDITIONS ==========
         if (data.termsAndConditions.length > 0) {
             y = checkContractPageBreak(doc, y, pageHeight, margin);
-            y = addContractSection(doc, 'Terms and Conditions', y, margin, pageWidth, primaryColor, textDark);
+            y = addContractSection(
+                doc,
+                'Terms and Conditions',
+                y,
+                margin,
+                pageWidth,
+                primaryColor,
+                textDark
+            );
 
             data.termsAndConditions.forEach((term, index) => {
                 y = checkContractPageBreak(doc, y, pageHeight, margin);
@@ -891,11 +983,12 @@ async function generateContractPDF() {
         doc.text('Date: ____________________', clientSigX, y + 100);
 
         // Save PDF
-        const fileName = `Contract_${data.projectName || data.title}_${new Date().toISOString().split('T')[0]}.pdf`.replace(/\s+/g, '_');
+        const fileName = `Contract_${data.projectName || data.title}_${
+            new Date().toISOString().split('T')[0]
+        }.pdf`.replace(/\s+/g, '_');
         doc.save(fileName);
 
         Common.showNotification('Contract PDF generated successfully!', 'success');
-
     } catch (error) {
         console.error('Error generating PDF:', error);
         Common.showNotification('Failed to generate PDF: ' + error.message, 'error');
@@ -953,29 +1046,41 @@ async function loadSavedContracts() {
         if (result.success && result.data.length > 0) {
             savedContracts = result.data;
 
-            container.innerHTML = result.data.map(contract => `
+            container.innerHTML = result.data
+                .map(
+                    (contract) => `
                 <div class="saved-item" data-id="${contract._id}">
                     <div class="saved-item-info">
                         <div class="saved-item-title">${escapeHtml(contract.title)}</div>
                         <div class="saved-item-meta">
-                            <span class="badge badge-${getContractStatusBadgeClass(contract.status)}">${contract.status}</span>
+                            <span class="badge badge-${getContractStatusBadgeClass(
+                                contract.status
+                            )}">${contract.status}</span>
                             <span>${contract.contractNumber || 'Draft'}</span>
                             <span>${formatCurrency(contract.payment?.totalAmount || 0)}</span>
                         </div>
                     </div>
                     <div class="saved-item-actions">
-                        <button class="btn btn-sm btn-primary" onclick="loadContract('${contract._id}')" title="Load">
+                        <button class="btn btn-sm btn-primary" onclick="loadContract('${
+                            contract._id
+                        }')" title="Load">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-warning" onclick="regenerateContractPDF('${contract._id}')" title="Generate PDF">
+                        <button class="btn btn-sm btn-warning" onclick="regenerateContractPDF('${
+                            contract._id
+                        }')" title="Generate PDF">
                             <i class="fas fa-file-pdf"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteContract('${contract._id}')" title="Delete">
+                        <button class="btn btn-sm btn-danger" onclick="deleteContract('${
+                            contract._id
+                        }')" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `
+                )
+                .join('');
         } else {
             container.innerHTML = `
                 <div class="empty-state-small">
@@ -1011,26 +1116,36 @@ async function loadContract(id) {
             document.getElementById('contClient').value = contract.client?._id || contract.client;
             document.getElementById('contLinkedProposal').value = contract.linkedProposal || '';
             document.getElementById('contTitle').value = contract.title || '';
-            document.getElementById('contClientCompanyName').value = contract.clientCompanyName || '';
-            document.getElementById('contClientRepName').value = contract.clientRepresentativeName || '';
+            document.getElementById('contClientCompanyName').value =
+                contract.clientCompanyName || '';
+            document.getElementById('contClientRepName').value =
+                contract.clientRepresentativeName || '';
             document.getElementById('contProjectName').value = contract.projectName || '';
-            document.getElementById('contProjectDescription').value = contract.projectDescription || '';
+            document.getElementById('contProjectDescription').value =
+                contract.projectDescription || '';
             document.getElementById('contTotalAmount').value = contract.payment?.totalAmount || 0;
-            document.getElementById('contPaymentDescription').value = contract.payment?.description || 'One-Time';
-            document.getElementById('contOperationalCostsNote').value = contract.payment?.operationalCostsNote || '';
-            document.getElementById('contPaymentInstructions').value = contract.payment?.paymentInstructions || '';
+            document.getElementById('contPaymentDescription').value =
+                contract.payment?.description || 'One-Time';
+            document.getElementById('contOperationalCostsNote').value =
+                contract.payment?.operationalCostsNote || '';
+            document.getElementById('contPaymentInstructions').value =
+                contract.payment?.paymentInstructions || '';
             document.getElementById('contResaleRights').value = contract.resaleRights || '';
-            document.getElementById('contSahabName').value = contract.signatures?.sahabName || 'Omar Abdelalim';
-            document.getElementById('contSahabTitle').value = contract.signatures?.sahabTitle || 'Sahab Solutions';
-            document.getElementById('contSignClientName').value = contract.signatures?.clientName || '';
-            document.getElementById('contSignClientTitle').value = contract.signatures?.clientTitle || '';
+            document.getElementById('contSahabName').value =
+                contract.signatures?.sahabName || 'Omar Abdelalim';
+            document.getElementById('contSahabTitle').value =
+                contract.signatures?.sahabTitle || 'Sahab Solutions';
+            document.getElementById('contSignClientName').value =
+                contract.signatures?.clientName || '';
+            document.getElementById('contSignClientTitle').value =
+                contract.signatures?.clientTitle || '';
             document.getElementById('contInternalNotes').value = contract.internalNotes || '';
 
             // Load scope of work
             const scopeContainer = document.getElementById('contScopeOfWork');
             scopeContainer.innerHTML = '';
             contScopeSectionCounter = 0;
-            (contract.scopeOfWork || []).forEach(section => {
+            (contract.scopeOfWork || []).forEach((section) => {
                 addContractScopeSection();
                 const sectionEl = scopeContainer.lastElementChild;
                 sectionEl.querySelector('.scope-title').value = section.sectionTitle || '';
@@ -1038,7 +1153,7 @@ async function loadContract(id) {
 
                 const itemsContainer = sectionEl.querySelector('.scope-items');
                 itemsContainer.innerHTML = '';
-                (section.items || []).forEach(item => {
+                (section.items || []).forEach((item) => {
                     addContractScopeItem(sectionEl.id);
                     const inputs = itemsContainer.querySelectorAll('.scope-item input');
                     inputs[inputs.length - 1].value = item;
@@ -1049,7 +1164,7 @@ async function loadContract(id) {
             const deliverablesContainer = document.getElementById('contDeliverables');
             deliverablesContainer.innerHTML = '';
             contDeliverableCounter = 0;
-            (contract.deliverables || []).forEach(item => {
+            (contract.deliverables || []).forEach((item) => {
                 addContractDeliverable();
                 const inputs = deliverablesContainer.querySelectorAll('.list-item input');
                 inputs[inputs.length - 1].value = item;
@@ -1059,7 +1174,7 @@ async function loadContract(id) {
             const scheduleContainer = document.getElementById('contPaymentSchedule');
             scheduleContainer.innerHTML = '';
             contPaymentItemCounter = 0;
-            (contract.payment?.schedule || []).forEach(payment => {
+            (contract.payment?.schedule || []).forEach((payment) => {
                 addContractPaymentItem();
                 const items = scheduleContainer.querySelectorAll('.payment-item');
                 const lastItem = items[items.length - 1];
@@ -1071,16 +1186,19 @@ async function loadContract(id) {
             });
 
             // Load retainer
-            document.getElementById('contRetainerEnabled').checked = contract.retainer?.enabled || false;
+            document.getElementById('contRetainerEnabled').checked =
+                contract.retainer?.enabled || false;
             toggleContractRetainer();
             if (contract.retainer?.enabled) {
                 document.getElementById('contRetainerAmount').value = contract.retainer.amount || 0;
-                document.getElementById('contRetainerFrequency').value = contract.retainer.frequency || 'monthly';
-                document.getElementById('contRetainerStartsAfter').value = contract.retainer.startsAfter || '';
+                document.getElementById('contRetainerFrequency').value =
+                    contract.retainer.frequency || 'monthly';
+                document.getElementById('contRetainerStartsAfter').value =
+                    contract.retainer.startsAfter || '';
 
                 const includesContainer = document.getElementById('contRetainerIncludes');
                 includesContainer.innerHTML = '';
-                (contract.retainer.includes || []).forEach(item => {
+                (contract.retainer.includes || []).forEach((item) => {
                     addContractRetainerInclude();
                     const inputs = includesContainer.querySelectorAll('.list-item input');
                     inputs[inputs.length - 1].value = item;
@@ -1091,7 +1209,7 @@ async function loadContract(id) {
             const termsContainer = document.getElementById('contTermsAndConditions');
             termsContainer.innerHTML = '';
             contTermCounter = 0;
-            (contract.termsAndConditions || []).forEach(term => {
+            (contract.termsAndConditions || []).forEach((term) => {
                 addContractTerm(term);
             });
 
@@ -1111,7 +1229,7 @@ async function deleteContract(id) {
     Common.confirm('Delete this contract?', async () => {
         try {
             const response = await fetch(`/api/tools/generated-contracts/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
             });
 
             const result = await response.json();
@@ -1148,9 +1266,9 @@ async function regenerateContractPDF(id) {
  */
 function getContractStatusBadgeClass(status) {
     const classes = {
-        'draft': 'secondary',
-        'sent': 'info',
-        'signed': 'success'
+        draft: 'secondary',
+        sent: 'info',
+        signed: 'success',
     };
     return classes[status] || 'secondary';
 }

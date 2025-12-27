@@ -60,16 +60,18 @@ async function loadProposalClients() {
 
     try {
         // Only fetch active clients
-        const response = await fetch('/api/clients?status=active&limit=1000');
+        const response = await fetch('/api/clients');
         const result = await response.json();
 
         if (result.success && result.data) {
             proposalClients = result.data;
 
             select.innerHTML = '<option value="">Select a client...</option>';
-            proposalClients.forEach(client => {
+            proposalClients.forEach((client) => {
                 const displayName = client.company || client.name;
-                select.innerHTML += `<option value="${client._id}">${escapeHtml(displayName)}</option>`;
+                select.innerHTML += `<option value="${client._id}">${escapeHtml(
+                    displayName
+                )}</option>`;
             });
         } else {
             select.innerHTML = '<option value="">No clients found</option>';
@@ -266,16 +268,16 @@ function removeListItem(itemId) {
  */
 function collectProposalData() {
     const clientId = document.getElementById('propClient').value;
-    const client = proposalClients.find(c => c._id === clientId);
+    const client = proposalClients.find((c) => c._id === clientId);
 
     // Collect scope of work sections
     const scopeOfWork = [];
-    document.querySelectorAll('#propScopeOfWork .scope-section').forEach(section => {
+    document.querySelectorAll('#propScopeOfWork .scope-section').forEach((section) => {
         const sectionTitle = section.querySelector('.scope-title')?.value.trim();
         const description = section.querySelector('.scope-description')?.value.trim();
         const items = [];
 
-        section.querySelectorAll('.scope-item input').forEach(input => {
+        section.querySelectorAll('.scope-item input').forEach((input) => {
             const value = input.value.trim();
             if (value) items.push(value);
         });
@@ -287,14 +289,14 @@ function collectProposalData() {
 
     // Collect deliverables
     const deliverables = [];
-    document.querySelectorAll('#propDeliverables .list-item input').forEach(input => {
+    document.querySelectorAll('#propDeliverables .list-item input').forEach((input) => {
         const value = input.value.trim();
         if (value) deliverables.push(value);
     });
 
     // Collect payment schedule
     const paymentSchedule = [];
-    document.querySelectorAll('#propPaymentSchedule .payment-item').forEach(item => {
+    document.querySelectorAll('#propPaymentSchedule .payment-item').forEach((item) => {
         const description = item.querySelector('.payment-desc')?.value.trim();
         const amount = parseFloat(item.querySelector('.payment-amount input')?.value) || 0;
         const dueDate = item.querySelector('.payment-date')?.value;
@@ -306,7 +308,7 @@ function collectProposalData() {
 
     // Collect retainer includes
     const retainerIncludes = [];
-    document.querySelectorAll('#propRetainerIncludes .list-item input').forEach(input => {
+    document.querySelectorAll('#propRetainerIncludes .list-item input').forEach((input) => {
         const value = input.value.trim();
         if (value) retainerIncludes.push(value);
     });
@@ -324,20 +326,20 @@ function collectProposalData() {
             totalAmount: parseFloat(document.getElementById('propTotalAmount').value) || 0,
             description: document.getElementById('propPricingDescription').value.trim(),
             isOneTime: document.getElementById('propPaymentType').value === 'one-time',
-            paymentSchedule
+            paymentSchedule,
         },
         retainer: {
             enabled: document.getElementById('propRetainerEnabled').checked,
             amount: parseFloat(document.getElementById('propRetainerAmount')?.value) || 0,
             frequency: document.getElementById('propRetainerFrequency')?.value || 'monthly',
-            includes: retainerIncludes
+            includes: retainerIncludes,
         },
         timeline: document.getElementById('propTimeline').value.trim(),
         closingText: document.getElementById('propClosingText').value.trim(),
         internalNotes: document.getElementById('propInternalNotes').value.trim(),
         preparedBy: 'Sahab Solutions',
         contactEmail: 'sahab@sahab-solutions.com',
-        contactWebsite: 'sahab-solutions.com'
+        contactWebsite: 'sahab-solutions.com',
     };
 }
 
@@ -366,7 +368,7 @@ async function saveProposalDraft() {
         const response = await fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify(data),
         });
 
         const result = await response.json();
@@ -415,7 +417,7 @@ async function generateProposalPDF() {
         const doc = new jsPDF({
             orientation: 'portrait',
             unit: 'pt',
-            format: 'letter'
+            format: 'letter',
         });
 
         const pageWidth = 612;
@@ -482,7 +484,15 @@ async function generateProposalPDF() {
 
         // ========== EXECUTIVE SUMMARY ==========
         if (data.executiveSummary) {
-            y = addPDFSection(doc, 'Executive Summary', y, margin, pageWidth, primaryColor, textDark);
+            y = addPDFSection(
+                doc,
+                'Executive Summary',
+                y,
+                margin,
+                pageWidth,
+                primaryColor,
+                textDark
+            );
 
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
@@ -498,7 +508,7 @@ async function generateProposalPDF() {
         if (data.scopeOfWork.length > 0) {
             y = addPDFSection(doc, 'Scope of Work', y, margin, pageWidth, primaryColor, textDark);
 
-            data.scopeOfWork.forEach(section => {
+            data.scopeOfWork.forEach((section) => {
                 y = checkPageBreak(doc, y, pageHeight, margin);
 
                 if (section.sectionTitle) {
@@ -513,12 +523,15 @@ async function generateProposalPDF() {
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(10);
                     doc.setTextColor(...textGray);
-                    const descLines = doc.splitTextToSize(section.description, pageWidth - 2 * margin - 20);
+                    const descLines = doc.splitTextToSize(
+                        section.description,
+                        pageWidth - 2 * margin - 20
+                    );
                     doc.text(descLines, margin + 10, y);
                     y += descLines.length * 12 + 8;
                 }
 
-                section.items.forEach(item => {
+                section.items.forEach((item) => {
                     y = checkPageBreak(doc, y, pageHeight, margin);
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(10);
@@ -540,7 +553,7 @@ async function generateProposalPDF() {
             y = checkPageBreak(doc, y, pageHeight, margin);
             y = addPDFSection(doc, 'Deliverables', y, margin, pageWidth, primaryColor, textDark);
 
-            data.deliverables.forEach(item => {
+            data.deliverables.forEach((item) => {
                 y = checkPageBreak(doc, y, pageHeight, margin);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
@@ -561,7 +574,13 @@ async function generateProposalPDF() {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(14);
         doc.setTextColor(...textDark);
-        doc.text(`Total Project Cost: ${formatCurrency(data.pricing.totalAmount)} (${data.pricing.description})`, margin, y);
+        doc.text(
+            `Total Project Cost: ${formatCurrency(data.pricing.totalAmount)} (${
+                data.pricing.description
+            })`,
+            margin,
+            y
+        );
         y += 20;
 
         if (!data.pricing.isOneTime && data.pricing.paymentSchedule.length > 0) {
@@ -570,12 +589,18 @@ async function generateProposalPDF() {
             doc.text('Payment Schedule:', margin, y);
             y += 16;
 
-            data.pricing.paymentSchedule.forEach(payment => {
+            data.pricing.paymentSchedule.forEach((payment) => {
                 y = checkPageBreak(doc, y, pageHeight, margin);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-                const dateStr = payment.dueDate ? ` - Due: ${formatDisplayDate(payment.dueDate)}` : '';
-                doc.text(`• ${payment.description}: ${formatCurrency(payment.amount)}${dateStr}`, margin + 10, y);
+                const dateStr = payment.dueDate
+                    ? ` - Due: ${formatDisplayDate(payment.dueDate)}`
+                    : '';
+                doc.text(
+                    `• ${payment.description}: ${formatCurrency(payment.amount)}${dateStr}`,
+                    margin + 10,
+                    y
+                );
                 y += 14;
             });
         }
@@ -585,12 +610,24 @@ async function generateProposalPDF() {
         // ========== RETAINER ==========
         if (data.retainer.enabled) {
             y = checkPageBreak(doc, y, pageHeight, margin);
-            y = addPDFSection(doc, 'Maintenance Retainer', y, margin, pageWidth, primaryColor, textDark);
+            y = addPDFSection(
+                doc,
+                'Maintenance Retainer',
+                y,
+                margin,
+                pageWidth,
+                primaryColor,
+                textDark
+            );
 
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
             doc.setTextColor(...textDark);
-            doc.text(`${formatCurrency(data.retainer.amount)}/${data.retainer.frequency}`, margin, y);
+            doc.text(
+                `${formatCurrency(data.retainer.amount)}/${data.retainer.frequency}`,
+                margin,
+                y
+            );
             y += 18;
 
             if (data.retainer.includes.length > 0) {
@@ -599,7 +636,7 @@ async function generateProposalPDF() {
                 doc.text('Includes:', margin, y);
                 y += 14;
 
-                data.retainer.includes.forEach(item => {
+                data.retainer.includes.forEach((item) => {
                     y = checkPageBreak(doc, y, pageHeight, margin);
                     doc.text(`• ${item}`, margin + 10, y);
                     y += 12;
@@ -652,11 +689,12 @@ async function generateProposalPDF() {
         doc.text(data.contactEmail, margin, y + 24);
 
         // Save PDF
-        const fileName = `Proposal_${data.projectName || data.title}_${data.preparedDate}.pdf`.replace(/\s+/g, '_');
+        const fileName = `Proposal_${data.projectName || data.title}_${
+            data.preparedDate
+        }.pdf`.replace(/\s+/g, '_');
         doc.save(fileName);
 
         Common.showNotification('Proposal PDF generated successfully!', 'success');
-
     } catch (error) {
         console.error('Error generating PDF:', error);
         Common.showNotification('Failed to generate PDF: ' + error.message, 'error');
@@ -714,30 +752,42 @@ async function loadSavedProposals() {
         if (result.success && result.data.length > 0) {
             savedProposals = result.data;
 
-            container.innerHTML = result.data.map(proposal => `
+            container.innerHTML = result.data
+                .map(
+                    (proposal) => `
                 <div class="saved-item" data-id="${proposal._id}">
                     <div class="saved-item-info">
                         <div class="saved-item-title">${escapeHtml(proposal.title)}</div>
                         <div class="saved-item-meta">
-                            <span class="badge badge-${getStatusBadgeClass(proposal.status)}">${proposal.status}</span>
+                            <span class="badge badge-${getStatusBadgeClass(proposal.status)}">${
+                        proposal.status
+                    }</span>
                             <span>${proposal.proposalNumber || 'Draft'}</span>
                             <span>${formatDisplayDate(proposal.preparedDate)}</span>
                             <span>${formatCurrency(proposal.pricing?.totalAmount || 0)}</span>
                         </div>
                     </div>
                     <div class="saved-item-actions">
-                        <button class="btn btn-sm btn-primary" onclick="loadProposal('${proposal._id}')" title="Load">
+                        <button class="btn btn-sm btn-primary" onclick="loadProposal('${
+                            proposal._id
+                        }')" title="Load">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-info" onclick="regenerateProposalPDF('${proposal._id}')" title="Generate PDF">
+                        <button class="btn btn-sm btn-info" onclick="regenerateProposalPDF('${
+                            proposal._id
+                        }')" title="Generate PDF">
                             <i class="fas fa-file-pdf"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteProposal('${proposal._id}')" title="Delete">
+                        <button class="btn btn-sm btn-danger" onclick="deleteProposal('${
+                            proposal._id
+                        }')" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `
+                )
+                .join('');
         } else {
             container.innerHTML = `
                 <div class="empty-state-small">
@@ -773,26 +823,33 @@ async function loadProposal(id) {
             document.getElementById('propClient').value = proposal.client?._id || proposal.client;
             document.getElementById('propTitle').value = proposal.title || '';
             document.getElementById('propProjectName').value = proposal.projectName || '';
-            document.getElementById('propPreparedDate').value = proposal.preparedDate ? proposal.preparedDate.split('T')[0] : '';
+            document.getElementById('propPreparedDate').value = proposal.preparedDate
+                ? proposal.preparedDate.split('T')[0]
+                : '';
             document.getElementById('propExecutiveSummary').value = proposal.executiveSummary || '';
             document.getElementById('propTotalAmount').value = proposal.pricing?.totalAmount || 0;
-            document.getElementById('propPricingDescription').value = proposal.pricing?.description || 'One-Time';
-            document.getElementById('propPaymentType').value = proposal.pricing?.isOneTime ? 'one-time' : 'installments';
+            document.getElementById('propPricingDescription').value =
+                proposal.pricing?.description || 'One-Time';
+            document.getElementById('propPaymentType').value = proposal.pricing?.isOneTime
+                ? 'one-time'
+                : 'installments';
             document.getElementById('propTimeline').value = proposal.timeline || '';
             document.getElementById('propClosingText').value = proposal.closingText || '';
             document.getElementById('propInternalNotes').value = proposal.internalNotes || '';
 
             // Handle retainer
-            document.getElementById('propRetainerEnabled').checked = proposal.retainer?.enabled || false;
+            document.getElementById('propRetainerEnabled').checked =
+                proposal.retainer?.enabled || false;
             toggleProposalRetainer();
             if (proposal.retainer?.enabled) {
                 document.getElementById('propRetainerAmount').value = proposal.retainer.amount || 0;
-                document.getElementById('propRetainerFrequency').value = proposal.retainer.frequency || 'monthly';
+                document.getElementById('propRetainerFrequency').value =
+                    proposal.retainer.frequency || 'monthly';
 
                 // Load retainer includes
                 const includesContainer = document.getElementById('propRetainerIncludes');
                 includesContainer.innerHTML = '';
-                (proposal.retainer.includes || []).forEach(item => {
+                (proposal.retainer.includes || []).forEach((item) => {
                     addProposalRetainerInclude();
                     const inputs = includesContainer.querySelectorAll('.list-item input');
                     inputs[inputs.length - 1].value = item;
@@ -803,7 +860,7 @@ async function loadProposal(id) {
             const scopeContainer = document.getElementById('propScopeOfWork');
             scopeContainer.innerHTML = '';
             propScopeSectionCounter = 0;
-            (proposal.scopeOfWork || []).forEach(section => {
+            (proposal.scopeOfWork || []).forEach((section) => {
                 addProposalScopeSection();
                 const sectionEl = scopeContainer.lastElementChild;
                 sectionEl.querySelector('.scope-title').value = section.sectionTitle || '';
@@ -811,7 +868,7 @@ async function loadProposal(id) {
 
                 const itemsContainer = sectionEl.querySelector('.scope-items');
                 itemsContainer.innerHTML = '';
-                (section.items || []).forEach(item => {
+                (section.items || []).forEach((item) => {
                     const sectionId = sectionEl.id;
                     addProposalScopeItem(sectionId);
                     const inputs = itemsContainer.querySelectorAll('.scope-item input');
@@ -823,7 +880,7 @@ async function loadProposal(id) {
             const deliverablesContainer = document.getElementById('propDeliverables');
             deliverablesContainer.innerHTML = '';
             propDeliverableCounter = 0;
-            (proposal.deliverables || []).forEach(item => {
+            (proposal.deliverables || []).forEach((item) => {
                 addProposalDeliverable();
                 const inputs = deliverablesContainer.querySelectorAll('.list-item input');
                 inputs[inputs.length - 1].value = item;
@@ -835,14 +892,15 @@ async function loadProposal(id) {
                 const scheduleContainer = document.getElementById('propPaymentSchedule');
                 scheduleContainer.innerHTML = '';
                 propPaymentItemCounter = 0;
-                (proposal.pricing?.paymentSchedule || []).forEach(payment => {
+                (proposal.pricing?.paymentSchedule || []).forEach((payment) => {
                     addProposalPaymentItem();
                     const items = scheduleContainer.querySelectorAll('.payment-item');
                     const lastItem = items[items.length - 1];
                     lastItem.querySelector('.payment-desc').value = payment.description || '';
                     lastItem.querySelector('.payment-amount input').value = payment.amount || 0;
                     if (payment.dueDate) {
-                        lastItem.querySelector('.payment-date').value = payment.dueDate.split('T')[0];
+                        lastItem.querySelector('.payment-date').value =
+                            payment.dueDate.split('T')[0];
                     }
                 });
             }
@@ -863,7 +921,7 @@ async function deleteProposal(id) {
     Common.confirm('Delete this proposal?', async () => {
         try {
             const response = await fetch(`/api/tools/generated-proposals/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
             });
 
             const result = await response.json();
@@ -900,12 +958,12 @@ async function regenerateProposalPDF(id) {
  */
 function getStatusBadgeClass(status) {
     const classes = {
-        'draft': 'secondary',
-        'sent': 'info',
-        'viewed': 'primary',
-        'accepted': 'success',
-        'rejected': 'danger',
-        'signed': 'success'
+        draft: 'secondary',
+        sent: 'info',
+        viewed: 'primary',
+        accepted: 'success',
+        rejected: 'danger',
+        signed: 'success',
     };
     return classes[status] || 'secondary';
 }
