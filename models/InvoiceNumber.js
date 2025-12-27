@@ -28,14 +28,20 @@ const invoiceNumberSchema = new mongoose.Schema(
 
 // Static method to generate a unique invoice number
 invoiceNumberSchema.statics.generateUniqueNumber = async function () {
+    const Invoice = mongoose.model('Invoice');
     let attempts = 0;
     const maxAttempts = 100;
 
     while (attempts < maxAttempts) {
         const number = String(Math.floor(10000 + Math.random() * 90000)); // 5-digit number
-        const exists = await this.findOne({ number });
 
-        if (!exists) {
+        // Check if number exists in InvoiceNumber collection
+        const existsInNumberTable = await this.findOne({ number });
+
+        // Also check if number is already used in an actual Invoice
+        const existsInInvoice = await Invoice.findOne({ invoiceNumber: number });
+
+        if (!existsInNumberTable && !existsInInvoice) {
             const newNumber = await this.create({ number });
             return newNumber;
         }

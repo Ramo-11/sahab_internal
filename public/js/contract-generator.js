@@ -70,14 +70,15 @@ async function initContractGenerator() {
 }
 
 /**
- * Load clients for dropdown
+ * Load clients for dropdown (only active clients)
  */
 async function loadContractClients() {
     const select = document.getElementById('contClient');
     if (!select) return;
 
     try {
-        const response = await fetch('/api/clients');
+        // Only fetch active clients
+        const response = await fetch('/api/clients?status=active&limit=1000');
         const result = await response.json();
 
         if (result.success && result.data) {

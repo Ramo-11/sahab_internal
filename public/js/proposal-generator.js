@@ -52,14 +52,15 @@ async function initProposalGenerator() {
 }
 
 /**
- * Load clients for dropdown
+ * Load clients for dropdown (only active clients)
  */
 async function loadProposalClients() {
     const select = document.getElementById('propClient');
     if (!select) return;
 
     try {
-        const response = await fetch('/api/clients');
+        // Only fetch active clients
+        const response = await fetch('/api/clients?status=active&limit=1000');
         const result = await response.json();
 
         if (result.success && result.data) {
