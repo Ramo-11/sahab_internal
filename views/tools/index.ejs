@@ -331,7 +331,7 @@
             </p>
 
             <form id="proposalGeneratorForm">
-                <!-- Basic Info Section -->
+                <!-- Basic Info Section (not draggable - always first) -->
                 <div class="form-section">
                     <h4 class="form-section-title">
                         <i class="fas fa-info-circle"></i> Basic Information
@@ -361,144 +361,143 @@
                     </div>
                 </div>
 
-                <!-- Executive Summary Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-align-left"></i> Executive Summary
-                    </h4>
-                    <div class="form-group">
-                        <textarea class="form-control" id="propExecutiveSummary" rows="4"
-                            placeholder="Brief overview of the project and what you're proposing..."></textarea>
-                    </div>
-                </div>
-
-                <!-- Scope of Work Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-tasks"></i> Scope of Work
-                        <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addProposalScopeSection()">
-                            <i class="fas fa-plus"></i> Add Section
-                        </button>
-                    </h4>
-                    <div id="propScopeOfWork">
-                        <!-- Scope sections added dynamically -->
-                    </div>
-                </div>
-
-                <!-- Deliverables Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-check-circle"></i> Deliverables
-                        <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addProposalDeliverable()">
-                            <i class="fas fa-plus"></i> Add
-                        </button>
-                    </h4>
-                    <div id="propDeliverables" class="list-items">
-                        <!-- Deliverables added dynamically -->
-                    </div>
-                </div>
-
-                <!-- Pricing Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-dollar-sign"></i> Pricing
-                    </h4>
-
-                    <div class="form-row-3">
+                <!-- Draggable Sections Container -->
+                <div id="propSectionsContainer">
+                    <!-- Executive Summary Section -->
+                    <div class="form-section draggable-section" data-section-type="executiveSummary" id="propExecutiveSummarySection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-align-left"></i> Executive Summary
+                        </h4>
                         <div class="form-group">
-                            <label class="form-label">Total Amount <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="propTotalAmount" min="0" step="0.01" value="0" required />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <input type="text" class="form-control" id="propPricingDescription" value="One-Time" placeholder="e.g., One-Time, Per Month" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Payment Type</label>
-                            <select class="form-control" id="propPaymentType">
-                                <option value="one-time">One-Time Payment</option>
-                                <option value="installments">Installments</option>
-                            </select>
+                            <textarea class="form-control" id="propExecutiveSummary" rows="4"
+                                placeholder="Brief overview of the project and what you're proposing..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Payment Schedule -->
-                    <div id="propPaymentScheduleSection" style="display: none;">
-                        <label class="form-label">Payment Schedule</label>
-                        <div id="propPaymentSchedule" class="payment-schedule-list">
-                            <!-- Payment items added dynamically -->
+                    <!-- Scope of Work Section -->
+                    <div class="form-section draggable-section" data-section-type="scopeOfWork" id="propScopeOfWorkSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-tasks"></i> Scope of Work
+                            <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addProposalScopeSection()">
+                                <i class="fas fa-plus"></i> Add Section
+                            </button>
+                        </h4>
+                        <div id="propScopeOfWork">
+                            <!-- Scope sections added dynamically -->
                         </div>
-                        <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addProposalPaymentItem()">
-                            <i class="fas fa-plus"></i> Add Payment
-                        </button>
                     </div>
-                </div>
 
-                <!-- Retainer Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-sync-alt"></i> Maintenance Retainer
-                        <label class="toggle-switch ml-3">
-                            <input type="checkbox" id="propRetainerEnabled" onchange="toggleProposalRetainer()" />
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </h4>
+                    <!-- Deliverables Section -->
+                    <div class="form-section draggable-section" data-section-type="deliverables" id="propDeliverablesSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-check-circle"></i> Deliverables
+                            <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addProposalDeliverable()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </h4>
+                        <div id="propDeliverables" class="list-items">
+                            <!-- Deliverables added dynamically -->
+                        </div>
+                    </div>
 
-                    <div id="propRetainerSection" style="display: none;">
-                        <div class="form-row-2">
-                            <div class="form-group">
-                                <label class="form-label">Amount</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="propRetainerAmount" min="0" step="0.01" />
+                    <!-- Cost Estimate Section (Combined Pricing + Recurring Items) -->
+                    <div class="form-section draggable-section" data-section-type="costEstimate" id="propCostEstimateSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-dollar-sign"></i> Cost Estimate
+                        </h4>
+
+                        <!-- Cost Items Container (for drag and drop reordering) -->
+                        <div id="propCostItemsContainer">
+                            <!-- Initial/One-Time Cost -->
+                            <div class="cost-item-box" data-cost-type="initial" id="propInitialCostBox">
+                                <div class="cost-item-header">
+                                    <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                                    <input type="text" class="form-control cost-section-title" id="propInitialCostTitle" value="Project Cost" placeholder="Section title" />
+                                </div>
+                                <div class="form-row-3">
+                                    <div class="form-group">
+                                        <label class="form-label">Amount <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="propTotalAmount" min="0" step="0.01" value="0" required />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Label</label>
+                                        <input type="text" class="form-control" id="propPricingDescription" value="One-Time" placeholder="e.g., One-Time, Fixed" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Payment Type</label>
+                                        <select class="form-control" id="propPaymentType">
+                                            <option value="one-time">One-Time Payment</option>
+                                            <option value="installments">Installments</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Payment Schedule -->
+                                <div id="propPaymentScheduleSection" style="display: none;">
+                                    <label class="form-label">Payment Schedule</label>
+                                    <div id="propPaymentSchedule" class="payment-schedule-list">
+                                        <!-- Payment items added dynamically -->
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addProposalPaymentItem()">
+                                        <i class="fas fa-plus"></i> Add Payment
+                                    </button>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">Frequency</label>
-                                <select class="form-control" id="propRetainerFrequency">
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="yearly">Yearly</option>
-                                </select>
+
+                            <!-- Recurring Cost Items (like Monthly Retainer) -->
+                            <div class="cost-item-box recurring-costs-box" data-cost-type="recurring" id="propRecurringCostBox">
+                                <div class="cost-item-header">
+                                    <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                                    <input type="text" class="form-control cost-section-title" id="propRecurringCostTitle" value="Recurring Costs" placeholder="Section title" />
+                                </div>
+                                <div id="propRecurringCosts">
+                                    <!-- Recurring cost items added dynamically -->
+                                </div>
+                                <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addProposalRecurringCost()">
+                                    <i class="fas fa-plus"></i> Add Recurring Cost
+                                </button>
                             </div>
                         </div>
+
+                        <!-- Cost Estimate Note -->
+                        <div class="form-group mt-3">
+                            <label class="form-label">Additional Note <span class="text-muted">(Optional - appears in Cost Estimate section)</span></label>
+                            <textarea class="form-control" id="propCostNote" rows="2" placeholder="e.g., Prices may vary based on final scope..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Section -->
+                    <div class="form-section draggable-section" data-section-type="timeline" id="propTimelineSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-calendar-alt"></i> Timeline
+                        </h4>
                         <div class="form-group">
-                            <label class="form-label">What's Included</label>
-                            <div id="propRetainerIncludes" class="list-items">
-                                <!-- Includes items added dynamically -->
-                            </div>
-                            <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addProposalRetainerInclude()">
-                                <i class="fas fa-plus"></i> Add Item
-                            </button>
+                            <textarea class="form-control" id="propTimeline" rows="3"
+                                placeholder="Estimated timeline for the project..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Closing Section -->
+                    <div class="form-section draggable-section" data-section-type="closing" id="propClosingSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-flag-checkered"></i> Closing
+                        </h4>
+                        <div class="form-group">
+                            <textarea class="form-control" id="propClosingText" rows="2">We're ready to build and launch your project.</textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- Timeline Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-calendar-alt"></i> Timeline
-                    </h4>
-                    <div class="form-group">
-                        <textarea class="form-control" id="propTimeline" rows="3"
-                            placeholder="Estimated timeline for the project..."></textarea>
-                    </div>
-                </div>
-
-                <!-- Closing Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-flag-checkered"></i> Closing
-                    </h4>
-                    <div class="form-group">
-                        <textarea class="form-control" id="propClosingText" rows="2">We're ready to build and launch your project.</textarea>
-                    </div>
-                </div>
-
-                <!-- Internal Notes -->
+                <!-- Internal Notes (not draggable - always last) -->
                 <div class="form-section">
                     <h4 class="form-section-title">
                         <i class="fas fa-sticky-note"></i> Internal Notes
@@ -548,7 +547,7 @@
             </p>
 
             <form id="contractGeneratorForm">
-                <!-- Basic Info Section -->
+                <!-- Basic Info Section (not draggable - always first) -->
                 <div class="form-section">
                     <h4 class="form-section-title">
                         <i class="fas fa-info-circle"></i> Basic Information
@@ -586,187 +585,198 @@
                     </div>
                 </div>
 
-                <!-- Project Overview Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-project-diagram"></i> Project Overview
-                    </h4>
+                <!-- Draggable Sections Container -->
+                <div id="contSectionsContainer">
+                    <!-- Project Overview Section -->
+                    <div class="form-section draggable-section" data-section-type="projectOverview" id="contProjectOverviewSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-project-diagram"></i> Project Overview
+                        </h4>
 
-                    <div class="form-group">
-                        <label class="form-label">Project Name</label>
-                        <input type="text" class="form-control" id="contProjectName" placeholder="e.g., Arete Booking Platform" />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Project Description</label>
-                        <textarea class="form-control" id="contProjectDescription" rows="3"
-                            placeholder="Overview of the project..."></textarea>
-                    </div>
-                </div>
-
-                <!-- Scope of Work Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-tasks"></i> Scope of Work
-                        <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addContractScopeSection()">
-                            <i class="fas fa-plus"></i> Add Section
-                        </button>
-                    </h4>
-                    <div id="contScopeOfWork">
-                        <!-- Scope sections added dynamically -->
-                    </div>
-                </div>
-
-                <!-- Deliverables Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-check-circle"></i> Deliverables
-                        <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addContractDeliverable()">
-                            <i class="fas fa-plus"></i> Add
-                        </button>
-                    </h4>
-                    <div id="contDeliverables" class="list-items">
-                        <!-- Deliverables added dynamically -->
-                    </div>
-                </div>
-
-                <!-- Payment Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-dollar-sign"></i> Payment Terms
-                    </h4>
-
-                    <div class="form-row-2">
                         <div class="form-group">
-                            <label class="form-label">Total Project Fee <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="contTotalAmount" min="0" step="0.01" value="0" required />
-                            </div>
+                            <label class="form-label">Project Name</label>
+                            <input type="text" class="form-control" id="contProjectName" placeholder="e.g., Arete Booking Platform" />
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <input type="text" class="form-control" id="contPaymentDescription" value="One-Time" />
+                            <label class="form-label">Project Description</label>
+                            <textarea class="form-control" id="contProjectDescription" rows="3"
+                                placeholder="Overview of the project..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Payment Schedule -->
-                    <div class="form-group">
-                        <label class="form-label">Payment Schedule</label>
-                        <div id="contPaymentSchedule" class="payment-schedule-list">
-                            <!-- Payment items added dynamically -->
+                    <!-- Scope of Work Section -->
+                    <div class="form-section draggable-section" data-section-type="scopeOfWork" id="contScopeOfWorkSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-tasks"></i> Scope of Work
+                            <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addContractScopeSection()">
+                                <i class="fas fa-plus"></i> Add Section
+                            </button>
+                        </h4>
+                        <div id="contScopeOfWork">
+                            <!-- Scope sections added dynamically -->
                         </div>
-                        <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addContractPaymentItem()">
-                            <i class="fas fa-plus"></i> Add Payment
-                        </button>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Operational Costs Note</label>
-                        <textarea class="form-control" id="contOperationalCostsNote" rows="2">All ongoing operational costs — including but not limited to hosting, database usage, integration fees, API costs, and any third-party service charges — will be billed separately during the installment period. These costs are not included in the project fee.</textarea>
+                    <!-- Deliverables Section -->
+                    <div class="form-section draggable-section" data-section-type="deliverables" id="contDeliverablesSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-check-circle"></i> Deliverables
+                            <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addContractDeliverable()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </h4>
+                        <div id="contDeliverables" class="list-items">
+                            <!-- Deliverables added dynamically -->
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Payment Instructions</label>
-                        <input type="text" class="form-control" id="contPaymentInstructions" value="All payments must be made via Zelle to sahab@sahab-solutions.com" />
-                    </div>
-                </div>
+                    <!-- Payment Section -->
+                    <div class="form-section draggable-section" data-section-type="payment" id="contPaymentSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-dollar-sign"></i> Payment Terms
+                        </h4>
 
-                <!-- Retainer Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-sync-alt"></i> Maintenance & Hosting Retainer
-                        <label class="toggle-switch ml-3">
-                            <input type="checkbox" id="contRetainerEnabled" onchange="toggleContractRetainer()" />
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </h4>
-
-                    <div id="contRetainerSection" style="display: none;">
-                        <div class="form-row-3">
+                        <div class="form-row-2">
                             <div class="form-group">
-                                <label class="form-label">Amount</label>
+                                <label class="form-label">Total Project Fee <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="contRetainerAmount" min="0" step="0.01" />
+                                    <input type="number" class="form-control" id="contTotalAmount" min="0" step="0.01" value="0" required />
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Frequency</label>
-                                <select class="form-control" id="contRetainerFrequency">
-                                    <option value="monthly">Monthly</option>
-                                    <option value="quarterly">Quarterly</option>
-                                    <option value="yearly">Yearly</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Starts</label>
-                                <input type="text" class="form-control" id="contRetainerStartsAfter" value="after the final installment payment is made" />
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control" id="contPaymentDescription" value="One-Time" />
                             </div>
                         </div>
+
+                        <!-- Payment Schedule -->
                         <div class="form-group">
-                            <label class="form-label">What's Included</label>
-                            <div id="contRetainerIncludes" class="list-items">
-                                <!-- Includes items added dynamically -->
+                            <label class="form-label">Payment Schedule</label>
+                            <div id="contPaymentSchedule" class="payment-schedule-list">
+                                <!-- Payment items added dynamically -->
                             </div>
-                            <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addContractRetainerInclude()">
-                                <i class="fas fa-plus"></i> Add Item
+                            <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addContractPaymentItem()">
+                                <i class="fas fa-plus"></i> Add Payment
                             </button>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Resale Rights Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-share-alt"></i> Resale Rights & Revenue Sharing
-                    </h4>
-                    <div class="form-group">
-                        <textarea class="form-control" id="contResaleRights" rows="3">This contract does not grant resale, redistribution, or licensing rights to the platform. Any resale or revenue-sharing arrangement must be defined in a separate written agreement.</textarea>
-                    </div>
-                </div>
-
-                <!-- Terms and Conditions Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-gavel"></i> Terms and Conditions
-                        <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addContractTerm()">
-                            <i class="fas fa-plus"></i> Add Term
-                        </button>
-                    </h4>
-                    <div id="contTermsAndConditions" class="list-items numbered">
-                        <!-- Terms added dynamically -->
-                    </div>
-                </div>
-
-                <!-- Signatures Section -->
-                <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i class="fas fa-signature"></i> Signatures
-                    </h4>
-
-                    <div class="form-row-2">
-                        <div class="signature-block">
-                            <label class="form-label">Sahab Solutions</label>
-                            <div class="form-group">
-                                <input type="text" class="form-control" id="contSahabName" value="Omar Abdelalim" />
-                            </div>
-                            <div class="form-group">
-                                <input type="text" class="form-control" id="contSahabTitle" value="Sahab Solutions" />
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label">Operational Costs Note</label>
+                            <textarea class="form-control" id="contOperationalCostsNote" rows="2">All ongoing operational costs — including but not limited to hosting, database usage, integration fees, API costs, and any third-party service charges — will be billed separately during the installment period. These costs are not included in the project fee.</textarea>
                         </div>
-                        <div class="signature-block">
-                            <label class="form-label">Client</label>
-                            <div class="form-group">
-                                <input type="text" class="form-control" id="contSignClientName" placeholder="Client's name" />
-                            </div>
-                            <div class="form-group">
-                                <input type="text" class="form-control" id="contSignClientTitle" placeholder="Client's title/company" />
-                            </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Payment Instructions</label>
+                            <input type="text" class="form-control" id="contPaymentInstructions" value="All payments must be made via Zelle to sahab@sahab-solutions.com" />
                         </div>
                     </div>
+
+                    <!-- Retainer Section -->
+                    <div class="form-section draggable-section" data-section-type="retainer" id="contRetainerSectionContainer">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-sync-alt"></i> Maintenance & Hosting Retainer
+                            <label class="toggle-switch ml-3">
+                                <input type="checkbox" id="contRetainerEnabled" onchange="toggleContractRetainer()" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </h4>
+
+                        <div id="contRetainerSection" style="display: none;">
+                            <div class="form-row-3">
+                                <div class="form-group">
+                                    <label class="form-label">Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="contRetainerAmount" min="0" step="0.01" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Frequency</label>
+                                    <select class="form-control" id="contRetainerFrequency">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="quarterly">Quarterly</option>
+                                        <option value="yearly">Yearly</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Starts</label>
+                                    <input type="text" class="form-control" id="contRetainerStartsAfter" value="after the final installment payment is made" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">What's Included</label>
+                                <div id="contRetainerIncludes" class="list-items">
+                                    <!-- Includes items added dynamically -->
+                                </div>
+                                <button type="button" class="btn btn-sm btn-secondary mt-2" onclick="addContractRetainerInclude()">
+                                    <i class="fas fa-plus"></i> Add Item
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resale Rights Section -->
+                    <div class="form-section draggable-section" data-section-type="resaleRights" id="contResaleRightsSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-share-alt"></i> Resale Rights & Revenue Sharing
+                        </h4>
+                        <div class="form-group">
+                            <textarea class="form-control" id="contResaleRights" rows="3">This contract does not grant resale, redistribution, or licensing rights to the platform. Any resale or revenue-sharing arrangement must be defined in a separate written agreement.</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions Section -->
+                    <div class="form-section draggable-section" data-section-type="termsAndConditions" id="contTermsAndConditionsSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-gavel"></i> Terms and Conditions
+                            <button type="button" class="btn btn-sm btn-primary ml-2" onclick="addContractTerm()">
+                                <i class="fas fa-plus"></i> Add Term
+                            </button>
+                        </h4>
+                        <div id="contTermsAndConditions" class="list-items numbered">
+                            <!-- Terms added dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Signatures Section -->
+                    <div class="form-section draggable-section" data-section-type="signatures" id="contSignaturesSection">
+                        <h4 class="form-section-title">
+                            <span class="section-drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                            <i class="fas fa-signature"></i> Signatures
+                        </h4>
+
+                        <div class="form-row-2">
+                            <div class="signature-block">
+                                <label class="form-label">Sahab Solutions</label>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="contSahabName" value="Omar Abdelalim" />
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="contSahabTitle" value="Sahab Solutions" />
+                                </div>
+                            </div>
+                            <div class="signature-block">
+                                <label class="form-label">Client</label>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="contSignClientName" placeholder="Client's name" />
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="contSignClientTitle" placeholder="Client's title/company" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Internal Notes -->
+                <!-- Internal Notes (not draggable - always last) -->
                 <div class="form-section">
                     <h4 class="form-section-title">
                         <i class="fas fa-sticky-note"></i> Internal Notes

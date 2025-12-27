@@ -12,6 +12,7 @@ let propScopeSectionCounter = 0;
 let propDeliverableCounter = 0;
 let propPaymentItemCounter = 0;
 let propRetainerIncludeCounter = 0;
+let propRecurringCostCounter = 0;
 
 /**
  * Initialize Proposal Generator
@@ -49,6 +50,146 @@ async function initProposalGenerator() {
         e.preventDefault();
         await generateProposalPDF();
     });
+
+    // Initialize drag and drop for cost sections
+    initCostSectionDragDrop();
+
+    // Initialize drag and drop for all main sections
+    initSectionDragDrop();
+}
+
+/**
+ * Initialize drag and drop for cost estimate sections
+ */
+function initCostSectionDragDrop() {
+    const container = document.getElementById('propCostItemsContainer');
+    if (!container) return;
+
+    const costBoxes = container.querySelectorAll('.cost-item-box');
+
+    costBoxes.forEach((box) => {
+        const handle = box.querySelector('.drag-handle');
+        if (!handle) return;
+
+        handle.addEventListener('mousedown', () => {
+            box.setAttribute('draggable', 'true');
+        });
+
+        handle.addEventListener('mouseup', () => {
+            box.setAttribute('draggable', 'false');
+        });
+
+        box.addEventListener('dragstart', (e) => {
+            box.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', box.id);
+        });
+
+        box.addEventListener('dragend', () => {
+            box.classList.remove('dragging');
+            box.setAttribute('draggable', 'false');
+            container.querySelectorAll('.cost-item-box').forEach((b) => {
+                b.classList.remove('drag-over');
+            });
+        });
+
+        box.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const dragging = container.querySelector('.dragging');
+            if (dragging && dragging !== box) {
+                box.classList.add('drag-over');
+            }
+        });
+
+        box.addEventListener('dragleave', () => {
+            box.classList.remove('drag-over');
+        });
+
+        box.addEventListener('drop', (e) => {
+            e.preventDefault();
+            box.classList.remove('drag-over');
+            const dragging = container.querySelector('.dragging');
+            if (dragging && dragging !== box) {
+                const boxes = [...container.querySelectorAll('.cost-item-box')];
+                const dragIdx = boxes.indexOf(dragging);
+                const dropIdx = boxes.indexOf(box);
+
+                if (dragIdx < dropIdx) {
+                    box.after(dragging);
+                } else {
+                    box.before(dragging);
+                }
+            }
+        });
+    });
+}
+
+/**
+ * Initialize drag and drop for main proposal sections
+ */
+function initSectionDragDrop() {
+    const container = document.getElementById('propSectionsContainer');
+    if (!container) return;
+
+    const sections = container.querySelectorAll('.draggable-section');
+
+    sections.forEach((section) => {
+        const handle = section.querySelector('.section-drag-handle');
+        if (!handle) return;
+
+        handle.addEventListener('mousedown', () => {
+            section.setAttribute('draggable', 'true');
+        });
+
+        handle.addEventListener('mouseup', () => {
+            section.setAttribute('draggable', 'false');
+        });
+
+        section.addEventListener('dragstart', (e) => {
+            section.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', section.id);
+        });
+
+        section.addEventListener('dragend', () => {
+            section.classList.remove('dragging');
+            section.setAttribute('draggable', 'false');
+            container.querySelectorAll('.draggable-section').forEach((s) => {
+                s.classList.remove('drag-over');
+            });
+        });
+
+        section.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const dragging = container.querySelector('.dragging');
+            if (dragging && dragging !== section) {
+                section.classList.add('drag-over');
+            }
+        });
+
+        section.addEventListener('dragleave', () => {
+            section.classList.remove('drag-over');
+        });
+
+        section.addEventListener('drop', (e) => {
+            e.preventDefault();
+            section.classList.remove('drag-over');
+            const dragging = container.querySelector('.dragging');
+            if (dragging && dragging !== section) {
+                const allSections = [...container.querySelectorAll('.draggable-section')];
+                const dragIdx = allSections.indexOf(dragging);
+                const dropIdx = allSections.indexOf(section);
+
+                if (dragIdx < dropIdx) {
+                    section.after(dragging);
+                } else {
+                    section.before(dragging);
+                }
+            }
+        });
+    });
 }
 
 /**
@@ -60,7 +201,7 @@ async function loadProposalClients() {
 
     try {
         // Only fetch active clients
-        const response = await fetch('/api/clients');
+        const response = await fetch('/api/clients?status');
         const result = await response.json();
 
         if (result.success && result.data) {
@@ -264,6 +405,114 @@ function removeListItem(itemId) {
 }
 
 /**
+ * Add a recurring cost item (e.g., Monthly Retainer)
+ */
+function addProposalRecurringCost() {
+    const container = document.getElementById('propRecurringCosts');
+    if (!container) return;
+
+    propRecurringCostCounter++;
+    const itemId = `propRecurringCost_${propRecurringCostCounter}`;
+
+    const item = document.createElement('div');
+    item.className = 'recurring-cost-item';
+    item.id = itemId;
+    item.innerHTML = `
+        <div class="recurring-cost-header">
+            <input type="text" class="form-control recurring-cost-name" placeholder="e.g., Monthly Retainer, Hosting Fee" />
+            <button type="button" class="btn btn-sm btn-icon text-danger" onclick="removeRecurringCost('${itemId}')" title="Remove">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="recurring-cost-row">
+            <div class="form-group">
+                <label class="form-label">Amount</label>
+                <div class="amount-range-group">
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control recurring-cost-min" min="0" step="0.01" placeholder="0.00" />
+                    </div>
+                    <label class="range-toggle">
+                        <input type="checkbox" class="recurring-cost-range-toggle" onchange="toggleRecurringCostRange('${itemId}', this.checked)" />
+                        <span>Range</span>
+                    </label>
+                    <div class="input-group recurring-cost-max-group" style="display: none;">
+                        <span class="input-group-text">to $</span>
+                        <input type="number" class="form-control recurring-cost-max" min="0" step="0.01" placeholder="0.00" />
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Frequency</label>
+                <select class="form-control recurring-cost-frequency">
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Includes <span class="text-muted">(Optional)</span></label>
+            <div class="recurring-cost-includes" id="${itemId}_includes">
+                <!-- Include items added dynamically -->
+            </div>
+            <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="addRecurringCostInclude('${itemId}')">
+                <i class="fas fa-plus"></i> Add Include
+            </button>
+        </div>
+    `;
+
+    container.appendChild(item);
+}
+
+/**
+ * Toggle range input for recurring cost
+ */
+function toggleRecurringCostRange(itemId, showRange) {
+    const item = document.getElementById(itemId);
+    if (!item) return;
+
+    const maxGroup = item.querySelector('.recurring-cost-max-group');
+    if (maxGroup) {
+        maxGroup.style.display = showRange ? 'flex' : 'none';
+    }
+}
+
+/**
+ * Remove a recurring cost item
+ */
+function removeRecurringCost(itemId) {
+    const item = document.getElementById(itemId);
+    if (item) {
+        item.remove();
+    }
+}
+
+/**
+ * Add an include item to a recurring cost
+ */
+function addRecurringCostInclude(itemId) {
+    const container = document.getElementById(`${itemId}_includes`);
+    if (!container) return;
+
+    const includeId = `${itemId}_include_${container.children.length + 1}`;
+
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.id = includeId;
+    item.innerHTML = `
+        <span class="list-item-bullet">•</span>
+        <input type="text" class="form-control" placeholder="e.g., Server maintenance and monitoring" />
+        <button type="button" class="btn btn-sm btn-icon text-danger" onclick="removeListItem('${includeId}')" title="Remove">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    container.appendChild(item);
+}
+
+/**
  * Collect proposal data from form
  */
 function collectProposalData() {
@@ -306,12 +555,69 @@ function collectProposalData() {
         }
     });
 
-    // Collect retainer includes
+    // Collect retainer includes (legacy - keeping for backward compatibility)
     const retainerIncludes = [];
     document.querySelectorAll('#propRetainerIncludes .list-item input').forEach((input) => {
         const value = input.value.trim();
         if (value) retainerIncludes.push(value);
     });
+
+    // Collect recurring costs
+    const recurringCosts = [];
+    document.querySelectorAll('#propRecurringCosts .recurring-cost-item').forEach((item) => {
+        const name = item.querySelector('.recurring-cost-name')?.value.trim();
+        const minAmount = parseFloat(item.querySelector('.recurring-cost-min')?.value) || 0;
+        const isRange = item.querySelector('.recurring-cost-range-toggle')?.checked || false;
+        const maxAmount = isRange
+            ? parseFloat(item.querySelector('.recurring-cost-max')?.value) || 0
+            : null;
+        const frequency = item.querySelector('.recurring-cost-frequency')?.value || 'monthly';
+
+        // Collect includes for this recurring cost
+        const includes = [];
+        item.querySelectorAll('.recurring-cost-includes .list-item input').forEach((input) => {
+            const value = input.value.trim();
+            if (value) includes.push(value);
+        });
+
+        if (name || minAmount > 0) {
+            recurringCosts.push({
+                name,
+                minAmount,
+                maxAmount,
+                isRange,
+                frequency,
+                includes,
+            });
+        }
+    });
+
+    // Get cost note
+    const costNote = document.getElementById('propCostNote')?.value.trim() || '';
+
+    // Get custom section titles
+    const initialCostTitle =
+        document.getElementById('propInitialCostTitle')?.value.trim() || 'Project Cost';
+    const recurringCostTitle =
+        document.getElementById('propRecurringCostTitle')?.value.trim() || 'Recurring Costs';
+
+    // Get cost section order from DOM
+    const costItemsContainer = document.getElementById('propCostItemsContainer');
+    const costSectionOrder = [];
+    if (costItemsContainer) {
+        costItemsContainer.querySelectorAll('.cost-item-box').forEach((box) => {
+            costSectionOrder.push(box.dataset.costType);
+        });
+    }
+
+    // Get main section order from DOM
+    const sectionsContainer = document.getElementById('propSectionsContainer');
+    const sectionOrder = [];
+    if (sectionsContainer) {
+        sectionsContainer.querySelectorAll('.draggable-section').forEach((section) => {
+            sectionOrder.push(section.dataset.sectionType);
+        });
+    }
 
     return {
         client: clientId,
@@ -329,11 +635,17 @@ function collectProposalData() {
             paymentSchedule,
         },
         retainer: {
-            enabled: document.getElementById('propRetainerEnabled').checked,
+            enabled: document.getElementById('propRetainerEnabled')?.checked || false,
             amount: parseFloat(document.getElementById('propRetainerAmount')?.value) || 0,
             frequency: document.getElementById('propRetainerFrequency')?.value || 'monthly',
             includes: retainerIncludes,
         },
+        recurringCosts,
+        costNote,
+        initialCostTitle,
+        recurringCostTitle,
+        costSectionOrder,
+        sectionOrder,
         timeline: document.getElementById('propTimeline').value.trim(),
         closingText: document.getElementById('propClosingText').value.trim(),
         internalNotes: document.getElementById('propInternalNotes').value.trim(),
@@ -432,16 +744,22 @@ async function generateProposalPDF() {
         const lineGray = [200, 200, 200];
 
         // ========== HEADER ==========
-        // Logo placeholder
-        doc.setFillColor(...primaryColor);
-        doc.roundedRect(margin, y, 80, 80, 6, 6, 'F');
+        // Try to load logo, with a professional fallback
+        try {
+            const logoImg = await loadImage('/images/logo.png');
+            doc.addImage(logoImg, 'PNG', margin, y, 80, 80);
+        } catch (e) {
+            // Draw a professional styled logo placeholder
+            doc.setFillColor(...primaryColor);
+            doc.roundedRect(margin, y, 80, 80, 6, 6, 'F');
 
-        // Cloud icon in logo
-        doc.setFillColor(255, 255, 255);
-        doc.circle(margin + 28, y + 35, 14, 'F');
-        doc.circle(margin + 42, y + 30, 17, 'F');
-        doc.circle(margin + 58, y + 36, 12, 'F');
-        doc.rect(margin + 18, y + 35, 48, 18, 'F');
+            // Cloud icon in logo
+            doc.setFillColor(255, 255, 255);
+            doc.circle(margin + 28, y + 35, 14, 'F');
+            doc.circle(margin + 42, y + 30, 17, 'F');
+            doc.circle(margin + 58, y + 36, 12, 'F');
+            doc.rect(margin + 18, y + 35, 48, 18, 'F');
+        }
 
         // Company name
         doc.setTextColor(...textDark);
@@ -473,17 +791,41 @@ async function generateProposalPDF() {
 
         // Client info on right
         if (data.clientData) {
-            const clientName = data.clientData.company || data.clientData.name;
+            const clientCompany = data.clientData.company || data.clientData.name;
+            const clientContact = data.clientData.name || '';
             doc.text('Prepared for:', pageWidth - margin - 150, y);
             doc.setTextColor(...textDark);
             doc.setFont('helvetica', 'bold');
-            doc.text(clientName, pageWidth - margin - 150, y + 14);
+            doc.text(clientCompany, pageWidth - margin - 150, y + 14);
+            // Add contact name under company name if different
+            if (clientContact && clientContact !== clientCompany) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.setTextColor(...textGray);
+                doc.text(clientContact, pageWidth - margin - 150, y + 28);
+            }
         }
 
         y += 55;
 
-        // ========== EXECUTIVE SUMMARY ==========
-        if (data.executiveSummary) {
+        const contentWidth = pageWidth - 2 * margin;
+
+        // Get section order (default order if not set)
+        const mainSectionOrder = data.sectionOrder || [
+            'executiveSummary',
+            'scopeOfWork',
+            'deliverables',
+            'costEstimate',
+            'timeline',
+            'closing',
+        ];
+
+        // Get cost section order (default: initial first, then recurring)
+        const costOrder = data.costSectionOrder || ['initial', 'recurring'];
+
+        // Helper function to render Executive Summary
+        const renderExecutiveSummary = () => {
+            if (!data.executiveSummary) return;
             y = addPDFSection(
                 doc,
                 'Executive Summary',
@@ -502,10 +844,11 @@ async function generateProposalPDF() {
             y += summaryLines.length * 14 + 20;
 
             y = checkPageBreak(doc, y, pageHeight, margin);
-        }
+        };
 
-        // ========== SCOPE OF WORK ==========
-        if (data.scopeOfWork.length > 0) {
+        // Helper function to render Scope of Work
+        const renderScopeOfWork = () => {
+            if (data.scopeOfWork.length === 0) return;
             y = addPDFSection(doc, 'Scope of Work', y, margin, pageWidth, primaryColor, textDark);
 
             data.scopeOfWork.forEach((section) => {
@@ -546,10 +889,11 @@ async function generateProposalPDF() {
             });
 
             y += 10;
-        }
+        };
 
-        // ========== DELIVERABLES ==========
-        if (data.deliverables.length > 0) {
+        // Helper function to render Deliverables
+        const renderDeliverables = () => {
+            if (data.deliverables.length === 0) return;
             y = checkPageBreak(doc, y, pageHeight, margin);
             y = addPDFSection(doc, 'Deliverables', y, margin, pageWidth, primaryColor, textDark);
 
@@ -565,89 +909,194 @@ async function generateProposalPDF() {
             });
 
             y += 15;
-        }
+        };
 
-        // ========== COST ESTIMATE ==========
-        y = checkPageBreak(doc, y, pageHeight, margin);
-        y = addPDFSection(doc, 'Cost Estimate', y, margin, pageWidth, primaryColor, textDark);
+        // Helper function to render initial cost section
+        const renderInitialCost = () => {
+            // Initial Project Cost - styled box
+            const initialCostBoxY = y;
+            const initialCostBoxHeight = 55;
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(14);
-        doc.setTextColor(...textDark);
-        doc.text(
-            `Total Project Cost: ${formatCurrency(data.pricing.totalAmount)} (${
-                data.pricing.description
-            })`,
-            margin,
-            y
-        );
-        y += 20;
+            // Draw background box for initial cost
+            doc.setFillColor(248, 246, 255); // Light purple background
+            doc.roundedRect(margin, initialCostBoxY, contentWidth, initialCostBoxHeight, 4, 4, 'F');
 
-        if (!data.pricing.isOneTime && data.pricing.paymentSchedule.length > 0) {
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Payment Schedule:', margin, y);
-            y += 16;
-
-            data.pricing.paymentSchedule.forEach((payment) => {
-                y = checkPageBreak(doc, y, pageHeight, margin);
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                const dateStr = payment.dueDate
-                    ? ` - Due: ${formatDisplayDate(payment.dueDate)}`
-                    : '';
-                doc.text(
-                    `• ${payment.description}: ${formatCurrency(payment.amount)}${dateStr}`,
-                    margin + 10,
-                    y
-                );
-                y += 14;
-            });
-        }
-
-        y += 15;
-
-        // ========== RETAINER ==========
-        if (data.retainer.enabled) {
-            y = checkPageBreak(doc, y, pageHeight, margin);
-            y = addPDFSection(
-                doc,
-                'Maintenance Retainer',
-                y,
-                margin,
-                pageWidth,
-                primaryColor,
-                textDark
-            );
-
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(12);
-            doc.setTextColor(...textDark);
-            doc.text(
-                `${formatCurrency(data.retainer.amount)}/${data.retainer.frequency}`,
-                margin,
-                y
-            );
+            // Use custom title (uppercase for display)
+            const initialTitle = (data.initialCostTitle || 'Project Cost').toUpperCase();
             y += 18;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...primaryColor);
+            doc.text(initialTitle, margin + 15, y);
 
-            if (data.retainer.includes.length > 0) {
-                doc.setFontSize(10);
+            // Amount
+            y += 22;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(20);
+            doc.setTextColor(...textDark);
+            doc.text(formatCurrency(data.pricing.totalAmount), margin + 15, y);
+
+            // Add description label if provided
+            if (data.pricing.description) {
+                const amtWidth = doc.getTextWidth(formatCurrency(data.pricing.totalAmount));
                 doc.setFont('helvetica', 'normal');
-                doc.text('Includes:', margin, y);
-                y += 14;
+                doc.setFontSize(11);
+                doc.setTextColor(...textGray);
+                doc.text(`(${data.pricing.description})`, margin + 25 + amtWidth, y);
+            }
 
-                data.retainer.includes.forEach((item) => {
+            y = initialCostBoxY + initialCostBoxHeight + 15;
+
+            // Payment Schedule (if installments)
+            if (!data.pricing.isOneTime && data.pricing.paymentSchedule.length > 0) {
+                y = checkPageBreak(doc, y, pageHeight, margin);
+
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(...textDark);
+                doc.text('Payment Schedule', margin, y);
+                y += 18;
+
+                data.pricing.paymentSchedule.forEach((payment, index) => {
                     y = checkPageBreak(doc, y, pageHeight, margin);
-                    doc.text(`• ${item}`, margin + 10, y);
-                    y += 12;
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+                    doc.setTextColor(...textDark);
+
+                    const dateStr = payment.dueDate
+                        ? `  —  Due: ${formatDisplayDate(payment.dueDate)}`
+                        : '';
+                    doc.text(`${index + 1}.`, margin + 10, y);
+                    doc.text(`${payment.description}:`, margin + 25, y);
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(formatCurrency(payment.amount), margin + 180, y);
+
+                    if (dateStr) {
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(...textGray);
+                        doc.text(dateStr, margin + 250, y);
+                    }
+
+                    y += 16;
                 });
+                y += 10;
+            }
+        };
+
+        // Helper function to render recurring costs section
+        const renderRecurringCosts = () => {
+            if (!data.recurringCosts || data.recurringCosts.length === 0) return;
+
+            y = checkPageBreak(doc, y, pageHeight, margin);
+
+            // Draw a subtle divider if not first section
+            if (costOrder.indexOf('recurring') > 0) {
+                doc.setDrawColor(...lineGray);
+                doc.setLineWidth(0.5);
+                doc.line(margin, y, margin + contentWidth, y);
+                y += 20;
+            }
+
+            // Use custom title (uppercase for display)
+            const recurringTitle = (data.recurringCostTitle || 'Recurring Costs').toUpperCase();
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...primaryColor);
+            doc.text(recurringTitle, margin, y);
+            y += 20;
+
+            data.recurringCosts.forEach((recurring) => {
+                y = checkPageBreak(doc, y, pageHeight, margin);
+
+                // Draw a light background box for each recurring cost
+                const recurringBoxHeight =
+                    recurring.includes && recurring.includes.length > 0
+                        ? 45 + recurring.includes.length * 14
+                        : 45;
+
+                doc.setFillColor(250, 250, 250);
+                doc.roundedRect(margin, y - 5, contentWidth, recurringBoxHeight, 3, 3, 'F');
+
+                // Recurring cost name
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(...textDark);
+                const recurringName = recurring.name || 'Recurring Cost';
+                doc.text(recurringName, margin + 12, y + 12);
+
+                // Format amount (with range support)
+                let amountStr;
+                if (recurring.isRange && recurring.maxAmount) {
+                    amountStr = `${formatCurrency(recurring.minAmount)} — ${formatCurrency(
+                        recurring.maxAmount
+                    )} / ${recurring.frequency}`;
+                } else {
+                    amountStr = `${formatCurrency(recurring.minAmount)} / ${recurring.frequency}`;
+                }
+
+                // Amount on the right side
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(11);
+                doc.setTextColor(...primaryColor);
+                const amtWidth = doc.getTextWidth(amountStr);
+                doc.text(amountStr, margin + contentWidth - amtWidth - 12, y + 12);
+
+                y += 28;
+
+                // Includes list
+                if (recurring.includes && recurring.includes.length > 0) {
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(9);
+                    doc.setTextColor(...textGray);
+                    doc.text('Includes:', margin + 12, y);
+                    y += 14;
+
+                    doc.setFont('helvetica', 'normal');
+                    recurring.includes.forEach((item) => {
+                        y = checkPageBreak(doc, y, pageHeight, margin);
+                        doc.text(`•  ${item}`, margin + 20, y);
+                        y += 14;
+                    });
+                }
+
+                y += 15;
+            });
+        };
+
+        // Helper function to render Cost Estimate section
+        const renderCostEstimate = () => {
+            y = checkPageBreak(doc, y, pageHeight, margin);
+            y = addPDFSection(doc, 'Cost Estimate', y, margin, pageWidth, primaryColor, textDark);
+
+            // Render cost sections in order
+            costOrder.forEach((sectionType) => {
+                if (sectionType === 'initial') {
+                    renderInitialCost();
+                } else if (sectionType === 'recurring') {
+                    renderRecurringCosts();
+                }
+            });
+
+            // Cost Note (if any)
+            if (data.costNote) {
+                y = checkPageBreak(doc, y, pageHeight, margin);
+                y += 8;
+
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(10);
+                doc.setTextColor(...textGray);
+                const noteLines = doc.splitTextToSize(data.costNote, contentWidth - 10);
+                doc.text(noteLines, margin + 5, y);
+                y += noteLines.length * 14 + 10;
             }
 
             y += 15;
-        }
+        };
 
-        // ========== TIMELINE ==========
-        if (data.timeline) {
+        // Helper function to render Timeline
+        const renderTimeline = () => {
+            if (!data.timeline) return;
             y = checkPageBreak(doc, y, pageHeight, margin);
             y = addPDFSection(doc, 'Timeline', y, margin, pageWidth, primaryColor, textDark);
 
@@ -657,10 +1106,11 @@ async function generateProposalPDF() {
             const timelineLines = doc.splitTextToSize(data.timeline, pageWidth - 2 * margin);
             doc.text(timelineLines, margin, y);
             y += timelineLines.length * 12 + 15;
-        }
+        };
 
-        // ========== CLOSING ==========
-        if (data.closingText) {
+        // Helper function to render Closing
+        const renderClosing = () => {
+            if (!data.closingText) return;
             y = checkPageBreak(doc, y, pageHeight, margin);
             y = addPDFSection(doc, 'Ready to Start?', y, margin, pageWidth, primaryColor, textDark);
 
@@ -669,7 +1119,31 @@ async function generateProposalPDF() {
             doc.setTextColor(...textDark);
             doc.text(data.closingText, margin, y);
             y += 30;
-        }
+        };
+
+        // Render all sections in order
+        mainSectionOrder.forEach((sectionType) => {
+            switch (sectionType) {
+                case 'executiveSummary':
+                    renderExecutiveSummary();
+                    break;
+                case 'scopeOfWork':
+                    renderScopeOfWork();
+                    break;
+                case 'deliverables':
+                    renderDeliverables();
+                    break;
+                case 'costEstimate':
+                    renderCostEstimate();
+                    break;
+                case 'timeline':
+                    renderTimeline();
+                    break;
+                case 'closing':
+                    renderClosing();
+                    break;
+            }
+        });
 
         // ========== FOOTER ==========
         y = checkPageBreak(doc, y, pageHeight, margin);
@@ -982,6 +1456,10 @@ window.addProposalDeliverable = addProposalDeliverable;
 window.addProposalPaymentItem = addProposalPaymentItem;
 window.toggleProposalRetainer = toggleProposalRetainer;
 window.addProposalRetainerInclude = addProposalRetainerInclude;
+window.addProposalRecurringCost = addProposalRecurringCost;
+window.toggleRecurringCostRange = toggleRecurringCostRange;
+window.removeRecurringCost = removeRecurringCost;
+window.addRecurringCostInclude = addRecurringCostInclude;
 window.removeListItem = removeListItem;
 window.saveProposalDraft = saveProposalDraft;
 window.generateProposalPDF = generateProposalPDF;

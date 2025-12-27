@@ -56,6 +56,9 @@ async function initContractGenerator() {
         await generateContractPDF();
     });
 
+    // Initialize drag and drop for all main sections
+    initContractSectionDragDrop();
+
     // Client change handler - auto-fill company name
     document.getElementById('contClient')?.addEventListener('change', (e) => {
         const client = contractClients.find((c) => c._id === e.target.value);
@@ -66,6 +69,73 @@ async function initContractGenerator() {
             document.getElementById('contSignClientName').value = contactName;
             document.getElementById('contSignClientTitle').value = client.company || '';
         }
+    });
+}
+
+/**
+ * Initialize drag and drop for main contract sections
+ */
+function initContractSectionDragDrop() {
+    const container = document.getElementById('contSectionsContainer');
+    if (!container) return;
+
+    const sections = container.querySelectorAll('.draggable-section');
+
+    sections.forEach((section) => {
+        const handle = section.querySelector('.section-drag-handle');
+        if (!handle) return;
+
+        handle.addEventListener('mousedown', () => {
+            section.setAttribute('draggable', 'true');
+        });
+
+        handle.addEventListener('mouseup', () => {
+            section.setAttribute('draggable', 'false');
+        });
+
+        section.addEventListener('dragstart', (e) => {
+            section.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', section.id);
+        });
+
+        section.addEventListener('dragend', () => {
+            section.classList.remove('dragging');
+            section.setAttribute('draggable', 'false');
+            container.querySelectorAll('.draggable-section').forEach((s) => {
+                s.classList.remove('drag-over');
+            });
+        });
+
+        section.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const dragging = container.querySelector('.dragging');
+            if (dragging && dragging !== section) {
+                section.classList.add('drag-over');
+            }
+        });
+
+        section.addEventListener('dragleave', () => {
+            section.classList.remove('drag-over');
+        });
+
+        section.addEventListener('drop', (e) => {
+            e.preventDefault();
+            section.classList.remove('drag-over');
+            const dragging = container.querySelector('.dragging');
+            if (dragging && dragging !== section) {
+                const allSections = [...container.querySelectorAll('.draggable-section')];
+                const dragIdx = allSections.indexOf(dragging);
+                const dropIdx = allSections.indexOf(section);
+
+                if (dragIdx < dropIdx) {
+                    section.after(dragging);
+                } else {
+                    section.before(dragging);
+                }
+            }
+        });
     });
 }
 
@@ -506,6 +576,15 @@ function collectContractData() {
         if (value) termsAndConditions.push(value);
     });
 
+    // Get main section order from DOM
+    const sectionsContainer = document.getElementById('contSectionsContainer');
+    const sectionOrder = [];
+    if (sectionsContainer) {
+        sectionsContainer.querySelectorAll('.draggable-section').forEach((section) => {
+            sectionOrder.push(section.dataset.sectionType);
+        });
+    }
+
     return {
         client: clientId,
         clientData: client,
@@ -535,6 +614,7 @@ function collectContractData() {
         },
         resaleRights: document.getElementById('contResaleRights').value.trim(),
         termsAndConditions,
+        sectionOrder,
         signatures: {
             sahabName: document.getElementById('contSahabName').value.trim(),
             sahabTitle: document.getElementById('contSahabTitle').value.trim(),
@@ -687,8 +767,21 @@ async function generateContractPDF() {
         );
         y += 25;
 
-        // ========== PROJECT OVERVIEW ==========
-        if (data.projectName || data.projectDescription) {
+        // Get section order (default order if not set)
+        const mainSectionOrder = data.sectionOrder || [
+            'projectOverview',
+            'scopeOfWork',
+            'deliverables',
+            'payment',
+            'retainer',
+            'resaleRights',
+            'termsAndConditions',
+            'signatures',
+        ];
+
+        // Helper function to render Project Overview
+        const renderProjectOverview = () => {
+            if (!data.projectName && !data.projectDescription) return;
             y = addContractSection(
                 doc,
                 'Project Overview',
@@ -716,10 +809,11 @@ async function generateContractPDF() {
                 doc.text(descLines, margin, y);
                 y += descLines.length * 12 + 15;
             }
-        }
+        };
 
-        // ========== SCOPE OF WORK ==========
-        if (data.scopeOfWork.length > 0) {
+        // Helper function to render Scope of Work
+        const renderScopeOfWork = () => {
+            if (data.scopeOfWork.length === 0) return;
             y = checkContractPageBreak(doc, y, pageHeight, margin);
             y = addContractSection(
                 doc,
@@ -767,10 +861,11 @@ async function generateContractPDF() {
 
                 y += 8;
             });
-        }
+        };
 
-        // ========== DELIVERABLES ==========
-        if (data.deliverables.length > 0) {
+        // Helper function to render Deliverables
+        const renderDeliverables = () => {
+            if (data.deliverables.length === 0) return;
             y = checkContractPageBreak(doc, y, pageHeight, margin);
             y = addContractSection(
                 doc,
@@ -794,70 +889,73 @@ async function generateContractPDF() {
             });
 
             y += 12;
-        }
+        };
 
-        // ========== PAYMENT ==========
-        y = checkContractPageBreak(doc, y, pageHeight, margin);
-        y = addContractSection(doc, 'Payment', y, margin, pageWidth, primaryColor, textDark);
-
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(12);
-        doc.setTextColor(...textDark);
-        doc.text(
-            `Total Project Fee: ${formatCurrency(data.payment.totalAmount)} (${
-                data.payment.description
-            })`,
-            margin,
-            y
-        );
-        y += 20;
-
-        if (data.payment.schedule.length > 0) {
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Payment Schedule:', margin, y);
-            y += 14;
-
-            data.payment.schedule.forEach((payment) => {
-                y = checkContractPageBreak(doc, y, pageHeight, margin);
-                doc.setFont('helvetica', 'normal');
-                const dateStr = payment.dueDate
-                    ? ` - Due: ${formatDisplayDate(payment.dueDate)}`
-                    : '';
-                doc.text(
-                    `• ${payment.description}: ${formatCurrency(payment.amount)}${dateStr}`,
-                    margin + 10,
-                    y
-                );
-                y += 12;
-            });
-
-            y += 8;
-        }
-
-        if (data.payment.operationalCostsNote) {
+        // Helper function to render Payment
+        const renderPayment = () => {
             y = checkContractPageBreak(doc, y, pageHeight, margin);
-            doc.setFont('helvetica', 'italic');
-            doc.setFontSize(9);
-            doc.setTextColor(...textGray);
-            const noteLines = doc.splitTextToSize(
-                data.payment.operationalCostsNote,
-                pageWidth - 2 * margin
-            );
-            doc.text(noteLines, margin, y);
-            y += noteLines.length * 11 + 10;
-        }
+            y = addContractSection(doc, 'Payment', y, margin, pageWidth, primaryColor, textDark);
 
-        if (data.payment.paymentInstructions) {
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(12);
             doc.setTextColor(...textDark);
-            doc.text(data.payment.paymentInstructions, margin, y);
+            doc.text(
+                `Total Project Fee: ${formatCurrency(data.payment.totalAmount)} (${
+                    data.payment.description
+                })`,
+                margin,
+                y
+            );
             y += 20;
-        }
 
-        // ========== RETAINER ==========
-        if (data.retainer.enabled) {
+            if (data.payment.schedule.length > 0) {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Payment Schedule:', margin, y);
+                y += 14;
+
+                data.payment.schedule.forEach((payment) => {
+                    y = checkContractPageBreak(doc, y, pageHeight, margin);
+                    doc.setFont('helvetica', 'normal');
+                    const dateStr = payment.dueDate
+                        ? ` - Due: ${formatDisplayDate(payment.dueDate)}`
+                        : '';
+                    doc.text(
+                        `• ${payment.description}: ${formatCurrency(payment.amount)}${dateStr}`,
+                        margin + 10,
+                        y
+                    );
+                    y += 12;
+                });
+
+                y += 8;
+            }
+
+            if (data.payment.operationalCostsNote) {
+                y = checkContractPageBreak(doc, y, pageHeight, margin);
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(9);
+                doc.setTextColor(...textGray);
+                const noteLines = doc.splitTextToSize(
+                    data.payment.operationalCostsNote,
+                    pageWidth - 2 * margin
+                );
+                doc.text(noteLines, margin, y);
+                y += noteLines.length * 11 + 10;
+            }
+
+            if (data.payment.paymentInstructions) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.setTextColor(...textDark);
+                doc.text(data.payment.paymentInstructions, margin, y);
+                y += 20;
+            }
+        };
+
+        // Helper function to render Retainer
+        const renderRetainer = () => {
+            if (!data.retainer.enabled) return;
             y = checkContractPageBreak(doc, y, pageHeight, margin);
             y = addContractSection(
                 doc,
@@ -896,10 +994,11 @@ async function generateContractPDF() {
             }
 
             y += 10;
-        }
+        };
 
-        // ========== RESALE RIGHTS ==========
-        if (data.resaleRights) {
+        // Helper function to render Resale Rights
+        const renderResaleRights = () => {
+            if (!data.resaleRights) return;
             y = checkContractPageBreak(doc, y, pageHeight, margin);
             y = addContractSection(
                 doc,
@@ -917,10 +1016,11 @@ async function generateContractPDF() {
             const resaleLines = doc.splitTextToSize(data.resaleRights, pageWidth - 2 * margin);
             doc.text(resaleLines, margin, y);
             y += resaleLines.length * 12 + 15;
-        }
+        };
 
-        // ========== TERMS AND CONDITIONS ==========
-        if (data.termsAndConditions.length > 0) {
+        // Helper function to render Terms and Conditions
+        const renderTermsAndConditions = () => {
+            if (data.termsAndConditions.length === 0) return;
             y = checkContractPageBreak(doc, y, pageHeight, margin);
             y = addContractSection(
                 doc,
@@ -946,41 +1046,73 @@ async function generateContractPDF() {
             });
 
             y += 10;
-        }
+        };
 
-        // ========== SIGNATURES ==========
-        y = checkContractPageBreak(doc, y, pageHeight, margin + 120);
-        y = addContractSection(doc, 'Signatures', y, margin, pageWidth, primaryColor, textDark);
+        // Helper function to render Signatures
+        const renderSignatures = () => {
+            y = checkContractPageBreak(doc, y, pageHeight, margin + 120);
+            y = addContractSection(doc, 'Signatures', y, margin, pageWidth, primaryColor, textDark);
 
-        const sigWidth = (pageWidth - 2 * margin - 40) / 2;
+            const sigWidth = (pageWidth - 2 * margin - 40) / 2;
 
-        // Sahab signature
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.setTextColor(...textDark);
-        doc.text('Sahab Solutions', margin, y);
+            // Sahab signature
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(...textDark);
+            doc.text('Sahab Solutions', margin, y);
 
-        doc.setFont('helvetica', 'normal');
-        doc.setDrawColor(...lineGray);
-        doc.line(margin, y + 40, margin + sigWidth, y + 40);
-        doc.text('Signature', margin, y + 52);
+            doc.setFont('helvetica', 'normal');
+            doc.setDrawColor(...lineGray);
+            doc.line(margin, y + 40, margin + sigWidth, y + 40);
+            doc.text('Signature', margin, y + 52);
 
-        doc.text(data.signatures.sahabName || 'Omar Abdelalim', margin, y + 70);
-        doc.text(data.signatures.sahabTitle || 'Sahab Solutions', margin, y + 82);
-        doc.text('Date: ____________________', margin, y + 100);
+            doc.text(data.signatures.sahabName || 'Omar Abdelalim', margin, y + 70);
+            doc.text(data.signatures.sahabTitle || 'Sahab Solutions', margin, y + 82);
+            doc.text('Date: ____________________', margin, y + 100);
 
-        // Client signature
-        const clientSigX = margin + sigWidth + 40;
-        doc.setFont('helvetica', 'bold');
-        doc.text('Client', clientSigX, y);
+            // Client signature
+            const clientSigX = margin + sigWidth + 40;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Client', clientSigX, y);
 
-        doc.setFont('helvetica', 'normal');
-        doc.line(clientSigX, y + 40, clientSigX + sigWidth, y + 40);
-        doc.text('Signature', clientSigX, y + 52);
+            doc.setFont('helvetica', 'normal');
+            doc.line(clientSigX, y + 40, clientSigX + sigWidth, y + 40);
+            doc.text('Signature', clientSigX, y + 52);
 
-        doc.text(data.signatures.clientName || '________________________', clientSigX, y + 70);
-        doc.text(data.signatures.clientTitle || '________________________', clientSigX, y + 82);
-        doc.text('Date: ____________________', clientSigX, y + 100);
+            doc.text(data.signatures.clientName || '________________________', clientSigX, y + 70);
+            doc.text(data.signatures.clientTitle || '________________________', clientSigX, y + 82);
+            doc.text('Date: ____________________', clientSigX, y + 100);
+        };
+
+        // Render all sections in order
+        mainSectionOrder.forEach((sectionType) => {
+            switch (sectionType) {
+                case 'projectOverview':
+                    renderProjectOverview();
+                    break;
+                case 'scopeOfWork':
+                    renderScopeOfWork();
+                    break;
+                case 'deliverables':
+                    renderDeliverables();
+                    break;
+                case 'payment':
+                    renderPayment();
+                    break;
+                case 'retainer':
+                    renderRetainer();
+                    break;
+                case 'resaleRights':
+                    renderResaleRights();
+                    break;
+                case 'termsAndConditions':
+                    renderTermsAndConditions();
+                    break;
+                case 'signatures':
+                    renderSignatures();
+                    break;
+            }
+        });
 
         // Save PDF
         const fileName = `Contract_${data.projectName || data.title}_${
